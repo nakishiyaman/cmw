@@ -1,448 +1,332 @@
 """
-Command Line Interface for Claude Multi-Worker Framework
+コマンドラインインターフェース (CLI)
+
+cmw コマンドの実装
 """
+import os
+import json
 import click
-import sys
 from pathlib import Path
-from rich.console import Console
-from rich.table import Table
-from rich.progress import Progress
+from typing import Optional
+from dotenv import load_dotenv
 
-from .coordinator import Coordinator
-from .prompt_generator import PromptGenerator
-from .templates import TemplateManager
-from . import __version__
-
-
-console = Console()
+from .models import TaskStatus
+from .api_client import ClaudeAPIClient
+from .coordinator import Coordinator, PromptGenerator
+from .executor import TaskExecutor
 
 
 @click.group()
-@click.version_option(version=__version__)
-def main():
-    """Claude Multi-Worker Framework - Document-Driven Multi-Agent Development"""
+@click.version_option(version="0.1.0")
+def cli():
+    """Claude Multi-Worker Framework - マルチワーカー開発フレームワーク"""
     pass
 
 
-@main.command()
-@click.argument('project_name')
-@click.option('--template', '-t', default='web-app', 
-              help='プロジェクトテンプレート')
-@click.option('--path', '-p', default='.', 
-              help='プロジェクト作成場所')
-def init(project_name: str, template: str, path: str):
-    """新規プロジェクトを初期化"""
-    console.print(f"[bold blue]プロジェクト作成中: {project_name}[/bold blue]")
-    
-    project_path = Path(path) / project_name
+@cli.command()
+@click.option('--name', default='new-project', help='プロジェクト名')
+def init(name: str):
+    """新しいプロジェクトを初期化"""
+    project_path = Path.cwd() / name
     
     if project_path.exists():
-        console.print(f"[bold red]エラー: {project_path} は既に存在します[/bold red]")
-        sys.exit(1)
+        click.echo(f"❌ エラー: ディレクトリ {name} は既に存在します", err=True)
+        return
     
-    # テンプレートマネージャーを使用
-    template_mgr = TemplateManager()
+    # ディレクトリ構造を作成
+    dirs = [
+        "shared/docs",
+        "shared/coordination",
+        "shared/artifacts/backend/core",
+        "shared/artifacts/frontend",
+        "shared/artifacts/tests"
+    ]
     
-    try:
-        template_mgr.create_project(project_name, template, Path(path))
-        console.print(f"[bold green]✓ プロジェクト作成完了: {project_path}[/bold green]")
-        console.print("\n次のステップ:")
-        console.print(f"  cd {project_name}")
-        console.print("  cmw start")
-    except Exception as e:
-        console.print(f"[bold red]エラー: {e}[/bold red]")
-        sys.exit(1)
+    for dir_path in dirs:
+        (project_path / dir_path).mkdir(parents=True, exist_ok=True)
+    
+    # サンプルファイルを作成
+    requirements_file = project_path / "shared" / "docs" / "requirements.md"
+    requirements_file.write_text("""# プロジェクト要件書
+
+## 概要
+このプロジェクトの概要を記載してください。
+
+## 機能要件
+### 機能1: 
+### 機能2: 
+
+## 非機能要件
+- パフォーマンス: 
+- セキュリティ: 
+""", encoding='utf-8')
+    
+    # .env.example を作成
+    env_example = project_path / ".env.example"
+    env_example.write_text("ANTHROPIC_API_KEY=your-api-key-here\n", encoding='utf-8')
+    
+    click.echo(f"✅ プロジェクト '{name}' を初期化しました")
+    click.echo(f"\n次のステップ:")
+    click.echo(f"  1. cd {name}")
+    click.echo(f"  2. shared/docs/requirements.md を編集")
+    click.echo(f"  3. .env ファイルを作成してAPIキーを設定")
+    click.echo(f"  4. cmw tasks generate")
 
 
-@main.command()
-@click.option('--path', '-p', default='.', 
-              help='プロジェクトディレクトリ')
-@click.option('--interval', '-i', default=300, 
-              help='進捗チェック間隔（秒）')
-def start(path: str, interval: int):
-    """Coordinatorを起動"""
-    project_path = Path(path)
-    
-    if not (project_path / "workers-config.yaml").exists():
-        console.print("[bold red]エラー: workers-config.yaml が見つかりません[/bold red]")
-        console.print("プロジェクトディレクトリで実行してください")
-        sys.exit(1)
-    
-    console.print("[bold blue]Coordinator を起動しています...[/bold blue]")
-    
-    try:
-        coordinator = Coordinator(project_path)
-        coordinator.run(check_interval=interval)
-    except KeyboardInterrupt:
-        console.print("\n[bold yellow]Coordinator を停止しました[/bold yellow]")
-    except Exception as e:
-        console.print(f"[bold red]エラー: {e}[/bold red]")
-        sys.exit(1)
-
-
-@main.command()
-@click.option('--path', '-p', default='.', 
-              help='プロジェクトディレクトリ')
-def status(path: str):
-    """プロジェクトの進捗状況を表示"""
-    project_path = Path(path)
-    coordinator = Coordinator(project_path)
-    
-    progress = coordinator.check_progress()
-    
-    # 全体進捗
-    console.print(f"\n[bold]プロジェクト: {progress.project_name}[/bold]")
-    console.print(f"全体進捗: [bold green]{progress.overall_progress}[/bold green]")
-    console.print(f"更新日時: {progress.updated_at.strftime('%Y-%m-%d %H:%M:%S')}\n")
-    
-    # ワーカーごとの進捗テーブル
-    table = Table(title="ワーカー進捗")
-    table.add_column("ワーカーID", style="cyan")
-    table.add_column("状態", style="magenta")
-    table.add_column("進捗", style="green")
-    table.add_column("現在のタスク")
-    table.add_column("完了数")
-    
-    for worker_id, worker_progress in progress.workers.items():
-        status_emoji = {
-            "idle": "⚪",
-            "working": "🟢",
-            "blocked": "🔴",
-            "completed": "✅",
-            "error": "❌"
-        }.get(worker_progress.status, "❓")
-        
-        table.add_row(
-            worker_id,
-            f"{status_emoji} {worker_progress.status}",
-            worker_progress.completion,
-            worker_progress.current_task or "-",
-            str(len(worker_progress.completed_tasks))
-        )
-    
-    console.print(table)
-
-
-@main.command()
-@click.option('--path', '-p', default='.', 
-              help='プロジェクトディレクトリ')
-def report(path: str):
-    """詳細レポートを表示"""
-    project_path = Path(path)
-    
-    # 各ファイルを直接読み込む
-    tasks_file = project_path / "shared" / "coordination" / "tasks.json"
-    progress_file = project_path / "shared" / "coordination" / "progress.json"
-    config_file = project_path / "workers-config.yaml"
-    
-    import json
-    import yaml
-    
-    # 設定ファイル読み込み
-    if config_file.exists():
-        with open(config_file, 'r', encoding='utf-8') as f:
-            config = yaml.safe_load(f)
-            project_name = config.get('project_name', 'Unknown')
-    else:
-        project_name = "Unknown"
-    
-    # 進捗ファイル読み込み
-    if progress_file.exists():
-        with open(progress_file, 'r', encoding='utf-8') as f:
-            progress_data = json.load(f)
-            overall_progress = progress_data.get('overall_progress', '0%')
-    else:
-        overall_progress = '0%'
-    
-    console.print(f"\n[bold]プロジェクト詳細レポート[/bold]\n")
-    console.print(f"プロジェクト名: {project_name}")
-    console.print(f"全体進捗: {overall_progress}\n")
-    
-    # タスク一覧
-    if tasks_file.exists():
-        with open(tasks_file, 'r', encoding='utf-8') as f:
-            tasks_data = json.load(f)
-            tasks = tasks_data.get('tasks', [])
-        
-        tasks_table = Table(title="タスク一覧")
-        tasks_table.add_column("タスクID")
-        tasks_table.add_column("タイトル")
-        tasks_table.add_column("ワーカー")
-        tasks_table.add_column("状態")
-        tasks_table.add_column("優先度")
-        
-        for task in tasks:
-            tasks_table.add_row(
-                task.get('task_id', ''),
-                task.get('title', '')[:40],
-                task.get('worker_id', ''),
-                task.get('status', ''),
-                task.get('priority', '')
-            )
-        
-        console.print(tasks_table)
-        console.print(f"\n合計タスク数: {len(tasks)} 件")
-        
-        # ステータス別集計
-        status_count = {}
-        for task in tasks:
-            status = task.get('status', 'unknown')
-            status_count[status] = status_count.get(status, 0) + 1
-        
-        console.print("\n[bold]ステータス別:[/bold]")
-        for status, count in status_count.items():
-            console.print(f"  • {status}: {count} 件")
-        
-        # ワーカー別集計
-        worker_count = {}
-        for task in tasks:
-            worker = task.get('worker_id', 'unknown')
-            worker_count[worker] = worker_count.get(worker, 0) + 1
-        
-        console.print("\n[bold]ワーカー別:[/bold]")
-        for worker, count in worker_count.items():
-            console.print(f"  • {worker}: {count} 件")
-    else:
-        console.print("[yellow]タスクファイルが見つかりません[/yellow]")
-
-
-@main.group()
-def workers():
-    """ワーカー管理コマンド"""
-    pass
-
-
-@workers.command('list')
-@click.option('--path', '-p', default='.', 
-              help='プロジェクトディレクトリ')
-def workers_list(path: str):
-    """ワーカー一覧を表示"""
-    project_path = Path(path)
-    coordinator = Coordinator(project_path)
-    
-    table = Table(title="登録ワーカー")
-    table.add_column("ID", style="cyan")
-    table.add_column("役割")
-    table.add_column("タイプ")
-    table.add_column("スキル")
-    table.add_column("依存")
-    
-    for worker_id, worker in coordinator.workers.items():
-        table.add_row(
-            worker_id,
-            worker.role,
-            worker.type,
-            ", ".join(worker.skills[:3]),
-            ", ".join(worker.depends_on) if worker.depends_on else "-"
-        )
-    
-    console.print(table)
-
-
-@main.group()
+@cli.group()
 def tasks():
     """タスク管理コマンド"""
     pass
 
 
 @tasks.command('list')
-@click.option('--path', '-p', default='.', 
-              help='プロジェクトディレクトリ')
-@click.option('--status', '-s', 
-              help='状態でフィルタ')
-def tasks_list(path: str, status: str):
+@click.option('--status', type=click.Choice(['pending', 'in_progress', 'completed', 'failed', 'blocked']), 
+              help='ステータスでフィルタ')
+def list_tasks(status: Optional[str]):
     """タスク一覧を表示"""
-    project_path = Path(path)
+    project_path = Path.cwd()
+    coordinator = Coordinator(project_path)
     
-    # tasks.jsonを直接読み込む（Coordinatorを初期化しない）
-    tasks_file = project_path / "shared" / "coordination" / "tasks.json"
-    
-    if not tasks_file.exists():
-        console.print("[yellow]タスクファイルが見つかりません。[/yellow]")
-        console.print("まず 'cmw start' を実行してタスクを生成してください。")
+    if not coordinator.tasks:
+        click.echo("タスクが見つかりません。'cmw tasks generate' を実行してください。")
         return
     
-    # JSONファイルを読み込み
-    import json
-    with open(tasks_file, 'r', encoding='utf-8') as f:
-        tasks_data = json.load(f)
-    
-    tasks_to_show = tasks_data.get('tasks', [])
-    
-    # ステータスでフィルタ
+    # フィルタリング
+    tasks_to_show = coordinator.tasks.values()
     if status:
-        tasks_to_show = [t for t in tasks_to_show if t.get('status') == status]
+        tasks_to_show = [t for t in tasks_to_show if t.status.value == status]
     
-    table = Table(title=f"タスク一覧 {f'(status={status})' if status else ''}")
-    table.add_column("ID")
-    table.add_column("タイトル")
-    table.add_column("ワーカー")
-    table.add_column("状態")
-    table.add_column("優先度")
+    click.echo(f"\n{'='*80}")
+    click.echo(f"タスク一覧 ({len(list(tasks_to_show))} 件)")
+    click.echo(f"{'='*80}\n")
     
     for task in tasks_to_show:
-        table.add_row(
-            task.get('task_id', ''),
-            task.get('title', '')[:50],
-            task.get('worker_id', ''),
-            task.get('status', ''),
-            task.get('priority', '')
-        )
+        status_emoji = {
+            TaskStatus.PENDING: "⏳",
+            TaskStatus.IN_PROGRESS: "🔄",
+            TaskStatus.COMPLETED: "✅",
+            TaskStatus.FAILED: "❌",
+            TaskStatus.BLOCKED: "🚫"
+        }
+        
+        emoji = status_emoji.get(task.status, "❓")
+        click.echo(f"{emoji} {task.id}: {task.title}")
+        click.echo(f"   ステータス: {task.status.value}")
+        click.echo(f"   担当: {task.assigned_to}")
+        if task.dependencies:
+            click.echo(f"   依存: {', '.join(task.dependencies)}")
+        click.echo()
+
+
+@tasks.command('show')
+@click.argument('task_id')
+def show_task(task_id: str):
+    """タスクの詳細を表示"""
+    project_path = Path.cwd()
+    coordinator = Coordinator(project_path)
     
-    console.print(table)
-    console.print(f"\n合計: {len(tasks_to_show)} 件")
+    task = coordinator.get_task(task_id)
+    if not task:
+        click.echo(f"❌ タスク {task_id} が見つかりません", err=True)
+        return
+    
+    click.echo(f"\n{'='*80}")
+    click.echo(f"タスク詳細: {task.id}")
+    click.echo(f"{'='*80}\n")
+    
+    click.echo(f"タイトル: {task.title}")
+    click.echo(f"説明: {task.description}")
+    click.echo(f"ステータス: {task.status.value}")
+    click.echo(f"優先度: {task.priority.value}")
+    click.echo(f"担当ワーカー: {task.assigned_to}")
+    
+    if task.dependencies:
+        click.echo(f"依存タスク: {', '.join(task.dependencies)}")
+    
+    if task.artifacts:
+        click.echo(f"\n生成されたファイル:")
+        for artifact in task.artifacts:
+            click.echo(f"  - {artifact}")
+    
+    if task.error_message:
+        click.echo(f"\nエラー: {task.error_message}")
 
 
 @tasks.command('execute')
 @click.argument('task_id')
-@click.option('--path', '-p', default='.',
-              help='プロジェクトディレクトリ')
-@click.option('--show-prompt', is_flag=True,
-              help='プロンプトを表示')
-@click.option('--output', '-o',
-              help='プロンプトをファイルに出力')
-@click.option('--guide', is_flag=True,
-              help='実行ガイドを表示')
-def task_execute(task_id: str, path: str, show_prompt: bool,
-                 output: str, guide: bool):
-    """タスク実行用のプロンプトを生成"""
-    project_path = Path(path)
-
-    # tasks.jsonからタスクを読み込み
-    tasks_file = project_path / "shared" / "coordination" / "tasks.json"
-
-    if not tasks_file.exists():
-        console.print("[red]エラー: タスクファイルが見つかりません[/red]")
-        console.print("まず 'cmw start' を実行してタスクを生成してください。")
-        return
-
-    import json
-    from .models import Task
-
-    with open(tasks_file, 'r', encoding='utf-8') as f:
-        tasks_data = json.load(f)
-
-    # 指定されたタスクを検索
-    task_dict = None
-    for t in tasks_data.get('tasks', []):
-        if t.get('task_id') == task_id:
-            task_dict = t
-            break
-
-    if not task_dict:
-        console.print(f"[red]エラー: タスク {task_id} が見つかりません[/red]")
-        return
-
-    # Taskオブジェクトに変換
-    task = Task(**task_dict)
-
-    # PromptGeneratorを初期化
-    generator = PromptGenerator(project_path)
-
-    # ガイド表示
-    if guide:
-        guide_text = generator.generate_execution_guide(task)
-        console.print(guide_text)
-        return
-
-    # プロンプト生成
-    prompt = generator.generate_prompt(task)
-
-    # ファイルに出力
-    if output:
-        output_path = Path(output)
-        with open(output_path, 'w', encoding='utf-8') as f:
-            f.write(prompt)
-        console.print(f"[green]✓[/green] プロンプトを {output} に出力しました")
-        return
-
-    # 画面に表示（デフォルト）
-    if show_prompt or not output:
-        console.print("\n" + "="*70)
-        console.print(f"[bold cyan]タスク {task_id} の実行プロンプト[/bold cyan]")
-        console.print("="*70 + "\n")
-        console.print(prompt)
-        console.print("\n" + "="*70)
-        console.print("\n[yellow]💡 ヒント:[/yellow]")
-        console.print("  このプロンプトをコピーして Claude Code で実行してください")
-        console.print(f"  または: cmw task execute {task_id} --output prompt.md")
-
-
-@main.group()
-def check():
-    """整合性チェックコマンド"""
-    pass
-
-@main.group()
-def check():
-    """整合性チェックコマンド"""
-    pass
-
-
-@check.command('api')
-@click.option('--path', '-p', default='.', 
-              help='プロジェクトディレクトリ')
-def check_api(path: str):
-    """API仕様の整合性をチェック"""
-    project_path = Path(path)
+@click.option('--api-key', envvar='ANTHROPIC_API_KEY', help='Anthropic API key')
+@click.option('--dry-run', is_flag=True, help='プロンプトを表示するだけ（実行しない）')
+def execute_task(task_id: str, api_key: Optional[str], dry_run: bool):
+    """タスクを実行してコードを生成
+    
+    例:
+        cmw tasks execute TASK-001
+        cmw tasks execute TASK-001 --dry-run
+        cmw tasks execute TASK-001 --api-key sk-xxx
+    """
+    project_path = Path.cwd()
+    
+    # .envファイルを読み込む
+    env_file = project_path / ".env"
+    if env_file.exists():
+        load_dotenv(env_file)
+    
+    # Coordinatorを初期化
     coordinator = Coordinator(project_path)
     
-    console.print("[bold]API仕様の整合性をチェック中...[/bold]")
-    results = coordinator.consistency_checker.check_api_consistency()
+    # タスクを取得
+    task = coordinator.get_task(task_id)
+    if not task:
+        click.echo(f"❌ タスク {task_id} が見つかりません", err=True)
+        return
     
-    if not results:
-        console.print("[bold green]✓ 問題ありません[/bold green]")
-    else:
-        console.print(f"[bold red]✗ {len(results)} 件の不一致を検出[/bold red]\n")
-        for issue in results:
-            console.print(f"  • {issue['type']}: {issue['message']}")
-
-
-@check.command('all')
-@click.option('--path', '-p', default='.', 
-              help='プロジェクトディレクトリ')
-def check_all(path: str):
-    """すべての整合性チェックを実行"""
-    project_path = Path(path)
-    coordinator = Coordinator(project_path)
+    # Dry-runモード: プロンプトのみ表示
+    if dry_run:
+        click.echo(f"\n{'='*80}")
+        click.echo(f"生成されたプロンプト (Dry-run)")
+        click.echo(f"{'='*80}\n")
+        
+        generator = PromptGenerator(project_path)
+        prompt = generator.generate_prompt(task)
+        click.echo(prompt)
+        return
     
-    console.print("[bold]全整合性チェックを実行中...[/bold]\n")
+    # APIキーの確認
+    api_key = api_key or os.environ.get('ANTHROPIC_API_KEY')
+    if not api_key:
+        click.echo("❌ エラー: ANTHROPIC_API_KEY が設定されていません", err=True)
+        click.echo("\n以下のいずれかの方法でAPIキーを設定してください:")
+        click.echo("  1. .env ファイルに記載: ANTHROPIC_API_KEY=sk-xxx")
+        click.echo("  2. 環境変数を設定: export ANTHROPIC_API_KEY=sk-xxx")
+        click.echo("  3. コマンドオプション: --api-key sk-xxx")
+        return
     
-    results = coordinator.check_consistency()
-    
-    for check_type, issues in results.items():
-        if not issues:
-            console.print(f"[bold green]✓ {check_type}: OK[/bold green]")
+    try:
+        # API クライアントを初期化
+        api_client = ClaudeAPIClient(api_key)
+        
+        # 実行エンジンを初期化
+        executor = TaskExecutor(api_client, coordinator)
+        
+        # タスクを実行
+        click.echo(f"\n{'='*80}")
+        click.echo(f"タスク {task_id} を実行中...")
+        click.echo(f"{'='*80}\n")
+        
+        result = executor.execute_task(task_id)
+        
+        # 結果を表示
+        if result.success:
+            click.echo(f"\n✅ タスク {task_id} の実行が完了しました!")
+            click.echo(f"実行時間: {result.execution_time:.2f}秒")
+            
+            if result.generated_files:
+                click.echo(f"\n生成されたファイル:")
+                for file in result.generated_files:
+                    click.echo(f"  ✓ {file}")
         else:
-            console.print(f"[bold red]✗ {check_type}: {len(issues)} 件の問題[/bold red]")
+            click.echo(f"\n❌ タスク {task_id} の実行が失敗しました", err=True)
+            click.echo(f"エラー: {result.error}")
+            
+    except Exception as e:
+        click.echo(f"\n❌ 実行エラー: {str(e)}", err=True)
 
 
-@main.group()
-def templates():
-    """テンプレート管理コマンド"""
-    pass
-
-
-@templates.command('list')
-def templates_list():
-    """利用可能なテンプレート一覧"""
-    template_mgr = TemplateManager()
-    available = template_mgr.list_templates()
+@tasks.command('execute-all')
+@click.option('--api-key', envvar='ANTHROPIC_API_KEY', help='Anthropic API key')
+@click.option('--continue-on-error', is_flag=True, help='エラーが発生しても続行')
+def execute_all_tasks(api_key: Optional[str], continue_on_error: bool):
+    """実行可能な全タスクを順次実行"""
+    project_path = Path.cwd()
     
-    table = Table(title="利用可能なテンプレート")
-    table.add_column("ID", style="cyan")
-    table.add_column("名前")
-    table.add_column("説明")
+    # .envファイルを読み込む
+    env_file = project_path / ".env"
+    if env_file.exists():
+        load_dotenv(env_file)
     
-    for tmpl in available:
-        table.add_row(
-            tmpl['id'],
-            tmpl['name'],
-            tmpl['description']
-        )
+    # APIキーの確認
+    api_key = api_key or os.environ.get('ANTHROPIC_API_KEY')
+    if not api_key:
+        click.echo("❌ エラー: ANTHROPIC_API_KEY が設定されていません", err=True)
+        return
     
-    console.print(table)
+    try:
+        # 初期化
+        api_client = ClaudeAPIClient(api_key)
+        coordinator = Coordinator(project_path)
+        executor = TaskExecutor(api_client, coordinator)
+        
+        # 実行可能なタスクを取得
+        executable_tasks = coordinator.get_executable_tasks()
+        
+        if not executable_tasks:
+            click.echo("実行可能なタスクがありません")
+            return
+        
+        click.echo(f"\n実行可能なタスク: {len(executable_tasks)} 件")
+        for task in executable_tasks:
+            click.echo(f"  - {task.id}: {task.title}")
+        
+        # 確認
+        if not click.confirm("\nこれらのタスクを実行しますか?"):
+            return
+        
+        # 実行
+        results = executor.execute_multiple_tasks([t.id for t in executable_tasks])
+        
+        # サマリー表示
+        click.echo(f"\n{'='*80}")
+        click.echo("実行サマリー")
+        click.echo(f"{'='*80}")
+        
+        success_count = sum(1 for r in results if r.success)
+        failed_count = len(results) - success_count
+        
+        click.echo(f"成功: {success_count} / {len(results)}")
+        click.echo(f"失敗: {failed_count} / {len(results)}")
+        
+    except Exception as e:
+        click.echo(f"\n❌ 実行エラー: {str(e)}", err=True)
+
+
+@cli.command()
+def status():
+    """プロジェクトの進捗状況を表示"""
+    project_path = Path.cwd()
+    coordinator = Coordinator(project_path)
+    
+    if not coordinator.tasks:
+        click.echo("タスクが見つかりません")
+        return
+    
+    # ステータスごとにカウント
+    status_counts = {
+        TaskStatus.PENDING: 0,
+        TaskStatus.IN_PROGRESS: 0,
+        TaskStatus.COMPLETED: 0,
+        TaskStatus.FAILED: 0,
+        TaskStatus.BLOCKED: 0
+    }
+    
+    for task in coordinator.tasks.values():
+        status_counts[task.status] += 1
+    
+    total = len(coordinator.tasks)
+    completed = status_counts[TaskStatus.COMPLETED]
+    progress = (completed / total * 100) if total > 0 else 0
+    
+    click.echo(f"\n{'='*80}")
+    click.echo("プロジェクト進捗状況")
+    click.echo(f"{'='*80}\n")
+    
+    click.echo(f"全体進捗: {completed}/{total} タスク完了 ({progress:.1f}%)")
+    click.echo(f"\nステータス別:")
+    click.echo(f"  ⏳ 待機中: {status_counts[TaskStatus.PENDING]}")
+    click.echo(f"  🔄 実行中: {status_counts[TaskStatus.IN_PROGRESS]}")
+    click.echo(f"  ✅ 完了: {status_counts[TaskStatus.COMPLETED]}")
+    click.echo(f"  ❌ 失敗: {status_counts[TaskStatus.FAILED]}")
+    click.echo(f"  🚫 ブロック: {status_counts[TaskStatus.BLOCKED]}")
 
 
 if __name__ == '__main__':
-    main()
+    cli()

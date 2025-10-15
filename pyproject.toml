@@ -55,7 +55,7 @@ Repository = "https://github.com/yourusername/claude-multi-worker-framework"
 Issues = "https://github.com/yourusername/claude-multi-worker-framework/issues"
 
 [project.scripts]
-cmw = "cmw.cli:main"
+cmw = "cmw.cli:cli"
 
 [tool.setuptools.packages.find]
 where = ["src"]

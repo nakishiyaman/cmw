@@ -1,457 +1,247 @@
 """
-Coordinator - オーケストレーションの中核
+コーディネーター機能
+
+タスクの管理、依存関係の解決、プロンプト生成などを行います。
 """
 import json
-import time
 from pathlib import Path
-from typing import Dict, List, Optional, Any
-from datetime import datetime
-import yaml
+from typing import Optional, List, Dict
+from .models import Task, TaskStatus, Worker
 
-from .models import (
-    WorkerConfig, Task, WorkerProgress, ProjectProgress,
-    Decision, TaskStatus, WorkerStatus, TaskPriority, ProjectConfig
-)
-from .workers import WorkerInstance
-from .utils import DocumentParser, ConsistencyChecker, Logger
+
+class PromptGenerator:
+    """タスク実行用のプロンプトを生成"""
+    
+    def __init__(self, project_path: Path):
+        """
+        プロンプトジェネレーターを初期化
+        
+        Args:
+            project_path: プロジェクトのルートパス
+        """
+        self.project_path = project_path
+        self.docs_path = project_path / "shared" / "docs"
+        self.coordination_path = project_path / "shared" / "coordination"
+        self.artifacts_path = project_path / "shared" / "artifacts"
+    
+    def generate_prompt(self, task: Task) -> str:
+        """
+        タスク実行用のプロンプトを生成
+        
+        Args:
+            task: 実行するタスク
+            
+        Returns:
+            生成されたプロンプト
+        """
+        # 関連ドキュメントを読み込む
+        context = self._load_context(task)
+        
+        # プロンプトを構築
+        prompt = f"""# タスク実行依頼
+
+## タスク情報
+- **ID**: {task.id}
+- **タイトル**: {task.title}
+- **説明**: {task.description}
+- **担当ワーカー**: {task.assigned_to}
+- **優先度**: {task.priority.value}
+
+## 依存タスク
+{self._format_dependencies(task)}
+
+## プロジェクトコンテキスト
+{context}
+
+## 実装要件
+{task.description}
+
+## 指示
+上記のタスク情報とコンテキストに基づいて、以下を実装してください：
+
+1. **コードの実装**: 
+   - タスクの要件を満たすコードを記述
+   - ベストプラクティスに従う
+   - 適切なエラーハンドリングを含める
+
+2. **ファイル形式**:
+   - コードブロックは ```python または ```typescript などの適切な言語指定を使用
+   - 各ファイルには明確なファイルパスをコメントで記載
+
+3. **成果物の配置**:
+   - Backend: `shared/artifacts/backend/`
+   - Frontend: `shared/artifacts/frontend/`
+   - Database: `shared/artifacts/backend/core/`
+   - Tests: `shared/artifacts/tests/`
+
+実装を開始してください。
+"""
+        return prompt
+    
+    def _load_context(self, task: Task) -> str:
+        """
+        タスクに関連するコンテキスト情報を読み込む
+        
+        Args:
+            task: タスク
+            
+        Returns:
+            コンテキスト情報（文字列）
+        """
+        context_parts = []
+        
+        # requirements.md を読み込む
+        requirements_file = self.docs_path / "requirements.md"
+        if requirements_file.exists():
+            with open(requirements_file, 'r', encoding='utf-8') as f:
+                context_parts.append(f"### requirements.md\n{f.read()}\n")
+        
+        # API仕様書を読み込む
+        api_spec_file = self.docs_path / "api-spec.md"
+        if api_spec_file.exists():
+            with open(api_spec_file, 'r', encoding='utf-8') as f:
+                context_parts.append(f"### API仕様\n{f.read()}\n")
+        
+        return "\n".join(context_parts) if context_parts else "コンテキスト情報なし"
+    
+    def _format_dependencies(self, task: Task) -> str:
+        """
+        依存タスクをフォーマット
+        
+        Args:
+            task: タスク
+            
+        Returns:
+            フォーマットされた依存タスク情報
+        """
+        if not task.dependencies:
+            return "依存タスクなし"
+        
+        return "\n".join([f"- {dep_id}" for dep_id in task.dependencies])
 
 
 class Coordinator:
-    """
-    プロジェクト全体を統括するCoordinator
-    """
+    """タスクの管理と調整を行うコーディネーター"""
     
     def __init__(self, project_path: Path):
+        """
+        コーディネーターを初期化
+        
+        Args:
+            project_path: プロジェクトのルートパス
+        """
         self.project_path = project_path
-        self.shared_path = project_path / "shared"
-        self.docs_path = self.shared_path / "docs"
-        self.coordination_path = self.shared_path / "coordination"
-        self.artifacts_path = self.shared_path / "artifacts"
-        
-        self.logger = Logger(self.coordination_path / "coordinator.log")
-        self.doc_parser = DocumentParser(self.docs_path)
-        self.consistency_checker = ConsistencyChecker(
-            self.docs_path, 
-            self.artifacts_path
-        )
-        
-        self.config: Optional[ProjectConfig] = None
-        self.workers: Dict[str, WorkerInstance] = {}
+        self.tasks_file = project_path / "shared" / "coordination" / "tasks.json"
+        self.progress_file = project_path / "shared" / "coordination" / "progress.json"
         self.tasks: Dict[str, Task] = {}
-        self.decisions: List[Decision] = []
+        self.workers: Dict[str, Worker] = {}
         
-        self._ensure_directories()
-        self.load_configuration()
+        # タスクとワーカーを読み込む
+        self._load_tasks()
     
-    def _ensure_directories(self):
-        """必要なディレクトリを作成"""
-        for path in [self.docs_path, self.coordination_path, self.artifacts_path]:
-            path.mkdir(parents=True, exist_ok=True)
-    
-    def load_configuration(self):
-        """設定ファイルを読み込み"""
-        config_file = self.project_path / "workers-config.yaml"
-        
-        if not config_file.exists():
-            raise FileNotFoundError(f"設定ファイルが見つかりません: {config_file}")
-        
-        with open(config_file) as f:
-            config_data = yaml.safe_load(f)
-        
-        self.config = ProjectConfig(**config_data)
-        self.logger.info(f"プロジェクト: {self.config.project_name}")
-        self.logger.info(f"ワーカー数: {len(self.config.workers)}")
-        
-        self.initialize_workers()
-        self.build_dependency_graph()
-    
-    def initialize_workers(self):
-        """ワーカーを初期化"""
-        if not self.config:
-            raise RuntimeError("設定が読み込まれていません")
-        
-        for worker_config in self.config.workers:
-            if worker_config.id == 'coordinator':
-                continue  # 自分自身はスキップ
-            
-            worker = WorkerInstance(
-                config=worker_config,
-                shared_path=self.shared_path
-            )
-            self.workers[worker.id] = worker
-            self.logger.info(f"✓ ワーカー初期化: {worker.id} ({worker.role})")
-    
-    def build_dependency_graph(self):
-        """依存関係グラフを構築"""
-        if not self.config:
+    def _load_tasks(self):
+        """tasks.json からタスクを読み込む"""
+        if not self.tasks_file.exists():
             return
         
-        if not self.config.dependency_graph:
-            # 自動生成
-            dep_graph = {}
-            for worker_id, worker in self.workers.items():
-                dep_graph[worker_id] = {
-                    'depends_on': worker.depends_on,
-                    'blocks': self._find_blocked_workers(worker_id)
-                }
-            self.config.dependency_graph = dep_graph
-        
-        self.logger.info("依存関係グラフを構築しました")
-    
-    def _find_blocked_workers(self, worker_id: str) -> List[str]:
-        """このワーカーに依存している他のワーカーを検索"""
-        blocked = []
-        for other_id, other_worker in self.workers.items():
-            if worker_id in other_worker.depends_on:
-                blocked.append(other_id)
-        return blocked
-    
-    def decompose_requirements(self) -> List[Task]:
-        """要件を読み込んでタスクに分解（改善版）"""
-        requirements_file = self.docs_path / "requirements.md"
-        
-        if not requirements_file.exists():
-            self.logger.warning("requirements.md が見つかりません")
-            return []
-        
-        # 要件を解析
-        requirements = self.doc_parser.parse_requirements(requirements_file)
-        
-        # タスクに分解
-        tasks = []
-        task_counter = 1
-        
-        # セクションごとにタスクを生成
-        for section in requirements.get('sections', []):
-            # 機能要件のセクションのみを処理
-            if self._is_feature_section(section):
-                # このセクションから複数のタスクを生成することもある
-                generated_tasks = self._generate_tasks_from_section(section, task_counter)
-                tasks.extend(generated_tasks)
-                task_counter += len(generated_tasks)
-        
-        # 依存関係を自動設定
-        self._setup_task_dependencies(tasks)
-        
-        self.logger.info(f"{len(tasks)} 個のタスクを生成しました")
-        return tasks
-    
-    def _is_feature_section(self, section: Dict[str, Any]) -> bool:
-        """機能要件のセクションかどうかを判定"""
-        title = section.get('title', '').lower()
-        
-        # 除外するセクション
-        exclude_keywords = [
-            'プロジェクト概要', '非機能要件', '技術スタック', 
-            '画面一覧', '優先順位', 'phase'
-        ]
-        
-        for keyword in exclude_keywords:
-            if keyword.lower() in title:
-                return False
-        
-        # 機能要件のキーワード
-        include_keywords = ['機能', 'タスク', '管理', '認証', '検索', '表示']
-        
-        for keyword in include_keywords:
-            if keyword in title:
-                return True
-        
-        return False
-    
-    def _generate_tasks_from_section(self, section: Dict[str, Any], 
-                                    start_counter: int) -> List[Task]:
-        """セクションから複数のタスクを生成"""
-        tasks = []
-        title = section.get('title', '')
-        
-        # セクションの内容に応じてタスクを生成
-        
-        # 1. データベース関連タスク（最初に実行）
-        if self._requires_database(section):
-            task = Task(
-                task_id=f"TASK-{start_counter:03d}",
-                worker_id="database",
-                title=f"データベース設計: {title}",
-                priority=TaskPriority.HIGH,
-                based_on=[f"/shared/docs/requirements.md#{section.get('id', '')}",
-                         "/shared/docs/data-models.json"],
-                instructions={
-                    'section': title,
-                    'description': '該当機能のデータモデルとマイグレーションを作成'
-                },
-                deliverables=[
-                    "/shared/artifacts/database/migrations/",
-                    "/shared/artifacts/database/models.py"
-                ]
-            )
-            tasks.append(task)
-            start_counter += 1
-        
-        # 2. バックエンドAPI タスク
-        if self._requires_backend(section):
-            task = Task(
-                task_id=f"TASK-{start_counter:03d}",
-                worker_id="backend",
-                title=f"バックエンドAPI実装: {title}",
-                priority=TaskPriority.HIGH,
-                based_on=[f"/shared/docs/requirements.md#{section.get('id', '')}",
-                         "/shared/docs/api-specification.yaml"],
-                instructions={
-                    'section': title,
-                    'description': '該当機能のREST APIエンドポイントを実装'
-                },
-                deliverables=[
-                    "/shared/artifacts/backend/routers/",
-                    "/shared/artifacts/backend/crud/"
-                ]
-            )
-            tasks.append(task)
-            start_counter += 1
-        
-        # 3. フロントエンドUI タスク
-        if self._requires_frontend(section):
-            task = Task(
-                task_id=f"TASK-{start_counter:03d}",
-                worker_id="frontend",
-                title=f"フロントエンドUI実装: {title}",
-                priority=TaskPriority.NORMAL,
-                based_on=[f"/shared/docs/requirements.md#{section.get('id', '')}",
-                         "/shared/docs/api-specification.yaml"],
-                instructions={
-                    'section': title,
-                    'description': '該当機能のUIコンポーネントを実装'
-                },
-                deliverables=[
-                    "/shared/artifacts/frontend/src/pages/",
-                    "/shared/artifacts/frontend/src/components/"
-                ]
-            )
-            tasks.append(task)
-            start_counter += 1
-        
-        return tasks
-    
-    def _requires_database(self, section: Dict[str, Any]) -> bool:
-        """データベース設計が必要か判定"""
-        title = section.get('title', '').lower()
-        keywords = ['管理', '登録', '作成', '保存', 'crud', 'データ']
-        return any(kw in title for kw in keywords)
-    
-    def _requires_backend(self, section: Dict[str, Any]) -> bool:
-        """バックエンド実装が必要か判定"""
-        # ほぼすべての機能要件でバックエンドが必要
-        return True
-    
-    def _requires_frontend(self, section: Dict[str, Any]) -> bool:
-        """フロントエンド実装が必要か判定"""
-        title = section.get('title', '').lower()
-        # 「画面」「表示」「UI」などがあればフロントエンド必要
-        keywords = ['表示', '画面', 'ui', 'ユーザー', '一覧', '詳細', '編集', '作成']
-        return any(kw in title for kw in keywords)
-    
-    def _setup_task_dependencies(self, tasks: List[Task]):
-        """タスクの依存関係を自動設定"""
-        # データベースタスクのID
-        db_task_ids = [t.task_id for t in tasks if t.worker_id == "database"]
-        
-        # バックエンドタスクのID
-        backend_task_ids = [t.task_id for t in tasks if t.worker_id == "backend"]
-        
-        for task in tasks:
-            # バックエンドはデータベースに依存
-            if task.worker_id == "backend" and db_task_ids:
-                task.depends_on_tasks = db_task_ids.copy()
+        with open(self.tasks_file, 'r', encoding='utf-8') as f:
+            data = json.load(f)
             
-            # フロントエンドはバックエンドに依存
-            elif task.worker_id == "frontend" and backend_task_ids:
-                task.depends_on_tasks = backend_task_ids.copy()
+            # タスクを読み込む
+            for task_data in data.get("tasks", []):
+                task = Task.from_dict(task_data)
+                self.tasks[task.id] = task
             
-            # テストはすべてに依存
-            elif task.worker_id == "test":
-                task.depends_on_tasks = [t.task_id for t in tasks 
-                                        if t.worker_id != "test"]
-
-    def _create_task_from_section(self, section: Dict[str, Any], counter: int) -> Optional[Task]:
-        """要件セクションからタスクを生成"""
-        # 適切なワーカーを見つける
-        suitable_workers = self._find_suitable_workers_for_section(section)
-        
-        if not suitable_workers:
-            return None
-        
-        worker_id = suitable_workers[0].id
-        
-        return Task(
-            task_id=f"TASK-{counter:03d}",
-            worker_id=worker_id,
-            title=section.get('title', ''),
-            priority=TaskPriority.NORMAL,
-            based_on=[f"/shared/docs/requirements.md#{section.get('id', '')}"],
-            instructions=section.get('content', {}),
-            deliverables=[]
-        )
+            # ワーカーを読み込む
+            for worker_data in data.get("workers", []):
+                worker = Worker(
+                    id=worker_data["id"],
+                    name=worker_data["name"],
+                    description=worker_data["description"],
+                    skills=worker_data.get("skills", []),
+                    assigned_tasks=worker_data.get("assigned_tasks", [])
+                )
+                self.workers[worker.id] = worker
     
-    def _find_suitable_workers_for_section(self, section: Dict[str, Any]) -> List[WorkerInstance]:
-        """セクションに適したワーカーを検索"""
-        suitable = []
-        keywords = section.get('keywords', [])
+    def get_task(self, task_id: str) -> Optional[Task]:
+        """
+        タスクを取得
         
-        for worker in self.workers.values():
-            # キーワードと責任範囲のマッチング
-            if any(kw in worker.responsibilities for kw in keywords):
-                suitable.append(worker)
-        
-        return suitable
-    
-    def assign_tasks(self, tasks: List[Task]):
-        """タスクをワーカーに割り当て"""
-        for task in tasks:
-            task.status = TaskStatus.ASSIGNED
-            task.assigned_at = datetime.now()
-            self.tasks[task.task_id] = task
+        Args:
+            task_id: タスクID
             
-            # ワーカーに通知
-            worker = self.workers.get(task.worker_id)
-            if worker:
-                worker.assign_task(task)
-                self.logger.info(f"✓ タスク割り当て: {task.title} → {task.worker_id}")
-        
-        # タスクファイルに保存
-        self._save_tasks()
+        Returns:
+            タスク（存在しない場合はNone）
+        """
+        return self.tasks.get(task_id)
     
-    def _save_tasks(self):
-        """タスクをJSONファイルに保存"""
-        tasks_file = self.coordination_path / "tasks.json"
-        tasks_data = {
-            "tasks": [task.model_dump(mode='json') for task in self.tasks.values()]
+    def update_task_status(
+        self, 
+        task_id: str, 
+        status: TaskStatus,
+        error_message: Optional[str] = None,
+        artifacts: Optional[List[str]] = None
+    ):
+        """
+        タスクのステータスを更新
+        
+        Args:
+            task_id: タスクID
+            status: 新しいステータス
+            error_message: エラーメッセージ（任意）
+            artifacts: 生成されたファイルのリスト（任意）
+        """
+        task = self.tasks.get(task_id)
+        if not task:
+            return
+        
+        task.status = status
+        task.error_message = error_message
+        
+        if artifacts:
+            task.artifacts = artifacts
+        
+        if status == TaskStatus.COMPLETED:
+            from datetime import datetime
+            task.completed_at = datetime.now()
+        
+        # progress.json を更新
+        self._save_progress()
+    
+    def _save_progress(self):
+        """進捗状況を保存"""
+        progress_data = {
+            "tasks": [task.to_dict() for task in self.tasks.values()]
         }
         
-        with open(tasks_file, 'w', encoding='utf-8') as f:
-            json.dump(tasks_data, f, indent=2, ensure_ascii=False, default=str)
+        # ディレクトリが存在しない場合は作成
+        self.progress_file.parent.mkdir(parents=True, exist_ok=True)
+        
+        with open(self.progress_file, 'w', encoding='utf-8') as f:
+            json.dump(progress_data, f, indent=2, ensure_ascii=False)
     
-    def check_progress(self) -> ProjectProgress:
-        """全ワーカーの進捗をチェック"""
-        progress = ProjectProgress(
-            project_name=self.config.project_name if self.config else "Unknown",
-            workers={}
-        )
+    def get_executable_tasks(self) -> List[Task]:
+        """
+        実行可能なタスクのリストを取得
         
-        for worker_id, worker in self.workers.items():
-            worker_progress = worker.get_progress()
-            progress.workers[worker_id] = worker_progress
+        Returns:
+            依存タスクが完了しており実行可能なタスクのリスト
+        """
+        executable = []
         
-        # 全体進捗を計算
-        total_completion = sum(
-            int(wp.completion.rstrip('%')) 
-            for wp in progress.workers.values()
-        )
-        avg_completion = total_completion // len(progress.workers) if progress.workers else 0
-        progress.overall_progress = f"{avg_completion}%"
+        for task in self.tasks.values():
+            if task.status != TaskStatus.PENDING:
+                continue
+            
+            # 依存タスクがすべて完了しているか確認
+            dependencies_met = True
+            for dep_id in task.dependencies:
+                dep_task = self.tasks.get(dep_id)
+                if not dep_task or dep_task.status != TaskStatus.COMPLETED:
+                    dependencies_met = False
+                    break
+            
+            if dependencies_met:
+                executable.append(task)
         
-        # 進捗ファイルに保存
-        self._save_progress(progress)
-        
-        return progress
-    
-    def _save_progress(self, progress: ProjectProgress):
-        """進捗をJSONファイルに保存"""
-        progress_file = self.coordination_path / "progress.json"
-        
-        with open(progress_file, 'w', encoding='utf-8') as f:
-            json.dump(progress.model_dump(mode='json'), f, indent=2, ensure_ascii=False, default=str)
-    
-    def identify_blockers(self) -> List[Dict[str, Any]]:
-        """ブロッカーを特定"""
-        blockers = []
-        
-        for worker_id, worker in self.workers.items():
-            # 依存先の完了チェック
-            for dep_worker_id in worker.depends_on:
-                dep_worker = self.workers.get(dep_worker_id)
-                if dep_worker and dep_worker.status != WorkerStatus.COMPLETED:
-                    blockers.append({
-                        'worker_id': worker_id,
-                        'blocked_by': dep_worker_id,
-                        'reason': f'{dep_worker_id} の作業が未完了'
-                    })
-        
-        return blockers
-    
-    def check_consistency(self) -> Dict[str, Any]:
-        """整合性をチェック"""
-        self.logger.info("整合性チェックを開始")
-        
-        results = {
-            'api': self.consistency_checker.check_api_consistency(),
-            'data_models': self.consistency_checker.check_data_model_consistency(),
-            'security': self.consistency_checker.check_security_compliance()
-        }
-        
-        # 不一致があれば記録
-        for check_type, inconsistencies in results.items():
-            if inconsistencies:
-                self.logger.warning(f"{check_type}: {len(inconsistencies)} 件の不一致")
-        
-        return results
-    
-    def make_decision(self, decision_text: str, based_on: List[Dict[str, str]], 
-                     rationale: str) -> Decision:
-        """意思決定を記録"""
-        decision = Decision(
-            id=f"DEC-{len(self.decisions) + 1:03d}",
-            decision=decision_text,
-            based_on=based_on,
-            rationale=rationale
-        )
-        
-        self.decisions.append(decision)
-        self._save_decisions()
-        
-        return decision
-    
-    def _save_decisions(self):
-        """意思決定ログを保存"""
-        decisions_file = self.coordination_path / "decisions-log.json"
-        decisions_data = {
-            "decisions": [d.model_dump(mode='json') for d in self.decisions]
-        }
-        
-        with open(decisions_file, 'w', encoding='utf-8') as f:
-            json.dump(decisions_data, f, indent=2, ensure_ascii=False, default=str)
-    
-    def run(self, check_interval: int = 300):
-        """Coordinatorのメインループ"""
-        self.logger.info("Coordinator を起動します")
-        
-        # 初期タスク生成
-        tasks = self.decompose_requirements()
-        self.assign_tasks(tasks)
-        
-        try:
-            while not self._all_completed():
-                # 進捗確認
-                progress = self.check_progress()
-                self.logger.info(f"全体進捗: {progress.overall_progress}")
-                
-                # ブロッカー確認
-                blockers = self.identify_blockers()
-                if blockers:
-                    self.logger.warning(f"{len(blockers)} 件のブロッカーを検出")
-                    # TODO: ブロッカー解消ロジック
-                
-                # 整合性チェック
-                consistency_results = self.check_consistency()
-                
-                # 待機
-                time.sleep(check_interval)
-        
-        except KeyboardInterrupt:
-            self.logger.info("Coordinator を停止します")
-    
-    def _all_completed(self) -> bool:
-        """全タスクが完了したか"""
-        return all(
-            task.status == TaskStatus.COMPLETED 
-            for task in self.tasks.values()
-        )
+        return executable

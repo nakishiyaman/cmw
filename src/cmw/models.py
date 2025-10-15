@@ -1,132 +1,131 @@
 """
-Core data models for Claude Multi-Worker Framework
+データモデル定義
+
+タスク、ワーカー、実行結果などのデータ構造を定義します。
 """
-from datetime import datetime
+from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field
-
-
-class WorkerType(str, Enum):
-    """ワーカータイプ"""
-    ORCHESTRATOR = "orchestrator"
-    IMPLEMENTATION = "implementation"
-    QUALITY_ASSURANCE = "quality_assurance"
-    INFRASTRUCTURE = "infrastructure"
-    DOCUMENTATION = "documentation"
-    SECURITY = "security"
-    COMPLIANCE = "compliance"
-
-
-class WorkerStatus(str, Enum):
-    """ワーカーの状態"""
-    IDLE = "idle"
-    WORKING = "working"
-    BLOCKED = "blocked"
-    COMPLETED = "completed"
-    ERROR = "error"
+from typing import Optional, List
+from datetime import datetime
 
 
 class TaskStatus(str, Enum):
-    """タスクの状態"""
-    PENDING = "pending"
-    ASSIGNED = "assigned"
-    IN_PROGRESS = "in_progress"
-    COMPLETED = "completed"
-    BLOCKED = "blocked"
-    FAILED = "failed"
+    """タスクの実行ステータス"""
+    PENDING = "pending"          # 実行待機中
+    IN_PROGRESS = "in_progress"  # 実行中
+    COMPLETED = "completed"      # 完了
+    FAILED = "failed"           # 失敗
+    BLOCKED = "blocked"         # ブロック中（依存タスク未完了）
 
 
-class TaskPriority(str, Enum):
+class Priority(str, Enum):
     """タスクの優先度"""
-    CRITICAL = "critical"
     HIGH = "high"
-    NORMAL = "normal"
+    MEDIUM = "medium"
     LOW = "low"
 
 
-class WorkerConfig(BaseModel):
-    """ワーカー設定"""
+@dataclass
+class Task:
+    """タスク定義"""
     id: str
-    role: str
-    type: WorkerType
-    skills: List[str] = Field(default_factory=list)
-    responsibilities: List[str] = Field(default_factory=list)
-    reads: List[str] = Field(default_factory=list)
-    writes: List[str] = Field(default_factory=list)
-    depends_on: List[str] = Field(default_factory=list)
-    priority: str = "normal"
-    output_format: List[str] = Field(default_factory=list)
-
-
-class Task(BaseModel):
-    """タスク"""
-    task_id: str
-    worker_id: str
     title: str
-    priority: TaskPriority = TaskPriority.NORMAL
+    description: str
+    assigned_to: str  # Worker ID
     status: TaskStatus = TaskStatus.PENDING
-    based_on: List[str] = Field(default_factory=list)
-    instructions: Dict[str, Any] = Field(default_factory=dict)
-    deliverables: List[str] = Field(default_factory=list)
-    depends_on_tasks: List[str] = Field(default_factory=list)
-    assigned_at: Optional[datetime] = None
-    started_at: Optional[datetime] = None
+    priority: Priority = Priority.MEDIUM
+    dependencies: List[str] = field(default_factory=list)  # 依存タスクIDのリスト
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
-    deadline: Optional[datetime] = None
+    artifacts: List[str] = field(default_factory=list)  # 生成されたファイルのパス
+    error_message: Optional[str] = None
+    
+    def __post_init__(self):
+        """初期化後の処理"""
+        if self.created_at is None:
+            self.created_at = datetime.now()
+        if self.updated_at is None:
+            self.updated_at = datetime.now()
+    
+    def to_dict(self) -> dict:
+        """辞書形式に変換"""
+        return {
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "assigned_to": self.assigned_to,
+            "status": self.status.value,
+            "priority": self.priority.value,
+            "dependencies": self.dependencies,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "artifacts": self.artifacts,
+            "error_message": self.error_message
+        }
+    
+    @classmethod
+    def from_dict(cls, data: dict) -> "Task":
+        """辞書から Task を作成"""
+        # datetime文字列をパース
+        created_at = datetime.fromisoformat(data["created_at"]) if data.get("created_at") else None
+        updated_at = datetime.fromisoformat(data["updated_at"]) if data.get("updated_at") else None
+        completed_at = datetime.fromisoformat(data["completed_at"]) if data.get("completed_at") else None
+        
+        return cls(
+            id=data["id"],
+            title=data["title"],
+            description=data["description"],
+            assigned_to=data["assigned_to"],
+            status=TaskStatus(data.get("status", "pending")),
+            priority=Priority(data.get("priority", "medium")),
+            dependencies=data.get("dependencies", []),
+            created_at=created_at,
+            updated_at=updated_at,
+            completed_at=completed_at,
+            artifacts=data.get("artifacts", []),
+            error_message=data.get("error_message")
+        )
 
 
-class Blocker(BaseModel):
-    """ブロッカー"""
-    reason: str
-    waiting_for: str
-    estimated_unblock: Optional[datetime] = None
-
-
-class WorkerProgress(BaseModel):
-    """ワーカーの進捗"""
-    worker_id: str
-    status: WorkerStatus
-    completion: str  # "70%" など
-    current_task: Optional[str] = None
-    completed_tasks: List[str] = Field(default_factory=list)
-    blockers: List[Blocker] = Field(default_factory=list)
-    last_update: datetime = Field(default_factory=datetime.now)
-
-class ProjectProgress(BaseModel):
-    """プロジェクト全体の進捗"""
-    project_name: str
-    updated_at: datetime = Field(default_factory=datetime.now)
-    overall_progress: str = "0%"
-    workers: Dict[str, WorkerProgress] = Field(default_factory=dict)
-    milestones: Dict[str, Any] = Field(default_factory=dict)
-
-class Decision(BaseModel):
-    """意思決定のログ"""
+@dataclass
+class Worker:
+    """ワーカー定義"""
     id: str
-    timestamp: datetime = Field(default_factory=datetime.now)
-    decision: str
-    based_on: List[Dict[str, str]] = Field(default_factory=list)
-    rationale: str
-    instructions_sent: Optional[str] = None
-    action: Optional[str] = None
+    name: str
+    description: str
+    skills: List[str] = field(default_factory=list)
+    assigned_tasks: List[str] = field(default_factory=list)  # タスクIDのリスト
+    
+    def to_dict(self) -> dict:
+        """辞書形式に変換"""
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "skills": self.skills,
+            "assigned_tasks": self.assigned_tasks
+        }
 
 
-class InconsistencyReport(BaseModel):
-    """整合性チェックレポート"""
-    check_type: str  # "api", "data_model", "security" など
-    timestamp: datetime = Field(default_factory=datetime.now)
-    inconsistencies: List[Dict[str, Any]] = Field(default_factory=list)
-    severity: str  # "critical", "high", "medium", "low"
-    recommended_actions: List[str] = Field(default_factory=list)
-
-
-class ProjectConfig(BaseModel):
-    """プロジェクト設定"""
-    project_name: str
-    description: Optional[str] = None
-    version: str = "1.0"
-    settings: Dict[str, Any] = Field(default_factory=dict)
-    workers: List[WorkerConfig] = Field(default_factory=list)
-    dependency_graph: Dict[str, Any] = Field(default_factory=dict)
-    milestones: List[Dict[str, Any]] = Field(default_factory=list)
+@dataclass
+class ExecutionResult:
+    """タスク実行結果"""
+    success: bool
+    task_id: str
+    generated_files: List[str] = field(default_factory=list)
+    output: Optional[str] = None
+    error: Optional[str] = None
+    execution_time: Optional[float] = None  # 実行時間（秒）
+    
+    def to_dict(self) -> dict:
+        """辞書形式に変換"""
+        return {
+            "success": self.success,
+            "task_id": self.task_id,
+            "generated_files": self.generated_files,
+            "output": self.output,
+            "error": self.error,
+            "execution_time": self.execution_time
+        }

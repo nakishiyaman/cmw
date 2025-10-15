@@ -1,36 +1,24 @@
 """
 Claude Multi-Worker Framework
-Document-Driven Multi-Agent Development Orchestration
+
+マルチワーカーアーキテクチャでソフトウェア開発を自動化するフレームワーク
 """
 
 __version__ = "0.1.0"
-__author__ = "Your Name"
-__email__ = "your.email@example.com"
 
-from .coordinator import Coordinator
-from .workers import WorkerInstance
-from .models import (
-    WorkerConfig,
-    Task,
-    WorkerProgress,
-    ProjectProgress,
-    Decision,
-    WorkerType,
-    WorkerStatus,
-    TaskStatus,
-    TaskPriority
-)
+from .models import Task, TaskStatus, Worker, ExecutionResult, Priority
+from .api_client import ClaudeAPIClient
+from .coordinator import Coordinator, PromptGenerator
+from .executor import TaskExecutor
 
 __all__ = [
-    "Coordinator",
-    "WorkerInstance",
-    "WorkerConfig",
     "Task",
-    "WorkerProgress",
-    "ProjectProgress",
-    "Decision",
-    "WorkerType",
-    "WorkerStatus",
     "TaskStatus",
-    "TaskPriority",
+    "Worker",
+    "ExecutionResult",
+    "Priority",
+    "ClaudeAPIClient",
+    "Coordinator",
+    "PromptGenerator",
+    "TaskExecutor",
 ]
