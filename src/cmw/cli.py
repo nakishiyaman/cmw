@@ -9,6 +9,7 @@ from rich.table import Table
 from rich.progress import Progress
 
 from .coordinator import Coordinator
+from .prompt_generator import PromptGenerator
 from .templates import TemplateManager
 from . import __version__
 
@@ -291,6 +292,86 @@ def tasks_list(path: str, status: str):
     console.print(table)
     console.print(f"\n合計: {len(tasks_to_show)} 件")
 
+
+@tasks.command('execute')
+@click.argument('task_id')
+@click.option('--path', '-p', default='.',
+              help='プロジェクトディレクトリ')
+@click.option('--show-prompt', is_flag=True,
+              help='プロンプトを表示')
+@click.option('--output', '-o',
+              help='プロンプトをファイルに出力')
+@click.option('--guide', is_flag=True,
+              help='実行ガイドを表示')
+def task_execute(task_id: str, path: str, show_prompt: bool,
+                 output: str, guide: bool):
+    """タスク実行用のプロンプトを生成"""
+    project_path = Path(path)
+
+    # tasks.jsonからタスクを読み込み
+    tasks_file = project_path / "shared" / "coordination" / "tasks.json"
+
+    if not tasks_file.exists():
+        console.print("[red]エラー: タスクファイルが見つかりません[/red]")
+        console.print("まず 'cmw start' を実行してタスクを生成してください。")
+        return
+
+    import json
+    from .models import Task
+
+    with open(tasks_file, 'r', encoding='utf-8') as f:
+        tasks_data = json.load(f)
+
+    # 指定されたタスクを検索
+    task_dict = None
+    for t in tasks_data.get('tasks', []):
+        if t.get('task_id') == task_id:
+            task_dict = t
+            break
+
+    if not task_dict:
+        console.print(f"[red]エラー: タスク {task_id} が見つかりません[/red]")
+        return
+
+    # Taskオブジェクトに変換
+    task = Task(**task_dict)
+
+    # PromptGeneratorを初期化
+    generator = PromptGenerator(project_path)
+
+    # ガイド表示
+    if guide:
+        guide_text = generator.generate_execution_guide(task)
+        console.print(guide_text)
+        return
+
+    # プロンプト生成
+    prompt = generator.generate_prompt(task)
+
+    # ファイルに出力
+    if output:
+        output_path = Path(output)
+        with open(output_path, 'w', encoding='utf-8') as f:
+            f.write(prompt)
+        console.print(f"[green]✓[/green] プロンプトを {output} に出力しました")
+        return
+
+    # 画面に表示（デフォルト）
+    if show_prompt or not output:
+        console.print("\n" + "="*70)
+        console.print(f"[bold cyan]タスク {task_id} の実行プロンプト[/bold cyan]")
+        console.print("="*70 + "\n")
+        console.print(prompt)
+        console.print("\n" + "="*70)
+        console.print("\n[yellow]💡 ヒント:[/yellow]")
+        console.print("  このプロンプトをコピーして Claude Code で実行してください")
+        console.print(f"  または: cmw task execute {task_id} --output prompt.md")
+
+
+@main.group()
+def check():
+    """整合性チェックコマンド"""
+    pass
 
 @main.group()
 def check():
