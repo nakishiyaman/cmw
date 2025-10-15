@@ -1,0 +1,19 @@
+pyyaml>=6.0
+click>=8.0
+rich>=13.0
+watchdog>=3.0
+pydantic>=2.0
+httpx>=0.24
+python-dotenv>=1.0
+
+# Optional: Dashboard
+fastapi>=0.100
+uvicorn>=0.23
+jinja2>=3.1
+
+# Development
+pytest>=7.0
+pytest-asyncio>=0.21
+black>=23.0
+mypy>=1.0
+ruff>=0.1
