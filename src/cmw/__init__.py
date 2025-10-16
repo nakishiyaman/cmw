@@ -9,6 +9,7 @@ __version__ = "0.1.0"
 from .models import Task, TaskStatus, Worker, ExecutionResult, Priority
 from .coordinator import Coordinator, PromptGenerator
 from .task_provider import TaskProvider
+from .state_manager import StateManager, SessionContext
 
 __all__ = [
     "Task",
@@ -19,4 +20,6 @@ __all__ = [
     "Coordinator",
     "PromptGenerator",
     "TaskProvider",
+    "StateManager",
+    "SessionContext",
 ]
