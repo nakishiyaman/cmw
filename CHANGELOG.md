@@ -5,6 +5,44 @@ All notable changes to Claude Multi-Worker Framework will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2025-10-16
+
+### Added
+
+#### Phase 8.6: Task Completion Command
+- **`cmw task complete` コマンド実装**
+  - タスクを完了としてマーク
+  - `--artifacts` オプションで生成ファイルを記録（JSON配列形式）
+  - `--message` オプションで完了メッセージを追加
+  - 既に完了済みのタスクに対する警告表示
+  - エラーハンドリング（存在しないタスク、不正なJSON形式）
+
+### Improved
+
+- **Coordinator進捗管理の強化**
+  - progress.jsonからの進捗読み込み機能
+  - tasks.jsonとprogress.jsonの自動マージ
+  - 完了状態がコマンド間で永続化
+  - completed_at, started_at, failed_at のタイムスタンプサポート
+
+### Testing
+
+- 総テスト数: 273 → 291（+18テスト）
+  - test_cli_complete.py: 10個の新規テスト
+  - test_coordinator.py: 8個の新規テスト
+- 全てのテストがパス
+
+### Validation
+
+- todo-apiプロジェクトでTASK-014を完了マーク
+- ResponseParserが提案するコマンドが実際に動作することを確認
+- 完了状態がコマンド間で正しく保持されることを検証
+
+### Fixed
+
+- Coordinatorがprogress.jsonを読み込まない問題を修正
+- タスクの完了状態が次のコマンド実行時に失われる問題を解決
+
 ## [0.3.0] - 2025-10-16
 
 ### Added
@@ -176,6 +214,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 17タスク、2000行コード、106テスト
   - 全タスク完了、全テストパス
 
+[0.3.1]: https://github.com/nakishiyaman/claude-multi-worker-framework/releases/tag/v0.3.1
 [0.3.0]: https://github.com/nakishiyaman/claude-multi-worker-framework/releases/tag/v0.3.0
 [0.2.0]: https://github.com/nakishiyaman/claude-multi-worker-framework/releases/tag/v0.2.0
 [0.1.0]: https://github.com/nakishiyaman/claude-multi-worker-framework/releases/tag/v0.1.0

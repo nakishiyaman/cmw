@@ -20,9 +20,9 @@ from .git_integration import GitIntegration
 
 
 @click.group()
-@click.version_option(version="0.3.0")
+@click.version_option(version="0.3.1")
 def cli():
-    """Claude Multi-Worker Framework - マルチワーカー開発フレームワーク v0.3.0"""
+    """Claude Multi-Worker Framework - マルチワーカー開発フレームワーク v0.3.1"""
     pass
 
 
