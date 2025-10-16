@@ -14,6 +14,8 @@ from .requirements_parser import RequirementsParser
 from .conflict_detector import ConflictDetector
 from .progress_tracker import ProgressTracker
 from .dashboard import Dashboard
+from .dependency_validator import DependencyValidator
+from .task_filter import TaskFilter
 
 
 @click.group()
@@ -303,6 +305,211 @@ def analyze_conflicts(show_order: bool):
         click.echo(f"   リスクレベル: {usage['risk_level']}")
         click.echo(f"   関連タスク ({len(usage['tasks'])}件): {', '.join(usage['tasks'])}")
         click.echo()
+
+
+@tasks.command('validate')
+@click.option('--fix', is_flag=True, help='検出された問題を自動修正')
+@click.option('--tasks-file', default='shared/coordination/tasks.json',
+              help='検証するtasks.jsonのパス')
+def validate_tasks(fix: bool, tasks_file: str):
+    """タスクの品質を検証
+
+    循環依存、非タスク項目、依存関係の妥当性をチェックします。
+
+    examples:
+        cmw tasks validate
+        cmw tasks validate --fix
+    """
+    from rich.console import Console
+    from rich.panel import Panel
+    from rich.table import Table
+    from rich.text import Text
+
+    console = Console()
+    project_path = Path.cwd()
+    tasks_path = project_path / tasks_file
+
+    if not tasks_path.exists():
+        console.print(f"[red]❌ エラー: {tasks_file} が見つかりません[/red]")
+        console.print(f"\n次のステップ:")
+        console.print(f"  1. cmw tasks generate でタスクを生成")
+        console.print(f"  2. cmw tasks validate で検証")
+        return
+
+    # タスクを読み込み
+    tasks_data = json.loads(tasks_path.read_text(encoding='utf-8'))
+    tasks_list = []
+
+    for task_data in tasks_data.get('tasks', []):
+        from .models import Task, Priority
+        task = Task(
+            id=task_data['id'],
+            title=task_data['title'],
+            description=task_data.get('description', ''),
+            assigned_to=task_data.get('assigned_to', 'unknown'),
+            dependencies=task_data.get('dependencies', []),
+            target_files=task_data.get('target_files', []),
+            acceptance_criteria=task_data.get('acceptance_criteria', []),
+            priority=Priority(task_data.get('priority', 'medium'))
+        )
+        tasks_list.append(task)
+
+    # 検証を実行
+    validator = DependencyValidator()
+    task_filter = TaskFilter()
+
+    console.print(Panel.fit(
+        "🔍 タスクの品質を検証中...",
+        border_style="blue"
+    ))
+
+    # 1. 循環依存チェック
+    console.print("\n[bold cyan]1. 循環依存チェック[/bold cyan]")
+    cycles = validator.detect_cycles(tasks_list)
+
+    if cycles:
+        console.print(f"[yellow]⚠️  {len(cycles)}件の循環依存を検出しました:[/yellow]\n")
+
+        for i, cycle in enumerate(cycles, 1):
+            cycle_str = " → ".join(cycle) + f" → {cycle[0]}"
+            console.print(f"  {i}. {cycle_str}")
+
+        if fix:
+            console.print(f"\n[blue]🔧 自動修正を適用中...[/blue]")
+            suggestions = validator.suggest_fixes(cycles, tasks_list)
+
+            # 修正提案を表示
+            for suggestion in suggestions:
+                console.print(f"\n循環: {' ↔ '.join(suggestion['cycle'])}")
+                for fix_suggestion in suggestion['suggestions'][:1]:  # 最も信頼度の高い提案のみ
+                    console.print(f"  ✓ {fix_suggestion['from_task']} → {fix_suggestion['to_task']} を削除")
+                    console.print(f"    理由: {fix_suggestion['reason']}")
+                    console.print(f"    信頼度: {fix_suggestion['confidence']*100:.0f}%")
+
+            # 自動修正を適用
+            tasks_list = validator.auto_fix_cycles(tasks_list, cycles, auto_apply=True)
+
+            # 残りの循環をチェック
+            remaining_cycles = validator.detect_cycles(tasks_list)
+            if remaining_cycles:
+                console.print(f"\n[yellow]⚠️  {len(remaining_cycles)}件の循環依存が残っています[/yellow]")
+            else:
+                console.print(f"\n[green]✅ 全ての循環依存を解決しました[/green]")
+
+                # tasks.jsonを更新
+                tasks_data['tasks'] = [
+                    {
+                        'id': task.id,
+                        'title': task.title,
+                        'description': task.description,
+                        'assigned_to': task.assigned_to,
+                        'dependencies': task.dependencies,
+                        'target_files': task.target_files,
+                        'acceptance_criteria': task.acceptance_criteria,
+                        'priority': task.priority
+                    }
+                    for task in tasks_list
+                ]
+                tasks_path.write_text(json.dumps(tasks_data, ensure_ascii=False, indent=2), encoding='utf-8')
+                console.print(f"[green]💾 {tasks_file} を更新しました[/green]")
+        else:
+            console.print(f"\n[dim]ヒント: --fix オプションで自動修正できます[/dim]")
+    else:
+        console.print("[green]✅ 循環依存は見つかりませんでした[/green]")
+
+    # 2. 非タスク項目チェック
+    console.print("\n[bold cyan]2. 非タスク項目チェック[/bold cyan]")
+    implementation_tasks, non_tasks = task_filter.filter_tasks(tasks_list)
+
+    if non_tasks:
+        console.print(f"[yellow]⚠️  {len(non_tasks)}件の非タスク項目を検出しました:[/yellow]\n")
+
+        for non_task in non_tasks:
+            console.print(f"  • {non_task.id}: {non_task.title}")
+
+        console.print(f"\n[dim]これらは実装タスクではなく参照情報です[/dim]")
+
+        if fix:
+            console.print(f"\n[blue]🔧 非タスク項目を除外中...[/blue]")
+            tasks_list = implementation_tasks
+
+            # tasks.jsonを更新
+            tasks_data['tasks'] = [
+                {
+                    'id': task.id,
+                    'title': task.title,
+                    'description': task.description,
+                    'assigned_to': task.assigned_to,
+                    'dependencies': task.dependencies,
+                    'target_files': task.target_files,
+                    'acceptance_criteria': task.acceptance_criteria,
+                    'priority': task.priority
+                }
+                for task in tasks_list
+            ]
+            tasks_path.write_text(json.dumps(tasks_data, ensure_ascii=False, indent=2), encoding='utf-8')
+            console.print(f"[green]✅ {len(non_tasks)}件の非タスク項目を除外しました[/green]")
+            console.print(f"[green]💾 {tasks_file} を更新しました[/green]")
+        else:
+            console.print(f"\n[dim]ヒント: --fix オプションで自動除外できます[/dim]")
+    else:
+        console.print("[green]✅ 全てのタスクが実装タスクです[/green]")
+
+    # 3. 依存関係の妥当性チェック
+    console.print("\n[bold cyan]3. 依存関係の妥当性チェック[/bold cyan]")
+    validation_result = validator.validate_dependencies(tasks_list)
+
+    issues_found = False
+
+    if validation_result['missing_dependencies']:
+        issues_found = True
+        console.print(f"[red]❌ 存在しない依存先が見つかりました:[/red]\n")
+        for issue in validation_result['missing_dependencies']:
+            console.print(f"  • {issue}")
+
+    if validation_result['invalid_dependencies']:
+        issues_found = True
+        console.print(f"[red]❌ 不正な依存関係が見つかりました:[/red]\n")
+        for issue in validation_result['invalid_dependencies']:
+            console.print(f"  • {issue}")
+
+    if not issues_found:
+        console.print("[green]✅ 全ての依存関係が正しく設定されています[/green]")
+
+    # サマリー
+    console.print("\n" + "="*80)
+
+    summary_table = Table(show_header=True, header_style="bold magenta")
+    summary_table.add_column("検証項目", style="cyan")
+    summary_table.add_column("結果", justify="center")
+    summary_table.add_column("詳細")
+
+    # 循環依存
+    cycle_status = "✅ PASS" if not cycles else f"⚠️  {len(cycles)}件"
+    cycle_detail = "循環依存なし" if not cycles else ("修正済み" if fix and not validator.detect_cycles(tasks_list) else "要修正")
+    summary_table.add_row("循環依存", cycle_status, cycle_detail)
+
+    # 非タスク項目
+    non_task_status = "✅ PASS" if not non_tasks else f"⚠️  {len(non_tasks)}件"
+    non_task_detail = "全て実装タスク" if not non_tasks else ("除外済み" if fix else "要除外")
+    summary_table.add_row("非タスク項目", non_task_status, non_task_detail)
+
+    # 依存関係
+    dep_status = "✅ PASS" if not issues_found else "❌ FAIL"
+    dep_detail = "依存関係OK" if not issues_found else "要修正"
+    summary_table.add_row("依存関係の妥当性", dep_status, dep_detail)
+
+    console.print(summary_table)
+    console.print("="*80 + "\n")
+
+    # 最終メッセージ
+    if cycles or non_tasks or issues_found:
+        if fix:
+            console.print("[green]✅ 自動修正を完了しました[/green]")
+        else:
+            console.print("[yellow]💡 問題を検出しました。--fix オプションで自動修正できます[/yellow]")
+    else:
+        console.print("[green]🎉 全ての検証項目をパスしました！[/green]")
 
 
 @cli.command()
