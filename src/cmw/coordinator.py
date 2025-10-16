@@ -1,123 +1,12 @@
 """
 コーディネーター機能
 
-タスクの管理、依存関係の解決、プロンプト生成などを行います。
+タスクの管理、依存関係の解決を行います。
 """
 import json
 from pathlib import Path
 from typing import Optional, List, Dict
 from .models import Task, TaskStatus, Worker
-
-
-class PromptGenerator:
-    """タスク実行用のプロンプトを生成"""
-    
-    def __init__(self, project_path: Path):
-        """
-        プロンプトジェネレーターを初期化
-        
-        Args:
-            project_path: プロジェクトのルートパス
-        """
-        self.project_path = project_path
-        self.docs_path = project_path / "shared" / "docs"
-        self.coordination_path = project_path / "shared" / "coordination"
-        self.artifacts_path = project_path / "shared" / "artifacts"
-    
-    def generate_prompt(self, task: Task) -> str:
-        """
-        タスク実行用のプロンプトを生成
-        
-        Args:
-            task: 実行するタスク
-            
-        Returns:
-            生成されたプロンプト
-        """
-        # 関連ドキュメントを読み込む
-        context = self._load_context(task)
-        
-        # プロンプトを構築
-        prompt = f"""# タスク実行依頼
-
-## タスク情報
-- **ID**: {task.id}
-- **タイトル**: {task.title}
-- **説明**: {task.description}
-- **担当ワーカー**: {task.assigned_to}
-- **優先度**: {task.priority.value}
-
-## 依存タスク
-{self._format_dependencies(task)}
-
-## プロジェクトコンテキスト
-{context}
-
-## 実装要件
-{task.description}
-
-## 指示
-上記のタスク情報とコンテキストに基づいて、以下を実装してください：
-
-1. **コードの実装**: 
-   - タスクの要件を満たすコードを記述
-   - ベストプラクティスに従う
-   - 適切なエラーハンドリングを含める
-
-2. **ファイル形式**:
-   - コードブロックは ```python または ```typescript などの適切な言語指定を使用
-   - 各ファイルには明確なファイルパスをコメントで記載
-
-3. **成果物の配置**:
-   - Backend: `shared/artifacts/backend/`
-   - Frontend: `shared/artifacts/frontend/`
-   - Database: `shared/artifacts/backend/core/`
-   - Tests: `shared/artifacts/tests/`
-
-実装を開始してください。
-"""
-        return prompt
-    
-    def _load_context(self, task: Task) -> str:
-        """
-        タスクに関連するコンテキスト情報を読み込む
-        
-        Args:
-            task: タスク
-            
-        Returns:
-            コンテキスト情報（文字列）
-        """
-        context_parts = []
-        
-        # requirements.md を読み込む
-        requirements_file = self.docs_path / "requirements.md"
-        if requirements_file.exists():
-            with open(requirements_file, 'r', encoding='utf-8') as f:
-                context_parts.append(f"### requirements.md\n{f.read()}\n")
-        
-        # API仕様書を読み込む
-        api_spec_file = self.docs_path / "api-spec.md"
-        if api_spec_file.exists():
-            with open(api_spec_file, 'r', encoding='utf-8') as f:
-                context_parts.append(f"### API仕様\n{f.read()}\n")
-        
-        return "\n".join(context_parts) if context_parts else "コンテキスト情報なし"
-    
-    def _format_dependencies(self, task: Task) -> str:
-        """
-        依存タスクをフォーマット
-        
-        Args:
-            task: タスク
-            
-        Returns:
-            フォーマットされた依存タスク情報
-        """
-        if not task.dependencies:
-            return "依存タスクなし"
-        
-        return "\n".join([f"- {dep_id}" for dep_id in task.dependencies])
 
 
 class Coordinator:

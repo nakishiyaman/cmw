@@ -7,7 +7,7 @@ Claude Multi-Worker Framework
 __version__ = "0.1.0"
 
 from .models import Task, TaskStatus, Worker, ExecutionResult, Priority
-from .coordinator import Coordinator, PromptGenerator
+from .coordinator import Coordinator
 from .task_provider import TaskProvider
 from .state_manager import StateManager, SessionContext
 from .parallel_executor import ParallelExecutor
@@ -25,7 +25,6 @@ __all__ = [
     "ExecutionResult",
     "Priority",
     "Coordinator",
-    "PromptGenerator",
     "TaskProvider",
     "StateManager",
     "SessionContext",
