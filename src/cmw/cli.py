@@ -608,6 +608,76 @@ def show_graph(format: str, stats: bool):
                     console.print(f"  レベル {i}: {', '.join(group)} ({len(group)}個並列)")
 
 
+@task.command('prompt')
+@click.argument('task_id')
+@click.option('--output', '-o', type=click.Path(), help='プロンプトをファイルに保存')
+@click.option('--review', is_flag=True, help='レビュー用プロンプトを生成')
+def generate_prompt(task_id: str, output: Optional[str], review: bool):
+    """タスク実行用のプロンプトを生成
+
+    examples:
+        cmw task prompt TASK-001
+        cmw task prompt TASK-001 --output prompt.md
+        cmw task prompt TASK-001 --review
+    """
+    from rich.console import Console
+    from rich.panel import Panel
+    from rich.markdown import Markdown
+    from .prompt_template import PromptTemplate
+
+    console = Console()
+    project_path = Path.cwd()
+    coordinator = Coordinator(project_path)
+
+    if not coordinator.tasks:
+        console.print("[yellow]タスクが見つかりません。'cmw task generate' を実行してください。[/yellow]")
+        return
+
+    # タスクを取得
+    task = coordinator.get_task(task_id)
+    if not task:
+        console.print(f"[red]❌ タスク {task_id} が見つかりません[/red]")
+        return
+
+    # コンテキストタスク（依存タスク）を取得
+    context_tasks = []
+    for dep_id in task.dependencies:
+        dep_task = coordinator.get_task(dep_id)
+        if dep_task:
+            context_tasks.append(dep_task)
+
+    # プロンプトを生成
+    template = PromptTemplate(project_root=project_path)
+
+    if review:
+        # レビュー用プロンプト
+        implementation_summary = "※ 実装内容をここに記載してください"
+        prompt_text = template.generate_review_prompt(task, implementation_summary)
+        title = f"🔍 レビュープロンプト: {task_id}"
+    else:
+        # 実行用プロンプト
+        prompt_text = template.generate_task_prompt(
+            task,
+            context_tasks=context_tasks
+        )
+        title = f"📝 タスク実行プロンプト: {task_id}"
+
+    # ファイルに保存
+    if output:
+        output_path = Path(output)
+        output_path.write_text(prompt_text, encoding='utf-8')
+        console.print(f"[green]✅ プロンプトを {output} に保存しました[/green]")
+        return
+
+    # コンソールに表示
+    console.print(Panel.fit(title, border_style="blue"))
+    console.print("")
+
+    # Markdown形式で表示
+    md = Markdown(prompt_text)
+    console.print(md)
+
+
 @cli.command()
 @click.option('--compact', is_flag=True, help='コンパクト表示')
 def status(compact: bool):

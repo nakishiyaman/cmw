@@ -19,6 +19,7 @@ from .conflict_detector import ConflictDetector, Conflict, ConflictType, Conflic
 from .progress_tracker import ProgressTracker
 from .dashboard import Dashboard
 from .graph_visualizer import GraphVisualizer
+from .prompt_template import PromptTemplate
 
 __all__ = [
     "Task",
@@ -42,4 +43,5 @@ __all__ = [
     "ProgressTracker",
     "Dashboard",
     "GraphVisualizer",
+    "PromptTemplate",
 ]
