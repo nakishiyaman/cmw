@@ -1,8 +1,8 @@
 # Claude Multi-Worker Framework (cmw)
 
-マルチワーカーアーキテクチャでソフトウェア開発を自動化するフレームワークです。
+Claude Codeと統合してソフトウェア開発を効率化するタスク管理フレームワークです。
 
-Claude Codeと統合することで、requirements.mdから自動的にタスクを生成し、依存関係を管理しながら効率的に開発を進めることができます。
+requirements.mdから自動的にタスクを生成し、依存関係を管理しながら、Claude Codeによる実装を支援します。
 
 ## 🎯 概要
 
@@ -63,11 +63,14 @@ cmwは**タスク管理・メタデータ層**として機能し、Claude Code�
 - ✅ 進捗管理
 - ✅ CLI実装
 
-### 🔄 開発中（Phase 2+）
-- Phase 2.1: Claude Code統合（スキルファイル）
+### ✅ Phase 2.1完了
+- Claude Code統合ガイド作成完了
+
+### 🔄 開発中（Phase 2.2+）
+- Phase 2.2: MCP統合（オプション）
 - Phase 3: エラーハンドリングと回復
 - Phase 4: UX/フィードバック機能
-- Phase 5: Git統合、MCP統合（オプション）
+- Phase 5: Git統合（オプション）
 
 ## 📦 インストール
 
@@ -234,15 +237,15 @@ python -m pytest tests/test_parallel_executor.py -v
 - **Phase 1.2**: StateManager実装
 - **Phase 1.3**: ParallelExecutor実装
 
-### 🔄 Phase 2: Claude Code統合（10%）
-- **Phase 2.1**: スキル統合（進行中）
+### ✅ Phase 2: Claude Code統合（65%）
+- **Phase 2.1**: ドキュメント作成（完了）
 - Phase 2.2: MCP統合（オプション）
 
 ### 🔄 Phase 3: エラーハンドリング（0%）
 ### 🔄 Phase 4: UX/フィードバック（0%）
 ### 🔄 Phase 5: 拡張機能（0%）
 
-**全体進捗**: 約60%
+**全体進捗**: 約65%
 
 ## 💡 主な特徴
 
