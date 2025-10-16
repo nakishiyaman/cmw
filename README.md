@@ -87,9 +87,19 @@ cmwは**タスク管理・メタデータ層**として機能し、Claude Code�
 ### ✅ Phase 4完了
 - FeedbackManager実装完了（リアルタイムフィードバック機能）
 
-### 🔄 開発中（Phase 5+）
-- Phase 5: Git統合（オプション）
-- Phase 2.2: MCP統合（オプション）
+### 🎓 実プロジェクト検証完了
+- **検証プロジェクト**: [todo-api](https://github.com/nakishiyaman/todo-api)
+  - 17タスク、2000行コード、106テスト
+  - 全タスク完了、全テストパス
+  - 9つのAPIエンドポイントが正常動作
+  - 検証結果は[改善計画](docs/IMPROVEMENTS.md)参照
+
+### 🔄 次期開発（Phase 5-8）
+詳細は[改善計画](docs/IMPROVEMENTS.md)を参照：
+- Phase 5: 自動タスク生成（requirements.md → tasks.json）
+- Phase 6: ファイル競合検出強化
+- Phase 7: リアルタイム進捗UI
+- Phase 8: Claude Code統合最適化
 
 ## 📦 インストール
 
@@ -226,6 +236,7 @@ cmw tasks show TASK-001
 ## 📖 ドキュメント
 
 - **[Claude Code統合ガイド](docs/CLAUDE_CODE_INTEGRATION.md)** - Claude Codeからの使用方法
+- **[改善計画](docs/IMPROVEMENTS.md)** - 実プロジェクト検証結果と今後の改善計画
 - **[Phase 1実装ガイド](docs/planning/phase-1-implementation-guide.md)** - タスク管理層の実装詳細
 - **[アーキテクチャ設計v3.0](docs/planning/multiworker-framework-plan-v3.md)** - 全体設計と計画
 
@@ -268,9 +279,26 @@ python -m pytest tests/test_feedback.py -v
 ### ✅ Phase 4: UX/フィードバック（100%）
 - **Phase 4.1**: FeedbackManager実装（完了）
 
-### 🔄 Phase 5: 拡張機能（0%）
+### 🔄 Phase 5: 自動タスク生成（0%）
+- Requirements.mdからタスクを自動生成
+- ファイルベースの依存関係推論
+- ターゲットファイルの自動決定
 
-**全体進捗**: 約85%
+### 🔄 Phase 6: ファイル競合検出（0%）
+- ファイル競合の事前検出
+- 最適な実行順序の提案
+- 並列実行グループの自動生成
+
+### 🔄 Phase 7: リアルタイム進捗UI（0%）
+- ターミナルダッシュボード
+- 推定残り時間の計算
+- タスクタイムライン表示
+
+### 🔄 Phase 8: Claude Code統合最適化（0%）
+- プロンプトテンプレート
+- 応答解析の自動化
+
+**全体進捗**: 約85%（Phase 4完了 + 実プロジェクト検証完了）
 
 ## 💡 主な特徴
 

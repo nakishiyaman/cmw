@@ -11,9 +11,7 @@ from typing import Optional
 from dotenv import load_dotenv
 
 from .models import TaskStatus
-from .api_client import ClaudeAPIClient
 from .coordinator import Coordinator, PromptGenerator
-from .executor import TaskExecutor
 
 
 @click.group()
@@ -326,6 +324,11 @@ def status():
     click.echo(f"  ✅ 完了: {status_counts[TaskStatus.COMPLETED]}")
     click.echo(f"  ❌ 失敗: {status_counts[TaskStatus.FAILED]}")
     click.echo(f"  🚫 ブロック: {status_counts[TaskStatus.BLOCKED]}")
+
+
+def main():
+    """CLIのエントリーポイント"""
+    cli()
 
 
 if __name__ == '__main__':
