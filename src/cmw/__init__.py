@@ -15,6 +15,8 @@ from .error_handler import ErrorHandler, TaskFailureAction
 from .feedback import FeedbackManager
 from .requirements_parser import RequirementsParser
 from .conflict_detector import ConflictDetector, Conflict, ConflictType, ConflictSeverity
+from .progress_tracker import ProgressTracker
+from .dashboard import Dashboard
 
 __all__ = [
     "Task",
@@ -36,4 +38,6 @@ __all__ = [
     "Conflict",
     "ConflictType",
     "ConflictSeverity",
+    "ProgressTracker",
+    "Dashboard",
 ]

@@ -214,8 +214,11 @@ my-project/
 # プロジェクト初期化
 cmw init <project-name>
 
-# プロジェクト状態表示
+# プロジェクト状態表示（フルダッシュボード）
 cmw status
+
+# プロジェクト状態表示（コンパクト）
+cmw status --compact
 ```
 
 ### タスク管理
@@ -257,9 +260,10 @@ python -m pytest tests/test_error_handler.py -v
 python -m pytest tests/test_feedback.py -v
 python -m pytest tests/test_requirements_parser.py -v
 python -m pytest tests/test_conflict_detector.py -v
+python -m pytest tests/test_progress_tracker.py -v
 ```
 
-現在107個のテストが全てパスしています。
+現在119個のテストが全てパスしています。
 
 ## 📊 開発ロードマップ
 
@@ -305,16 +309,33 @@ python -m pytest tests/test_conflict_detector.py -v
 - **テスト**: 19テスト全パス
 - **実証**: todo-apiで2件の競合を検出、8ステップの実行順序を提案
 
-### 🔄 Phase 7: リアルタイム進捗UI（0%）
-- ターミナルダッシュボード
-- 推定残り時間の計算
-- タスクタイムライン表示
+### ✅ Phase 7: リアルタイム進捗UI（100%）
+- **ProgressTracker実装完了**
+  - 進捗サマリー（完了率、成功率）
+  - 残り時間の推定（完了タスクの平均所要時間から算出）
+  - タスクタイムライン
+  - ベロシティメトリクス（タスク/時間、平均所要時間）
+  - 優先度別・担当者別の進捗分解
+  - メトリクスの永続化
+- **Dashboard実装完了**
+  - Rich ライブラリによる美しいターミナルUI
+  - プロジェクト概要パネル
+  - ベロシティパネル
+  - 優先度別進捗テーブル
+  - 担当者別進捗テーブル
+  - 最近のアクティビティタイムライン
+  - プログレスバー表示
+- **CLIコマンド拡張**: `cmw status` にダッシュボード機能を統合
+  - `cmw status`: フルダッシュボード表示
+  - `cmw status --compact`: コンパクトサマリー表示
+- **テスト**: 12テスト全パス
+- **実証**: todo-apiで17タスクのダッシュボード表示を確認
 
 ### 🔄 Phase 8: Claude Code統合最適化（0%）
 - プロンプトテンプレート
 - 応答解析の自動化
 
-**全体進捗**: 約95%（Phase 6完了 + 実プロジェクト検証完了）
+**全体進捗**: 約98%（Phase 7完了 + 実プロジェクト検証完了）
 
 ## 💡 主な特徴
 

@@ -14,6 +14,8 @@ from .models import TaskStatus
 from .coordinator import Coordinator, PromptGenerator
 from .requirements_parser import RequirementsParser
 from .conflict_detector import ConflictDetector
+from .progress_tracker import ProgressTracker
+from .dashboard import Dashboard
 
 
 @click.group()
@@ -447,7 +449,8 @@ def analyze_conflicts(show_order: bool):
 
 
 @cli.command()
-def status():
+@click.option('--compact', is_flag=True, help='コンパクト表示')
+def status(compact: bool):
     """プロジェクトの進捗状況を表示"""
     project_path = Path.cwd()
     coordinator = Coordinator(project_path)
@@ -456,33 +459,16 @@ def status():
         click.echo("タスクが見つかりません")
         return
 
-    # ステータスごとにカウント
-    status_counts = {
-        TaskStatus.PENDING: 0,
-        TaskStatus.IN_PROGRESS: 0,
-        TaskStatus.COMPLETED: 0,
-        TaskStatus.FAILED: 0,
-        TaskStatus.BLOCKED: 0
-    }
+    tasks_list = list(coordinator.tasks.values())
+    tracker = ProgressTracker(project_path)
+    dashboard = Dashboard()
 
-    for task in coordinator.tasks.values():
-        status_counts[task.status] += 1
-
-    total = len(coordinator.tasks)
-    completed = status_counts[TaskStatus.COMPLETED]
-    progress = (completed / total * 100) if total > 0 else 0
-
-    click.echo(f"\n{'='*80}")
-    click.echo("プロジェクト進捗状況")
-    click.echo(f"{'='*80}\n")
-
-    click.echo(f"全体進捗: {completed}/{total} タスク完了 ({progress:.1f}%)")
-    click.echo(f"\nステータス別:")
-    click.echo(f"  ⏳ 待機中: {status_counts[TaskStatus.PENDING]}")
-    click.echo(f"  🔄 実行中: {status_counts[TaskStatus.IN_PROGRESS]}")
-    click.echo(f"  ✅ 完了: {status_counts[TaskStatus.COMPLETED]}")
-    click.echo(f"  ❌ 失敗: {status_counts[TaskStatus.FAILED]}")
-    click.echo(f"  🚫 ブロック: {status_counts[TaskStatus.BLOCKED]}")
+    if compact:
+        # コンパクト表示
+        dashboard.show_compact_summary(tracker, tasks_list)
+    else:
+        # フルダッシュボード表示
+        dashboard.show_dashboard(tracker, tasks_list)
 
 
 def main():
