@@ -7,9 +7,8 @@ Claude Multi-Worker Framework
 __version__ = "0.1.0"
 
 from .models import Task, TaskStatus, Worker, ExecutionResult, Priority
-from .api_client import ClaudeAPIClient
 from .coordinator import Coordinator, PromptGenerator
-from .executor import TaskExecutor
+from .task_provider import TaskProvider
 
 __all__ = [
     "Task",
@@ -17,8 +16,7 @@ __all__ = [
     "Worker",
     "ExecutionResult",
     "Priority",
-    "ClaudeAPIClient",
     "Coordinator",
     "PromptGenerator",
-    "TaskExecutor",
+    "TaskProvider",
 ]

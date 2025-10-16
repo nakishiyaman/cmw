@@ -35,11 +35,16 @@ class Task:
     status: TaskStatus = TaskStatus.PENDING
     priority: Priority = Priority.MEDIUM
     dependencies: List[str] = field(default_factory=list)  # 依存タスクIDのリスト
+    target_files: List[str] = field(default_factory=list)  # 対象ファイルのリスト
+    acceptance_criteria: List[str] = field(default_factory=list)  # 受け入れ基準
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
+    started_at: Optional[str] = None  # 開始時刻（ISO形式）
+    failed_at: Optional[str] = None  # 失敗時刻（ISO形式）
     artifacts: List[str] = field(default_factory=list)  # 生成されたファイルのパス
     error_message: Optional[str] = None
+    error: Optional[str] = None  # エラー詳細（error_messageと互換性のため）
     
     def __post_init__(self):
         """初期化後の処理"""
@@ -58,11 +63,16 @@ class Task:
             "status": self.status.value,
             "priority": self.priority.value,
             "dependencies": self.dependencies,
+            "target_files": self.target_files,
+            "acceptance_criteria": self.acceptance_criteria,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
             "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "started_at": self.started_at,
+            "failed_at": self.failed_at,
             "artifacts": self.artifacts,
-            "error_message": self.error_message
+            "error_message": self.error_message,
+            "error": self.error
         }
     
     @classmethod
@@ -72,7 +82,7 @@ class Task:
         created_at = datetime.fromisoformat(data["created_at"]) if data.get("created_at") else None
         updated_at = datetime.fromisoformat(data["updated_at"]) if data.get("updated_at") else None
         completed_at = datetime.fromisoformat(data["completed_at"]) if data.get("completed_at") else None
-        
+
         return cls(
             id=data["id"],
             title=data["title"],
@@ -81,11 +91,16 @@ class Task:
             status=TaskStatus(data.get("status", "pending")),
             priority=Priority(data.get("priority", "medium")),
             dependencies=data.get("dependencies", []),
+            target_files=data.get("target_files", []),
+            acceptance_criteria=data.get("acceptance_criteria", []),
             created_at=created_at,
             updated_at=updated_at,
             completed_at=completed_at,
+            started_at=data.get("started_at"),
+            failed_at=data.get("failed_at"),
             artifacts=data.get("artifacts", []),
-            error_message=data.get("error_message")
+            error_message=data.get("error_message"),
+            error=data.get("error")
         )
 
 
