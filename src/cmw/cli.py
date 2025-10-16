@@ -678,6 +678,68 @@ def generate_prompt(task_id: str, output: Optional[str], review: bool):
     console.print(md)
 
 
+@task.command('complete')
+@click.argument('task_id')
+@click.option('--artifacts', '-a', help='生成されたファイル（JSON配列形式）')
+@click.option('--message', '-m', help='完了メッセージ')
+def complete_task(task_id: str, artifacts: Optional[str], message: Optional[str]):
+    """タスクを完了としてマーク
+
+    examples:
+        cmw task complete TASK-001
+        cmw task complete TASK-001 --artifacts '["file1.py", "file2.py"]'
+        cmw task complete TASK-001 -m "実装完了"
+    """
+    from rich.console import Console
+
+    console = Console()
+    project_path = Path.cwd()
+    coordinator = Coordinator(project_path)
+
+    # タスクの存在確認
+    task = coordinator.get_task(task_id)
+    if not task:
+        console.print(f"[red]❌ タスク {task_id} が見つかりません[/red]")
+        return
+
+    # すでに完了している場合
+    if task.status == TaskStatus.COMPLETED:
+        console.print(f"[yellow]⚠️  タスク {task_id} は既に完了しています[/yellow]")
+        return
+
+    # artifacts をパース
+    artifacts_list = []
+    if artifacts:
+        try:
+            artifacts_list = json.loads(artifacts)
+        except json.JSONDecodeError:
+            console.print("[red]❌ エラー: artifacts は JSON 配列形式で指定してください[/red]")
+            console.print('[dim]例: --artifacts \'["file1.py", "file2.py"]\'[/dim]')
+            return
+
+    # タスクを完了マーク
+    try:
+        coordinator.update_task_status(
+            task_id=task_id,
+            status=TaskStatus.COMPLETED,
+            artifacts=artifacts_list if artifacts_list else None
+        )
+
+        console.print(f"[green]✅ タスク {task_id} を完了としてマークしました[/green]")
+        console.print(f"[dim]{task.title}[/dim]")
+
+        if artifacts_list:
+            console.print(f"\n[cyan]生成されたファイル:[/cyan]")
+            for artifact in artifacts_list:
+                console.print(f"  • {artifact}")
+
+        if message:
+            console.print(f"\n[cyan]メッセージ:[/cyan] {message}")
+
+    except Exception as e:
+        console.print(f"[red]❌ エラー: {str(e)}[/red]")
+
+
 @cli.command()
 @click.option('--compact', is_flag=True, help='コンパクト表示')
 def status(compact: bool):

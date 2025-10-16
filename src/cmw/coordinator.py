@@ -29,18 +29,18 @@ class Coordinator:
         self._load_tasks()
     
     def _load_tasks(self):
-        """tasks.json からタスクを読み込む"""
+        """tasks.json からタスクを読み込み、progress.json で進捗状況をマージ"""
         if not self.tasks_file.exists():
             return
-        
+
         with open(self.tasks_file, 'r', encoding='utf-8') as f:
             data = json.load(f)
-            
+
             # タスクを読み込む
             for task_data in data.get("tasks", []):
                 task = Task.from_dict(task_data)
                 self.tasks[task.id] = task
-            
+
             # ワーカーを読み込む
             for worker_data in data.get("workers", []):
                 worker = Worker(
@@ -51,6 +51,32 @@ class Coordinator:
                     assigned_tasks=worker_data.get("assigned_tasks", [])
                 )
                 self.workers[worker.id] = worker
+
+        # progress.json が存在する場合、進捗状況をマージ
+        if self.progress_file.exists():
+            with open(self.progress_file, 'r', encoding='utf-8') as f:
+                progress_data = json.load(f)
+
+                for task_data in progress_data.get("tasks", []):
+                    task_id = task_data.get("id")
+                    if task_id in self.tasks:
+                        # 進捗状況のみをマージ（status, artifacts, completed_at, error_message など）
+                        task = self.tasks[task_id]
+                        if "status" in task_data:
+                            task.status = TaskStatus(task_data["status"])
+                        if "artifacts" in task_data:
+                            task.artifacts = task_data["artifacts"]
+                        if "completed_at" in task_data and task_data["completed_at"]:
+                            from datetime import datetime
+                            task.completed_at = datetime.fromisoformat(task_data["completed_at"])
+                        if "started_at" in task_data and task_data["started_at"]:
+                            from datetime import datetime
+                            task.started_at = datetime.fromisoformat(task_data["started_at"])
+                        if "failed_at" in task_data and task_data["failed_at"]:
+                            from datetime import datetime
+                            task.failed_at = datetime.fromisoformat(task_data["failed_at"])
+                        if "error_message" in task_data:
+                            task.error_message = task_data["error_message"]
     
     def get_task(self, task_id: str) -> Optional[Task]:
         """
