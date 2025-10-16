@@ -16,6 +16,7 @@ from .progress_tracker import ProgressTracker
 from .dashboard import Dashboard
 from .dependency_validator import DependencyValidator
 from .task_filter import TaskFilter
+from .git_integration import GitIntegration
 
 
 @click.group()
@@ -533,6 +534,104 @@ def status(compact: bool):
     else:
         # フルダッシュボード表示
         dashboard.show_dashboard(tracker, tasks_list)
+
+
+@cli.command()
+@click.option('--from-git', is_flag=True, help='Gitコミットメッセージから進捗を同期')
+@click.option('--since', default='1.week.ago', help='コミット検索の開始時点（例: 1.day.ago, 2.weeks.ago, 2025-01-01）')
+@click.option('--branch', default='HEAD', help='対象ブランチ（デフォルト: HEAD）')
+@click.option('--dry-run', is_flag=True, help='実際には更新せず、検出結果のみ表示')
+def sync(from_git: bool, since: str, branch: str, dry_run: bool):
+    """進捗を同期
+
+    examples:
+        cmw sync --from-git
+        cmw sync --from-git --since=1.day.ago
+        cmw sync --from-git --dry-run
+    """
+    from rich.console import Console
+    from rich.panel import Panel
+    from rich.table import Table
+
+    console = Console()
+    project_path = Path.cwd()
+
+    if not from_git:
+        console.print("[yellow]⚠️  同期オプションを指定してください[/yellow]")
+        console.print("\n利用可能なオプション:")
+        console.print("  --from-git    Gitコミットメッセージから進捗を同期")
+        return
+
+    try:
+        git = GitIntegration()
+
+        console.print(Panel.fit(
+            f"🔄 Git履歴から進捗を同期中... (since: {since}, branch: {branch})",
+            border_style="blue"
+        ))
+
+        if dry_run:
+            # Dry-runモード: 検出のみ
+            commits = git._get_commit_log(project_path, since, branch)
+            task_ids = git._extract_task_ids(commits)
+
+            console.print(f"\n[cyan]📝 検出されたタスク ({len(task_ids)}件):[/cyan]")
+            for task_id in sorted(task_ids):
+                console.print(f"  • {task_id}")
+
+            console.print(f"\n[cyan]📊 分析したコミット数:[/cyan] {len(commits)}")
+            console.print(f"\n[dim]ヒント: --dry-run なしで実行すると、これらのタスクが完了にマークされます[/dim]")
+            return
+
+        # 実際に同期
+        result = git.sync_progress_from_git(project_path, since, branch)
+
+        # 結果をテーブルで表示
+        console.print("\n[bold green]✅ 同期完了[/bold green]\n")
+
+        table = Table(show_header=True, header_style="bold magenta")
+        table.add_column("項目", style="cyan")
+        table.add_column("値", justify="right")
+
+        table.add_row("分析したコミット数", str(result['commits_analyzed']))
+        table.add_row("検出したタスク数", str(len(result['completed_tasks'])))
+        table.add_row("更新したタスク数", str(result['updated_count']))
+        table.add_row("スキップしたタスク数", str(result['skipped_count']))
+
+        console.print(table)
+
+        if result['updated_count'] > 0:
+            console.print(f"\n[green]完了にマークしたタスク:[/green]")
+            coordinator = Coordinator(project_path)
+            for task_id in result['completed_tasks']:
+                if task_id in coordinator.tasks:
+                    task = coordinator.tasks[task_id]
+                    if task.status == TaskStatus.COMPLETED:
+                        console.print(f"  ✓ {task_id}: {task.title}")
+
+        # タスク参照の検証
+        console.print("\n[cyan]🔍 タスク参照を検証中...[/cyan]")
+        validation = git.validate_task_references(project_path)
+
+        if validation['invalid']:
+            console.print(f"\n[yellow]⚠️  {len(validation['invalid'])}件の不正なタスク参照を検出:[/yellow]")
+            for task_id in validation['invalid']:
+                console.print(f"  • {task_id} (存在しないタスク)")
+
+            console.print(f"\n[dim]該当するコミット:[/dim]")
+            for commit in validation['invalid_commits'][:5]:  # 最大5件表示
+                console.print(f"  {commit['hash']}: {commit['message'][:60]}")
+        else:
+            console.print("[green]✅ 全てのタスク参照が正しいです[/green]")
+
+    except ValueError as e:
+        console.print(f"[red]❌ エラー: {str(e)}[/red]")
+    except RuntimeError as e:
+        console.print(f"[red]❌ Git操作エラー: {str(e)}[/red]")
+    except Exception as e:
+        console.print(f"[red]❌ 予期しないエラー: {str(e)}[/red]")
+        import traceback
+        traceback.print_exc()
 
 
 def main():
