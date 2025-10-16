@@ -11,6 +11,8 @@ import re
 from datetime import datetime
 
 from .models import Task
+from .dependency_validator import DependencyValidator
+from .task_filter import TaskFilter
 
 
 class RequirementsParser:
@@ -18,6 +20,8 @@ class RequirementsParser:
 
     def __init__(self):
         self.task_counter = 0
+        self.validator = DependencyValidator()
+        self.task_filter = TaskFilter()
 
     def parse(self, requirements_path: Path) -> List[Task]:
         """
@@ -49,8 +53,50 @@ class RequirementsParser:
                 if subtask:
                     tasks.append(subtask)
 
+        # 🆕 v0.2.0: 非タスク項目のフィルタリング
+        all_items = tasks
+        tasks, non_tasks = self.task_filter.filter_tasks(all_items)
+
+        if non_tasks:
+            print(f"\n📋 {len(non_tasks)}件の非タスク項目を検出:")
+            for non_task in non_tasks:
+                print(f"  - {non_task.id}: {non_task.title}")
+
+            print(f"\n💡 これらは実装タスクではなく参照情報です")
+            print(f"✅ {len(tasks)}個の実装タスクを生成しました\n")
+
         # 依存関係を推論
         tasks = self._infer_dependencies(tasks)
+
+        # 🆕 v0.2.0: 循環依存の検出と自動修正
+        cycles = self.validator.detect_cycles(tasks)
+
+        if cycles:
+            print(f"\n⚠️  {len(cycles)}件の循環依存を検出しました:")
+            for i, cycle in enumerate(cycles, 1):
+                print(f"  {i}. {' ↔ '.join(cycle)}")
+
+            # 修正提案を生成
+            suggestions = self.validator.suggest_fixes(cycles, tasks)
+
+            print("\n💡 推奨される修正:")
+            for suggestion in suggestions:
+                for fix in suggestion['suggestions'][:1]:  # 最良の提案のみ表示
+                    print(f"  - {fix['from_task']} → {fix['to_task']} を削除")
+                    print(f"    理由: {fix['reason']}")
+                    print(f"    信頼度: {fix['confidence']:.0%}")
+
+            # 自動修正を適用
+            print("\n🔧 自動修正を適用中...")
+            tasks = self.validator.auto_fix_cycles(tasks, cycles, auto_apply=True)
+
+            # 修正後の確認
+            remaining_cycles = self.validator.detect_cycles(tasks)
+            if remaining_cycles:
+                print(f"\n⚠️  {len(remaining_cycles)}件の循環依存が残っています")
+                print("   手動での確認と修正が必要です")
+            else:
+                print("\n✅ 全ての循環依存を解決しました")
 
         return tasks
 
