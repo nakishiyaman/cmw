@@ -222,6 +222,41 @@ executable_tasks = executor.get_executable_tasks(max_parallel=3)
 can_parallel = executor.can_run_parallel(task1, task2)
 ```
 
+### ErrorHandler
+
+タスク失敗時のエラーハンドリングを提供します。
+
+```python
+from cmw import ErrorHandler, TaskFailureAction
+
+handler = ErrorHandler(project_path)
+
+# タスク失敗時の対応を決定
+try:
+    # タスク実行
+    ...
+except Exception as e:
+    action = handler.handle_task_failure(task, e, retry_count=0)
+
+    if action == TaskFailureAction.RETRY:
+        # リトライ
+        print("リトライします")
+    elif action == TaskFailureAction.ROLLBACK:
+        # ロールバック
+        handler.rollback_partial_work(task)
+    elif action == TaskFailureAction.BLOCK:
+        # 依存タスクをブロック
+        provider.mark_failed(task.id, str(e))
+
+    # 復旧方法の提案を取得
+    suggestion = handler.suggest_recovery(task, e)
+    print(suggestion)
+
+    # 影響を受けるタスクを取得
+    affected = handler.get_affected_tasks(task, all_tasks)
+    print(f"影響を受けるタスク: {[t.id for t in affected]}")
+```
+
 ## 🔄 典型的なワークフロー
 
 ### シナリオ1: 単一タスクの実行
@@ -247,14 +282,15 @@ context = provider.get_task_context(task.id)
 provider.mark_completed(task.id, ["backend/auth.py"])
 ```
 
-### シナリオ2: 全タスクの実行
+### シナリオ2: エラーハンドリング付き全タスク実行
 
 ```python
 from pathlib import Path
-from cmw import TaskProvider
+from cmw import TaskProvider, ErrorHandler, TaskFailureAction
 
 project_path = Path.cwd()
 provider = TaskProvider(project_path)
+error_handler = ErrorHandler(project_path)
 
 while True:
     task = provider.get_next_task()
@@ -265,16 +301,49 @@ while True:
     print(f"実行中: {task.id} - {task.title}")
     provider.mark_started(task.id)
 
-    try:
-        context = provider.get_task_context(task.id)
+    retry_count = 0
+    max_retries = 3
 
-        # Claude Codeがコーディング
-        # ... 実装 ...
+    while retry_count <= max_retries:
+        try:
+            context = provider.get_task_context(task.id)
 
-        provider.mark_completed(task.id, ["generated_file.py"])
-    except Exception as e:
-        print(f"エラー: {e}")
-        provider.mark_failed(task.id, str(e))
+            # Claude Codeがコーディング
+            # ... 実装 ...
+
+            provider.mark_completed(task.id, ["generated_file.py"])
+            break  # 成功したらループを抜ける
+
+        except Exception as e:
+            print(f"エラー: {e}")
+
+            # エラー対応を決定
+            action = error_handler.handle_task_failure(task, e, retry_count, max_retries)
+
+            if action == TaskFailureAction.RETRY:
+                print(f"リトライします（{retry_count + 1}/{max_retries}）")
+                retry_count += 1
+                continue
+
+            elif action == TaskFailureAction.ROLLBACK:
+                print("ロールバックします")
+                error_handler.rollback_partial_work(task)
+                provider.mark_failed(task.id, str(e))
+                break
+
+            elif action == TaskFailureAction.SKIP:
+                print("このタスクをスキップします")
+                provider.mark_failed(task.id, f"Skipped: {str(e)}")
+                break
+
+            else:  # BLOCK
+                print("依存タスクをブロックします")
+                provider.mark_failed(task.id, str(e))
+
+                # 復旧提案を表示
+                suggestion = error_handler.suggest_recovery(task, e)
+                print(suggestion)
+                break
 ```
 
 ### シナリオ3: セッション継続性
