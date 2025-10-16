@@ -20,6 +20,7 @@ from .progress_tracker import ProgressTracker
 from .dashboard import Dashboard
 from .graph_visualizer import GraphVisualizer
 from .prompt_template import PromptTemplate
+from .static_analyzer import StaticAnalyzer
 
 __all__ = [
     "Task",
@@ -44,4 +45,5 @@ __all__ = [
     "Dashboard",
     "GraphVisualizer",
     "PromptTemplate",
+    "StaticAnalyzer",
 ]
