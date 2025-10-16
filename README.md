@@ -1,8 +1,8 @@
-# Claude Multi-Worker Framework (cmw) v0.2.0
+# Claude Multi-Worker Framework (cmw) v0.3.0
 
 **requirements.mdを書くだけで、大規模プロジェクトの開発を完全自動化**
 
-Claude Codeと統合した次世代タスク管理フレームワーク。要件定義から自動的にタスクを生成し、循環依存を自動修正し、ファイル競合を検出し、Git連携で進捗を同期します。手動でタスク管理する必要はもうありません。
+Claude Codeと統合した次世代タスク管理フレームワーク。要件定義から自動的にタスクを生成し、依存関係グラフを可視化し、タスク実行プロンプトを自動生成し、Claude Codeの応答を自動解析します。開発ワークフロー全体を最適化します。
 
 ## 🎯 概要
 
@@ -287,6 +287,14 @@ cmw tasks validate --fix        # 検出した問題を自動修正
 
 # ファイル競合分析
 cmw tasks analyze
+
+# 依存関係グラフ表示（v0.3.0）
+cmw task graph                  # ASCII形式でグラフ表示
+cmw task graph --format mermaid # Mermaid形式で出力
+cmw task graph --stats          # 統計情報も表示
+
+# タスク実行プロンプト生成（v0.3.0）
+cmw task prompt TASK-001        # TASK-001の実行プロンプトを生成
 ```
 
 ### 進捗管理
@@ -309,7 +317,7 @@ cmw sync --from-git --dry-run          # 検出のみ（更新なし）
 
 ```bash
 # 全テストを実行
-python -m pytest tests/ -v --ignore=tests/test_coordinator.py
+python -m pytest tests/ -v
 
 # 特定のテストを実行
 python -m pytest tests/test_task_provider.py -v
@@ -320,9 +328,14 @@ python -m pytest tests/test_feedback.py -v
 python -m pytest tests/test_requirements_parser.py -v
 python -m pytest tests/test_conflict_detector.py -v
 python -m pytest tests/test_progress_tracker.py -v
+python -m pytest tests/test_graph_visualizer.py -v      # v0.3.0
+python -m pytest tests/test_prompt_template.py -v       # v0.3.0
+python -m pytest tests/test_static_analyzer.py -v       # v0.3.0
+python -m pytest tests/test_interactive_fixer.py -v     # v0.3.0
+python -m pytest tests/test_response_parser.py -v       # v0.3.0
 ```
 
-現在153個のテストが全てパスしています（v0.2.0）。
+現在273個のテストが全てパスしています（v0.3.0）。
 
 ## 📊 開発ロードマップ
 
@@ -411,19 +424,50 @@ python -m pytest tests/test_progress_tracker.py -v
 - **テスト**: 12テスト全パス
 - **実証**: todo-apiで17タスクのダッシュボード表示を確認
 
-### 🔄 Phase 8: Claude Code統合最適化（0%）
-- プロンプトテンプレート
-- 応答解析の自動化
+### ✅ Phase 8: Claude Code統合最適化（100%）- v0.3.0
+- **Phase 8.1**: GraphVisualizer実装（完了）
+  - タスク依存関係グラフのASCII/Mermaid形式表示
+  - クリティカルパスの自動計算
+  - 並列実行グループの自動生成
+  - グラフ統計情報（タスク数、依存関係数、最大並列度など）
+  - `cmw task graph`, `cmw task graph --format mermaid`, `cmw task graph --stats`
+  - 20テスト全パス
+- **Phase 8.2**: PromptTemplate実装（完了）
+  - タスク実行用プロンプトの自動生成
+  - 依存タスク情報の自動埋め込み
+  - 受入基準と実装手順の構造化
+  - バッチ実行用プロンプト、レビュープロンプトの生成
+  - `cmw task prompt TASK-XXX`
+  - 18テスト全パス
+- **Phase 8.3**: StaticAnalyzer実装（完了）
+  - Pythonコードの静的解析（ASTベース）
+  - ファイル依存関係の自動検出（sys.path動的変更対応）
+  - タスク依存関係の自動推論
+  - 循環インポート検出、API endpoint抽出、複雑度分析
+  - 20テスト全パス、todo-apiで検証済み
+- **Phase 8.4**: InteractiveFixer実装（完了）
+  - 循環依存の対話的修正
+  - タスク選択UI（Rich Table）
+  - 修正提案の表示と適用
+  - 23テスト全パス
+- **Phase 8.5**: ResponseParser実装（完了）
+  - Claude Code応答の自動解析
+  - ファイルパス抽出（日英対応）
+  - タスクID検出、完了キーワード検出
+  - 完了コマンドの自動提案
+  - エラー・質問の検出
+  - 29テスト全パス、実ワークフローで検証済み
 
-**全体進捗**: 100%（v0.2.0リリース完了）
+**全体進捗**: 100%（v0.3.0リリース完了）
 
-**v0.2.0の主な改善:**
-- ✅ 循環依存の自動検出と修正
-- ✅ 非タスク項目の自動除外
-- ✅ タスク検証コマンド（`cmw tasks validate`）
-- ✅ Git連携による進捗自動更新（`cmw sync --from-git`）
-- ✅ 153個のテスト全パス
-- ✅ blog-apiとtodo-apiで実証完了
+**v0.3.0の主な新機能:**
+- ✅ 依存関係グラフの可視化（`cmw task graph`）
+- ✅ タスク実行プロンプト自動生成（`cmw task prompt`）
+- ✅ 静的コード解析とファイル依存関係検出
+- ✅ 対話的な問題修正UI
+- ✅ Claude Code応答の自動解析
+- ✅ 273個のテスト全パス（+120テスト）
+- ✅ todo-apiで実ワークフロー検証完了
 
 ## 💡 主な特徴
 

@@ -1,0 +1,181 @@
+# Changelog
+
+All notable changes to Claude Multi-Worker Framework will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.3.0] - 2025-10-16
+
+### Added
+
+#### Phase 8.1: GraphVisualizer
+- タスク依存関係グラフの可視化機能
+  - ASCII形式での依存関係ツリー表示
+  - Mermaid形式での出力（図表生成対応）
+  - グラフ統計情報の表示（タスク数、依存関係数、最大並列度など）
+- クリティカルパスの自動計算
+- 並列実行グループの自動生成
+- CLIコマンド：`cmw task graph`, `cmw task graph --format mermaid`, `cmw task graph --stats`
+- 20個のユニットテスト
+
+#### Phase 8.2: PromptTemplate
+- Claude Code用タスク実行プロンプトの自動生成
+  - 依存タスク情報の自動埋め込み
+  - 受入基準と実装手順の構造化
+  - タスクコンテキストの自動収集
+- バッチ実行用プロンプトの生成
+- レビュー用プロンプトの生成
+- Rich UIによる美しい出力フォーマット
+- CLIコマンド：`cmw task prompt TASK-XXX`
+- 18個のユニットテスト
+
+#### Phase 8.3: StaticAnalyzer
+- Pythonコードの静的解析機能（ASTベース）
+  - ファイル間の依存関係自動検出
+  - sys.path動的変更の検出と対応
+  - 相対インポート・絶対インポートの完全サポート
+- タスク間依存関係の自動推論
+- 循環インポートの検出
+- API endpointの自動抽出（FastAPI対応）
+- コード複雑度の分析
+- 20個のユニットテスト
+- todo-apiプロジェクトで実証済み
+
+#### Phase 8.4: InteractiveFixer
+- 対話的な問題修正UI
+  - 循環依存の対話的修正（Rich Table UI）
+  - タスク選択インターフェース
+  - 修正提案の表示と適用
+  - 不足依存関係の修正
+- バリデーション結果の視覚的表示
+- 23個のユニットテスト
+
+#### Phase 8.5: ResponseParser
+- Claude Code応答の自動解析
+  - ファイルパスの自動抽出（日本語・英語対応）
+  - タスクID（TASK-XXX）の自動検出
+  - 完了キーワードの検出（日英対応）
+  - 完了コマンドの自動提案
+- エラーメッセージの検出
+- 質問の検出
+- 応答要約の生成
+- 29個のユニットテスト
+- todo-apiで実際のワークフローを検証済み
+
+### Improved
+- StaticAnalyzer: sys.path動的変更に対応（`sys.path.insert()`パターンを検出）
+- StaticAnalyzer: 現在のファイルのディレクトリを検索パスに追加
+- StaticAnalyzer: `from X import Y` で Y がサブモジュールの場合も解決
+- StaticAnalyzer: 自己参照の除外機能
+
+### Testing
+- 総テスト数: 153 → 273（+120テスト）
+- 全てのテストがパス
+
+### Documentation
+- README.md を v0.3.0 に更新
+- Phase 8 の全機能を追加
+- CLIコマンドリファレンスを更新
+
+### Validation
+- todo-apiプロジェクトで実ワークフロー検証
+- TASK-014（認証テスト）の実装を通して全機能を確認
+  - プロンプト生成
+  - テスト実装
+  - ResponseParser動作確認
+
+## [0.2.0] - 2025-XX-XX
+
+### Added
+
+#### Phase 1.4: DependencyValidator
+- 循環依存の自動検出と修正
+  - NetworkXによる高精度な循環検出
+  - セマンティック分析による修正提案
+  - 信頼度スコアリング
+  - 自動修正機能（信頼度100%で即座に適用）
+- 11個のユニットテスト
+
+#### Phase 1.5: TaskFilter
+- 非タスク項目の自動除外
+  - 「技術スタック」「非機能要件」などを自動判定
+  - タスク動詞・受入基準の具体性を評価
+- blog-apiで17→15タスクに最適化
+
+#### Phase 2.1: タスク検証コマンド
+- `cmw tasks validate`コマンド
+  - 循環依存チェック
+  - 非タスク項目チェック
+  - 依存関係の妥当性チェック（存在しない依存先、自己依存）
+  - `--fix`オプションで自動修正
+  - Rich UIで視覚的に結果表示
+- 9個のユニットテスト
+
+#### Phase 2.2: Git連携
+- `cmw sync --from-git`コマンド
+  - Gitコミットメッセージから進捗を自動同期
+  - `TASK-XXX`パターンの自動検出
+  - タスク参照の妥当性検証
+  - `--since`, `--branch`, `--dry-run`オプション
+- 14個のユニットテスト
+
+### Testing
+- 総テスト数: 153
+- 全てのテストがパス
+
+### Validation
+- blog-apiで実証完了
+- todo-apiで実証完了
+
+## [0.1.0] - 2025-XX-XX
+
+### Added
+
+#### Phase 0: 基盤構築
+- プロジェクト初期化（`cmw init`）
+- タスク定義（tasks.json）
+- 依存関係管理
+- 進捗管理
+- CLI実装
+
+#### Phase 1: タスク管理層
+- TaskProvider: タスク情報の提供、コンテキスト構築、状態管理
+- StateManager: ロック機構、セッション管理、進捗永続化
+- ParallelExecutor: 並列実行判定、ファイル競合検出
+
+#### Phase 3: エラーハンドリング
+- ErrorHandler: エラー対応決定、ロールバック、復旧提案
+
+#### Phase 4: フィードバック機能
+- FeedbackManager: リアルタイムフィードバック
+
+#### Phase 5: 自動タスク生成
+- RequirementsParser: requirements.mdからタスク自動生成
+- CLIコマンド: `cmw tasks generate`
+- 23個のユニットテスト
+
+#### Phase 6: ファイル競合検出
+- ConflictDetector: タスク間のファイル競合を事前検出
+- CLIコマンド: `cmw tasks analyze`
+- 19個のユニットテスト
+
+#### Phase 7: リアルタイム進捗UI
+- ProgressTracker: 進捗メトリクスの計算と追跡
+- Dashboard: 美しいターミナルダッシュボード
+- CLIコマンド: `cmw status`, `cmw status --compact`
+- 12個のユニットテスト
+
+### Documentation
+- Claude Code統合ガイド
+- 改善計画ドキュメント
+- Phase 1実装ガイド
+
+### Validation
+- todo-apiプロジェクトで検証完了
+  - 17タスク、2000行コード、106テスト
+  - 全タスク完了、全テストパス
+
+[0.3.0]: https://github.com/nakishiyaman/claude-multi-worker-framework/releases/tag/v0.3.0
+[0.2.0]: https://github.com/nakishiyaman/claude-multi-worker-framework/releases/tag/v0.2.0
+[0.1.0]: https://github.com/nakishiyaman/claude-multi-worker-framework/releases/tag/v0.1.0
