@@ -21,6 +21,7 @@ from .dashboard import Dashboard
 from .graph_visualizer import GraphVisualizer
 from .prompt_template import PromptTemplate
 from .static_analyzer import StaticAnalyzer
+from .interactive_fixer import InteractiveFixer
 
 __all__ = [
     "Task",
@@ -46,4 +47,5 @@ __all__ = [
     "GraphVisualizer",
     "PromptTemplate",
     "StaticAnalyzer",
+    "InteractiveFixer",
 ]
