@@ -14,6 +14,7 @@ from .parallel_executor import ParallelExecutor
 from .error_handler import ErrorHandler, TaskFailureAction
 from .feedback import FeedbackManager
 from .requirements_parser import RequirementsParser
+from .conflict_detector import ConflictDetector, Conflict, ConflictType, ConflictSeverity
 
 __all__ = [
     "Task",
@@ -31,4 +32,8 @@ __all__ = [
     "TaskFailureAction",
     "FeedbackManager",
     "RequirementsParser",
+    "ConflictDetector",
+    "Conflict",
+    "ConflictType",
+    "ConflictSeverity",
 ]

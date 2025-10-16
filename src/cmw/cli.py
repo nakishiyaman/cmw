@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from .models import TaskStatus
 from .coordinator import Coordinator, PromptGenerator
 from .requirements_parser import RequirementsParser
+from .conflict_detector import ConflictDetector
 
 
 @click.group()
@@ -391,16 +392,70 @@ def execute_all_tasks(api_key: Optional[str], continue_on_error: bool):
         click.echo(f"\n❌ 実行エラー: {str(e)}", err=True)
 
 
+@tasks.command('analyze')
+@click.option('--show-order', is_flag=True, help='推奨実行順序も表示')
+def analyze_conflicts(show_order: bool):
+    """タスク間のファイル競合を分析
+
+    examples:
+        cmw tasks analyze
+        cmw tasks analyze --show-order
+    """
+    project_path = Path.cwd()
+    coordinator = Coordinator(project_path)
+
+    if not coordinator.tasks:
+        click.echo("タスクが見つかりません。'cmw tasks generate' を実行してください。")
+        return
+
+    # ConflictDetectorで分析
+    detector = ConflictDetector()
+    tasks_list = list(coordinator.tasks.values())
+
+    # 競合レポートを生成
+    report = detector.get_conflict_report(tasks_list)
+    click.echo(report)
+
+    # ファイル使用状況
+    click.echo(f"\n{'='*80}")
+    click.echo("ファイル使用状況")
+    click.echo(f"{'='*80}\n")
+
+    file_usage = detector.analyze_file_usage(tasks_list)
+
+    # リスクレベル順にソート
+    risk_order = {'critical': 4, 'high': 3, 'medium': 2, 'low': 1}
+    sorted_files = sorted(
+        file_usage.items(),
+        key=lambda x: (risk_order.get(x[1]['risk_level'], 0), len(x[1]['tasks'])),
+        reverse=True
+    )
+
+    for file, usage in sorted_files:
+        risk_icon = {
+            'critical': '🔴',
+            'high': '🟠',
+            'medium': '🟡',
+            'low': '🟢'
+        }
+        icon = risk_icon.get(usage['risk_level'], '⚪')
+
+        click.echo(f"{icon} {file}")
+        click.echo(f"   リスクレベル: {usage['risk_level']}")
+        click.echo(f"   関連タスク ({len(usage['tasks'])}件): {', '.join(usage['tasks'])}")
+        click.echo()
+
+
 @cli.command()
 def status():
     """プロジェクトの進捗状況を表示"""
     project_path = Path.cwd()
     coordinator = Coordinator(project_path)
-    
+
     if not coordinator.tasks:
         click.echo("タスクが見つかりません")
         return
-    
+
     # ステータスごとにカウント
     status_counts = {
         TaskStatus.PENDING: 0,
@@ -409,18 +464,18 @@ def status():
         TaskStatus.FAILED: 0,
         TaskStatus.BLOCKED: 0
     }
-    
+
     for task in coordinator.tasks.values():
         status_counts[task.status] += 1
-    
+
     total = len(coordinator.tasks)
     completed = status_counts[TaskStatus.COMPLETED]
     progress = (completed / total * 100) if total > 0 else 0
-    
+
     click.echo(f"\n{'='*80}")
     click.echo("プロジェクト進捗状況")
     click.echo(f"{'='*80}\n")
-    
+
     click.echo(f"全体進捗: {completed}/{total} タスク完了 ({progress:.1f}%)")
     click.echo(f"\nステータス別:")
     click.echo(f"  ⏳ 待機中: {status_counts[TaskStatus.PENDING]}")

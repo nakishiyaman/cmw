@@ -231,6 +231,9 @@ cmw tasks list --status completed
 
 # タスク詳細
 cmw tasks show TASK-001
+
+# ファイル競合分析
+cmw tasks analyze
 ```
 
 ## 📖 ドキュメント
@@ -252,9 +255,11 @@ python -m pytest tests/test_state_manager.py -v
 python -m pytest tests/test_parallel_executor.py -v
 python -m pytest tests/test_error_handler.py -v
 python -m pytest tests/test_feedback.py -v
+python -m pytest tests/test_requirements_parser.py -v
+python -m pytest tests/test_conflict_detector.py -v
 ```
 
-現在88個のテストが全てパスしています。
+現在107個のテストが全てパスしています。
 
 ## 📊 開発ロードマップ
 
@@ -289,10 +294,16 @@ python -m pytest tests/test_feedback.py -v
 - **テスト**: 23テスト全パス
 - **実証**: todo-api検証で手動17タスク→自動20タスク生成
 
-### 🔄 Phase 6: ファイル競合検出（0%）
-- ファイル競合の事前検出
-- 最適な実行順序の提案
-- 並列実行グループの自動生成
+### ✅ Phase 6: ファイル競合検出（100%）
+- **ConflictDetector実装完了**
+  - ファイル競合の事前検出（WRITE-WRITE検出）
+  - 最適な実行順序の提案（トポロジカルソート）
+  - 並列実行グループの自動生成
+  - 競合の深刻度判定（CRITICAL/HIGH/MEDIUM/LOW）
+  - ファイル使用状況とリスク分析
+- **CLIコマンド追加**: `cmw tasks analyze`
+- **テスト**: 19テスト全パス
+- **実証**: todo-apiで2件の競合を検出、8ステップの実行順序を提案
 
 ### 🔄 Phase 7: リアルタイム進捗UI（0%）
 - ターミナルダッシュボード
@@ -303,7 +314,7 @@ python -m pytest tests/test_feedback.py -v
 - プロンプトテンプレート
 - 応答解析の自動化
 
-**全体進捗**: 約90%（Phase 5完了 + 実プロジェクト検証完了）
+**全体進捗**: 約95%（Phase 6完了 + 実プロジェクト検証完了）
 
 ## 💡 主な特徴
 
