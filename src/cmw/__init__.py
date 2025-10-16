@@ -10,6 +10,7 @@ from .models import Task, TaskStatus, Worker, ExecutionResult, Priority
 from .coordinator import Coordinator, PromptGenerator
 from .task_provider import TaskProvider
 from .state_manager import StateManager, SessionContext
+from .parallel_executor import ParallelExecutor
 
 __all__ = [
     "Task",
@@ -22,4 +23,5 @@ __all__ = [
     "TaskProvider",
     "StateManager",
     "SessionContext",
+    "ParallelExecutor",
 ]
