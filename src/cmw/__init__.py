@@ -11,6 +11,7 @@ from .coordinator import Coordinator, PromptGenerator
 from .task_provider import TaskProvider
 from .state_manager import StateManager, SessionContext
 from .parallel_executor import ParallelExecutor
+from .error_handler import ErrorHandler, TaskFailureAction
 
 __all__ = [
     "Task",
@@ -24,4 +25,6 @@ __all__ = [
     "StateManager",
     "SessionContext",
     "ParallelExecutor",
+    "ErrorHandler",
+    "TaskFailureAction",
 ]
