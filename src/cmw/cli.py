@@ -520,6 +520,94 @@ def validate_tasks(fix: bool, tasks_file: str):
         console.print("[green]🎉 全ての検証項目をパスしました！[/green]")
 
 
+@task.command('graph')
+@click.option('--format', type=click.Choice(['ascii', 'mermaid']), default='ascii',
+              help='出力形式（ascii, mermaid）')
+@click.option('--stats', is_flag=True, help='統計情報を表示')
+def show_graph(format: str, stats: bool):
+    """タスクの依存関係グラフを表示
+
+    examples:
+        cmw task graph
+        cmw task graph --format mermaid
+        cmw task graph --stats
+    """
+    from rich.console import Console
+    from rich.panel import Panel
+    from rich.table import Table
+    from .graph_visualizer import GraphVisualizer
+
+    console = Console()
+    project_path = Path.cwd()
+    coordinator = Coordinator(project_path)
+
+    if not coordinator.tasks:
+        console.print("[yellow]タスクが見つかりません。'cmw task generate' を実行してください。[/yellow]")
+        return
+
+    tasks_list = list(coordinator.tasks.values())
+    visualizer = GraphVisualizer(tasks_list)
+
+    # グラフを表示
+    if format == 'ascii':
+        console.print(Panel.fit(
+            "📊 タスク依存関係グラフ (ASCII)",
+            border_style="blue"
+        ))
+        console.print(visualizer.render_ascii())
+    elif format == 'mermaid':
+        console.print(Panel.fit(
+            "📊 タスク依存関係グラフ (Mermaid)",
+            border_style="blue"
+        ))
+        console.print("\n[cyan]以下のMermaid定義をコピーして、Mermaidビューアーで表示できます:[/cyan]\n")
+        console.print(visualizer.render_mermaid())
+
+    # 統計情報を表示
+    if stats:
+        console.print("\n")
+        console.print(Panel.fit(
+            "📈 グラフ統計情報",
+            border_style="green"
+        ))
+
+        graph_stats = visualizer.get_statistics()
+
+        table = Table(show_header=True, header_style="bold magenta")
+        table.add_column("項目", style="cyan")
+        table.add_column("値", justify="right")
+
+        table.add_row("総タスク数", str(graph_stats['total_tasks']))
+        table.add_row("総依存関係数", str(graph_stats['total_dependencies']))
+        table.add_row("ルートタスク数", str(graph_stats['root_tasks']))
+        table.add_row("リーフタスク数", str(graph_stats['leaf_tasks']))
+        table.add_row("平均依存数", f"{graph_stats['average_dependencies']:.2f}")
+        table.add_row("DAG（非循環グラフ）", "✅ はい" if graph_stats['is_dag'] else "❌ いいえ")
+
+        if graph_stats['is_dag']:
+            table.add_row("クリティカルパス長", str(graph_stats['critical_path_length']))
+            table.add_row("最大並列度", str(graph_stats['max_parallelism']))
+            table.add_row("並列レベル数", str(graph_stats['parallel_levels']))
+
+        console.print(table)
+
+        # クリティカルパスを表示
+        if graph_stats['is_dag'] and graph_stats['critical_path']:
+            console.print("\n[bold cyan]🎯 クリティカルパス:[/bold cyan]")
+            path_str = " → ".join(graph_stats['critical_path'])
+            console.print(f"  {path_str}")
+
+        # 並列実行グループを表示
+        parallel_groups = visualizer.get_parallel_groups()
+        if parallel_groups:
+            console.print("\n[bold cyan]⚡ 並列実行グループ:[/bold cyan]")
+            for i, group in enumerate(parallel_groups, 1):
+                if len(group) == 1:
+                    console.print(f"  レベル {i}: {group[0]}")
+                else:
+                    console.print(f"  レベル {i}: {', '.join(group)} ({len(group)}個並列)")
+
+
 @cli.command()
 @click.option('--compact', is_flag=True, help='コンパクト表示')
 def status(compact: bool):

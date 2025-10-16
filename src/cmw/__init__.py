@@ -5,7 +5,7 @@ Claude Codeと統合したタスク管理・メタデータフレームワーク
 requirements.mdから自動でタスクを生成し、依存関係を管理し、進捗を可視化します。
 """
 
-__version__ = "0.1.0"
+__version__ = "0.3.0"
 
 from .models import Task, TaskStatus, Worker, ExecutionResult, Priority
 from .coordinator import Coordinator
@@ -18,6 +18,7 @@ from .requirements_parser import RequirementsParser
 from .conflict_detector import ConflictDetector, Conflict, ConflictType, ConflictSeverity
 from .progress_tracker import ProgressTracker
 from .dashboard import Dashboard
+from .graph_visualizer import GraphVisualizer
 
 __all__ = [
     "Task",
@@ -40,4 +41,5 @@ __all__ = [
     "ConflictSeverity",
     "ProgressTracker",
     "Dashboard",
+    "GraphVisualizer",
 ]
