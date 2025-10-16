@@ -1,7 +1,8 @@
 """
 Claude Multi-Worker Framework
 
-マルチワーカーアーキテクチャでソフトウェア開発を自動化するフレームワーク
+Claude Codeと統合したタスク管理・メタデータフレームワーク。
+requirements.mdから自動でタスクを生成し、依存関係を管理し、進捗を可視化します。
 """
 
 __version__ = "0.1.0"

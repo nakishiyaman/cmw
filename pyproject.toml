@@ -5,14 +5,14 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "claude-multi-worker"
 version = "0.1.0"
-description = "Document-Driven Multi-Agent Development Orchestration Framework"
+description = "Claude Code統合タスク管理フレームワーク - requirements.mdから自動でタスク生成、依存関係管理、進捗可視化"
 readme = "README.md"
 requires-python = ">=3.9"
 license = {text = "MIT"}
 authors = [
-    {name = "Your Name", email = "your.email@example.com"}
+    {name = "Nakishiyama", email = "noreply@example.com"}
 ]
-keywords = ["claude", "ai", "multi-agent", "orchestration", "development"]
+keywords = ["claude", "claude-code", "task-management", "automation", "development", "requirements", "progress-tracking"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
