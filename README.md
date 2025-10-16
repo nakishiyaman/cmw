@@ -48,19 +48,27 @@ cmwは**タスク管理・メタデータ層**として機能し、Claude Code�
 
 ## ✨ 主な機能
 
-### ✅ 実装済み（Phase 0 + Phase 1 + Phase 3.1）
+### ✅ 実装済み（Phase 0 + Phase 1 + Phase 3 + Phase 4）
 
 #### タスク管理層（Phase 1）
 - **TaskProvider**: タスク情報の提供、コンテキスト構築、状態管理
 - **StateManager**: ロック機構、セッション管理、進捗永続化
 - **ParallelExecutor**: 並列実行判定、ファイル競合検出
 
-#### エラーハンドリング（Phase 3.1）
+#### エラーハンドリング（Phase 3）
 - **ErrorHandler**: エラー対応決定、ロールバック、復旧提案
   - リトライ可能なエラーの自動判定
   - 部分的な成果物の自動削除
   - エラー別の復旧方法提案
   - 影響を受けるタスクの分析
+
+#### フィードバック機能（Phase 4）
+- **FeedbackManager**: リアルタイムフィードバック
+  - プロジェクト全体の進捗表示（完了率、ステータス別）
+  - エラーの分かりやすい説明（8種類のエラーに対応）
+  - 次のアクション提案（実行可能タスク、失敗、ブロック）
+  - タスク概要の取得
+  - 残り時間の見積もり
 
 #### 基盤機能（Phase 0）
 - ✅ プロジェクト初期化（`cmw init`）
@@ -76,8 +84,10 @@ cmwは**タスク管理・メタデータ層**として機能し、Claude Code�
 ### ✅ Phase 3.1完了
 - ErrorHandler実装完了（エラーハンドリングと回復機能）
 
-### 🔄 開発中（Phase 4+）
-- Phase 4: UX/フィードバック機能
+### ✅ Phase 4完了
+- FeedbackManager実装完了（リアルタイムフィードバック機能）
+
+### 🔄 開発中（Phase 5+）
 - Phase 5: Git統合（オプション）
 - Phase 2.2: MCP統合（オプション）
 
@@ -230,9 +240,10 @@ python -m pytest tests/test_task_provider.py -v
 python -m pytest tests/test_state_manager.py -v
 python -m pytest tests/test_parallel_executor.py -v
 python -m pytest tests/test_error_handler.py -v
+python -m pytest tests/test_feedback.py -v
 ```
 
-現在42個のテストが全てパスしています。
+現在65個のテストが全てパスしています。
 
 ## 📊 開発ロードマップ
 
@@ -254,10 +265,12 @@ python -m pytest tests/test_error_handler.py -v
 ### ✅ Phase 3: エラーハンドリング（100%）
 - **Phase 3.1**: ErrorHandler実装（完了）
 
-### 🔄 Phase 4: UX/フィードバック（0%）
+### ✅ Phase 4: UX/フィードバック（100%）
+- **Phase 4.1**: FeedbackManager実装（完了）
+
 ### 🔄 Phase 5: 拡張機能（0%）
 
-**全体進捗**: 約75%
+**全体進捗**: 約85%
 
 ## 💡 主な特徴
 
