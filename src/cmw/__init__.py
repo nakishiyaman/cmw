@@ -13,6 +13,7 @@ from .state_manager import StateManager, SessionContext
 from .parallel_executor import ParallelExecutor
 from .error_handler import ErrorHandler, TaskFailureAction
 from .feedback import FeedbackManager
+from .requirements_parser import RequirementsParser
 
 __all__ = [
     "Task",
@@ -29,4 +30,5 @@ __all__ = [
     "ErrorHandler",
     "TaskFailureAction",
     "FeedbackManager",
+    "RequirementsParser",
 ]

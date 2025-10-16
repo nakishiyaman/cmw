@@ -254,7 +254,7 @@ python -m pytest tests/test_error_handler.py -v
 python -m pytest tests/test_feedback.py -v
 ```
 
-現在65個のテストが全てパスしています。
+現在88個のテストが全てパスしています。
 
 ## 📊 開発ロードマップ
 
@@ -279,10 +279,15 @@ python -m pytest tests/test_feedback.py -v
 ### ✅ Phase 4: UX/フィードバック（100%）
 - **Phase 4.1**: FeedbackManager実装（完了）
 
-### 🔄 Phase 5: 自動タスク生成（0%）
-- Requirements.mdからタスクを自動生成
-- ファイルベースの依存関係推論
-- ターゲットファイルの自動決定
+### ✅ Phase 5: 自動タスク生成（100%）
+- **RequirementsParser実装完了**
+  - Markdown解析とセクション抽出
+  - ファイルパスの自動推論
+  - 依存関係の自動推論
+  - 優先度の自動決定
+- **CLIコマンド追加**: `cmw tasks generate`
+- **テスト**: 23テスト全パス
+- **実証**: todo-api検証で手動17タスク→自動20タスク生成
 
 ### 🔄 Phase 6: ファイル競合検出（0%）
 - ファイル競合の事前検出
@@ -298,7 +303,7 @@ python -m pytest tests/test_feedback.py -v
 - プロンプトテンプレート
 - 応答解析の自動化
 
-**全体進捗**: 約85%（Phase 4完了 + 実プロジェクト検証完了）
+**全体進捗**: 約90%（Phase 5完了 + 実プロジェクト検証完了）
 
 ## 💡 主な特徴
 
