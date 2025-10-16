@@ -45,19 +45,36 @@ class StaticAnalyzer:
             tree = ast.parse(source, filename=str(full_path))
             dependencies = set()
 
+            # sys.pathの変更を検出
+            extra_paths = self._detect_sys_path_changes(tree, file_path)
+
             # Import文を検出
             for node in ast.walk(tree):
                 if isinstance(node, ast.Import):
                     for alias in node.names:
-                        dep_file = self._module_to_file(alias.name, file_path)
-                        if dep_file:
-                            dependencies.add(dep_file)
+                        dep_files = self._module_to_file(alias.name, file_path, extra_paths)
+                        dependencies.update(dep_files)
 
                 elif isinstance(node, ast.ImportFrom):
                     if node.module:
-                        dep_file = self._module_to_file(node.module, file_path)
-                        if dep_file:
-                            dependencies.add(dep_file)
+                        # from X import Y の場合、XとX.Yの両方を試す
+                        dep_files = self._module_to_file(node.module, file_path, extra_paths)
+                        dependencies.update(dep_files)
+
+                        # Yがモジュールである場合も考慮（from routers import auth など）
+                        for alias in node.names:
+                            submodule = f"{node.module}.{alias.name}"
+                            sub_dep_files = self._module_to_file(submodule, file_path, extra_paths)
+                            # 自分自身を除外
+                            sub_dep_files.discard(file_path)
+                            dependencies.update(sub_dep_files)
+                    else:
+                        # from . import Y の場合
+                        for alias in node.names:
+                            dep_files = self._module_to_file(f".{alias.name}", file_path, extra_paths)
+                            # 自分自身を除外
+                            dep_files.discard(file_path)
+                            dependencies.update(dep_files)
 
             return dependencies
 
@@ -65,16 +82,99 @@ class StaticAnalyzer:
             # 構文エラーやエンコーディングエラーは無視
             return set()
 
-    def _module_to_file(self, module_name: str, current_file: str) -> Optional[str]:
+    def _detect_sys_path_changes(self, tree: ast.AST, current_file: str) -> List[Path]:
+        """sys.pathの変更を検出
+
+        Args:
+            tree: ASTツリー
+            current_file: 現在のファイルパス
+
+        Returns:
+            追加されたパスのリスト
+        """
+        extra_paths = []
+
+        for node in ast.walk(tree):
+            # sys.path.insert(0, ...) や sys.path.append(...) を検出
+            if isinstance(node, ast.Expr) and isinstance(node.value, ast.Call):
+                call = node.value
+                if isinstance(call.func, ast.Attribute):
+                    # sys.path.insert や sys.path.append
+                    if (isinstance(call.func.value, ast.Attribute) and
+                        isinstance(call.func.value.value, ast.Name) and
+                        call.func.value.value.id == 'sys' and
+                        call.func.value.attr == 'path' and
+                        call.func.attr in ['insert', 'append']):
+
+                        # 引数を解析（簡易版 - str(Path(__file__).parent.parent) など）
+                        # 一般的なパターン: parent や parent.parent
+                        for arg in call.args:
+                            path = self._evaluate_path_expr(arg, current_file)
+                            if path:
+                                extra_paths.append(path)
+
+        return extra_paths
+
+    def _evaluate_path_expr(self, node: ast.AST, current_file: str) -> Optional[Path]:
+        """パス式を評価（簡易版）
+
+        Args:
+            node: AST ノード
+            current_file: 現在のファイルパス
+
+        Returns:
+            評価されたパス
+        """
+        # str(Path(__file__).parent) や str(Path(__file__).parent.parent) を検出
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == 'str':
+            if len(node.args) > 0:
+                arg = node.args[0]
+                # Path(__file__).parent.parent などを解析
+                parent_count = 0
+                current = arg
+
+                while isinstance(current, ast.Attribute) and current.attr == 'parent':
+                    parent_count += 1
+                    current = current.value
+
+                # Path(__file__) の部分を確認
+                if isinstance(current, ast.Call):
+                    if (isinstance(current.func, ast.Name) and current.func.id == 'Path' and
+                        len(current.args) > 0 and isinstance(current.args[0], ast.Name) and
+                        current.args[0].id == '__file__'):
+
+                        # current_fileから parent_count 分上のディレクトリを取得
+                        # current_fileはプロジェクトルートからの相対パスなので、
+                        # Path(current_file)の親ディレクトリをparent_count回取得
+                        current_path = Path(current_file)
+
+                        # ファイル自体は含めず、parent_count回親ディレクトリに移動
+                        # Path(__file__).parent は1回、.parent.parent は2回
+                        result = current_path
+                        for _ in range(parent_count):
+                            result = result.parent
+
+                        # 絶対パスに変換
+                        return self.project_root / result
+
+        return None
+
+    def _module_to_file(self, module_name: str, current_file: str, extra_paths: List[Path] = None) -> Set[str]:
         """モジュール名をファイルパスに変換
 
         Args:
             module_name: モジュール名（例: "backend.api.auth"）
             current_file: 現在のファイルパス
+            extra_paths: sys.pathに追加されたパス
 
         Returns:
-            ファイルパス（プロジェクトルートからの相対パス）
+            ファイルパスのセット（プロジェクトルートからの相対パス）
         """
+        if extra_paths is None:
+            extra_paths = []
+
+        results = set()
+
         # 相対インポート（.module）は現在のディレクトリからの相対パス
         if module_name.startswith('.'):
             current_dir = Path(current_file).parent
@@ -94,24 +194,31 @@ class StaticAnalyzer:
             for suffix in ['__init__.py', '.py']:
                 candidate = self.project_root / f"{module_path}{suffix}"
                 if candidate.exists():
-                    return str(candidate.relative_to(self.project_root))
+                    results.add(str(candidate.relative_to(self.project_root)))
 
-            return None
+            return results
 
         # 絶対インポートの場合
         module_path = module_name.replace('.', '/')
 
-        # __init__.py を試す
-        candidate = self.project_root / module_path / '__init__.py'
-        if candidate.exists():
-            return str(candidate.relative_to(self.project_root))
+        # 現在のファイルのディレクトリを検索パスに追加
+        current_file_dir = self.project_root / Path(current_file).parent
 
-        # .py を試す
-        candidate = self.project_root / f"{module_path}.py"
-        if candidate.exists():
-            return str(candidate.relative_to(self.project_root))
+        # extra_paths（sys.pathで追加されたパス）を優先し、次にプロジェクトルート、最後に現在のディレクトリ
+        search_bases = extra_paths + [self.project_root, current_file_dir]
 
-        return None
+        for base in search_bases:
+            # __init__.py を試す
+            candidate = base / module_path / '__init__.py'
+            if candidate.exists() and candidate.is_relative_to(self.project_root):
+                results.add(str(candidate.relative_to(self.project_root)))
+
+            # .py を試す
+            candidate = base / f"{module_path}.py"
+            if candidate.exists() and candidate.is_relative_to(self.project_root):
+                results.add(str(candidate.relative_to(self.project_root)))
+
+        return results
 
     def infer_task_dependencies(
         self,

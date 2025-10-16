@@ -344,19 +344,19 @@ class TestModuleToFile:
         analyzer = StaticAnalyzer(project_root=temp_python_project)
 
         # backend.models -> backend/models.py
-        file_path = analyzer._module_to_file("backend.models", "some_file.py")
-        assert file_path == "backend/models.py"
+        file_paths = analyzer._module_to_file("backend.models", "some_file.py")
+        assert "backend/models.py" in file_paths
 
         # backend.api -> backend/api/__init__.py
-        file_path = analyzer._module_to_file("backend.api", "some_file.py")
-        assert file_path is not None
+        file_paths = analyzer._module_to_file("backend.api", "some_file.py")
+        assert len(file_paths) > 0
 
     def test_module_to_file_nonexistent(self, temp_python_project):
         """存在しないモジュールの変換"""
         analyzer = StaticAnalyzer(project_root=temp_python_project)
 
-        file_path = analyzer._module_to_file("nonexistent.module", "some_file.py")
-        assert file_path is None
+        file_paths = analyzer._module_to_file("nonexistent.module", "some_file.py")
+        assert len(file_paths) == 0
 
 
 class TestRealWorldScenarios:
