@@ -257,6 +257,41 @@ except Exception as e:
     print(f"影響を受けるタスク: {[t.id for t in affected]}")
 ```
 
+### FeedbackManager
+
+リアルタイムフィードバック機能を提供します。
+
+```python
+from cmw import FeedbackManager
+
+feedback = FeedbackManager(project_path)
+
+# プロジェクト全体の進捗を表示
+progress_report = feedback.report_progress()
+print(progress_report)
+# → "完了: 3/19 タスク (15.8%)"
+# → "ステータス別: ✅完了: 3, 🔄実行中: 1, ⏸️保留: 15"
+
+# エラーを分かりやすく説明
+error_explanation = feedback.explain_error(task, exception)
+print(error_explanation)
+# → エラータイプ、説明、考えられる原因を表示
+
+# 次のステップを提案
+next_steps = feedback.show_next_steps()
+print(next_steps)
+# → 実行可能なタスク、失敗したタスク、推奨アクションを表示
+
+# タスク概要を取得
+task_summary = feedback.get_task_summary(task)
+print(task_summary)
+
+# 残り時間を見積もる
+time_estimate = feedback.estimate_remaining_time(avg_task_time_minutes=30)
+print(time_estimate)
+# → "残りタスク: 16/19, 約480分 (8.0時間)"
+```
+
 ## 🔄 典型的なワークフロー
 
 ### シナリオ1: 単一タスクの実行
@@ -282,23 +317,33 @@ context = provider.get_task_context(task.id)
 provider.mark_completed(task.id, ["backend/auth.py"])
 ```
 
-### シナリオ2: エラーハンドリング付き全タスク実行
+### シナリオ2: フル機能統合（エラーハンドリング + フィードバック）
 
 ```python
 from pathlib import Path
-from cmw import TaskProvider, ErrorHandler, TaskFailureAction
+from cmw import TaskProvider, ErrorHandler, FeedbackManager, TaskFailureAction
 
 project_path = Path.cwd()
 provider = TaskProvider(project_path)
 error_handler = ErrorHandler(project_path)
+feedback = FeedbackManager(project_path)
+
+# 開始時の進捗表示
+print(feedback.report_progress())
+print(feedback.show_next_steps())
 
 while True:
     task = provider.get_next_task()
     if not task:
-        print("全タスク完了！")
+        print("\n🎉 全タスク完了！")
+        print(feedback.report_progress())
         break
 
-    print(f"実行中: {task.id} - {task.title}")
+    # タスク概要を表示
+    print(f"\n{'=' * 50}")
+    print(feedback.get_task_summary(task))
+    print(f"{'=' * 50}\n")
+
     provider.mark_started(task.id)
 
     retry_count = 0
@@ -312,37 +357,46 @@ while True:
             # ... 実装 ...
 
             provider.mark_completed(task.id, ["generated_file.py"])
-            break  # 成功したらループを抜ける
+
+            # 完了後の進捗表示
+            print(f"\n✅ タスク {task.id} 完了")
+            print(feedback.report_progress())
+            print(feedback.estimate_remaining_time())
+            break
 
         except Exception as e:
-            print(f"エラー: {e}")
+            # エラーの詳細説明
+            print(feedback.explain_error(task, e))
 
             # エラー対応を決定
             action = error_handler.handle_task_failure(task, e, retry_count, max_retries)
 
             if action == TaskFailureAction.RETRY:
-                print(f"リトライします（{retry_count + 1}/{max_retries}）")
+                print(f"\n🔄 リトライします（{retry_count + 1}/{max_retries}）")
                 retry_count += 1
                 continue
 
             elif action == TaskFailureAction.ROLLBACK:
-                print("ロールバックします")
+                print("\n↩️  ロールバックします")
                 error_handler.rollback_partial_work(task)
                 provider.mark_failed(task.id, str(e))
                 break
 
             elif action == TaskFailureAction.SKIP:
-                print("このタスクをスキップします")
+                print("\n⏭️  このタスクをスキップします")
                 provider.mark_failed(task.id, f"Skipped: {str(e)}")
                 break
 
             else:  # BLOCK
-                print("依存タスクをブロックします")
+                print("\n🚫 依存タスクをブロックします")
                 provider.mark_failed(task.id, str(e))
 
                 # 復旧提案を表示
                 suggestion = error_handler.suggest_recovery(task, e)
                 print(suggestion)
+
+                # 次のステップを表示
+                print(feedback.show_next_steps())
                 break
 ```
 
