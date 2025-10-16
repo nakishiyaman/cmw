@@ -1,5 +1,5 @@
 """
-cmw tasks validate コマンドのユニットテスト
+cmw task validate コマンドのユニットテスト
 """
 import json
 import pytest
@@ -124,7 +124,7 @@ def tasks_with_non_tasks(temp_project):
 
 
 class TestValidateCommand:
-    """cmw tasks validate コマンドのテスト"""
+    """cmw task validate コマンドのテスト"""
 
     def test_validate_with_no_issues(self, temp_project, valid_tasks_json, monkeypatch):
         """問題がない場合の検証"""
@@ -133,7 +133,7 @@ class TestValidateCommand:
         # カレントディレクトリを変更
         monkeypatch.chdir(temp_project)
 
-        result = runner.invoke(cli, ['tasks', 'validate'], catch_exceptions=False)
+        result = runner.invoke(cli, ['task', 'validate'], catch_exceptions=False)
 
         # コマンドが成功
         assert result.exit_code == 0
@@ -147,7 +147,7 @@ class TestValidateCommand:
         runner = CliRunner()
         monkeypatch.chdir(temp_project)
 
-        result = runner.invoke(cli, ['tasks', 'validate'], catch_exceptions=False)
+        result = runner.invoke(cli, ['task', 'validate'], catch_exceptions=False)
 
         assert result.exit_code == 0
         assert "循環依存を検出しました" in result.output or "件" in result.output
@@ -157,7 +157,7 @@ class TestValidateCommand:
         runner = CliRunner()
         monkeypatch.chdir(temp_project)
 
-        result = runner.invoke(cli, ['tasks', 'validate', '--fix'], catch_exceptions=False)
+        result = runner.invoke(cli, ['task', 'validate', '--fix'], catch_exceptions=False)
 
         assert result.exit_code == 0
 
@@ -184,7 +184,7 @@ class TestValidateCommand:
         runner = CliRunner()
         monkeypatch.chdir(temp_project)
 
-        result = runner.invoke(cli, ['tasks', 'validate'], catch_exceptions=False)
+        result = runner.invoke(cli, ['task', 'validate'], catch_exceptions=False)
 
         assert result.exit_code == 0
         assert "非タスク項目を検出しました" in result.output or "TASK-024" in result.output
@@ -194,7 +194,7 @@ class TestValidateCommand:
         runner = CliRunner()
         monkeypatch.chdir(temp_project)
 
-        result = runner.invoke(cli, ['tasks', 'validate', '--fix'], catch_exceptions=False)
+        result = runner.invoke(cli, ['task', 'validate', '--fix'], catch_exceptions=False)
 
         assert result.exit_code == 0
 
@@ -215,7 +215,7 @@ class TestValidateCommand:
         runner = CliRunner()
         monkeypatch.chdir(temp_project)
 
-        result = runner.invoke(cli, ['tasks', 'validate'], catch_exceptions=False)
+        result = runner.invoke(cli, ['task', 'validate'], catch_exceptions=False)
 
         # エラーメッセージが表示される
         assert "が見つかりません" in result.output or "エラー" in result.output
@@ -233,7 +233,7 @@ class TestValidateCommand:
         custom_path.write_text(json.dumps(tasks_data, ensure_ascii=False, indent=2), encoding='utf-8')
 
         runner = CliRunner()
-        result = runner.invoke(cli, ['tasks', 'validate', '--tasks-file', 'custom/tasks.json'],
+        result = runner.invoke(cli, ['task', 'validate', '--tasks-file', 'custom/tasks.json'],
                                catch_exceptions=False)
 
         assert result.exit_code == 0
@@ -267,7 +267,7 @@ class TestValidateWithMissingDependencies:
         runner = CliRunner()
         monkeypatch.chdir(temp_project)
 
-        result = runner.invoke(cli, ['tasks', 'validate'], catch_exceptions=False)
+        result = runner.invoke(cli, ['task', 'validate'], catch_exceptions=False)
 
         assert result.exit_code == 0
         assert "存在しない依存先" in result.output or "TASK-999" in result.output
@@ -300,7 +300,7 @@ class TestValidateWithSelfDependency:
         runner = CliRunner()
         monkeypatch.chdir(temp_project)
 
-        result = runner.invoke(cli, ['tasks', 'validate'], catch_exceptions=False)
+        result = runner.invoke(cli, ['task', 'validate'], catch_exceptions=False)
 
         assert result.exit_code == 0
         assert "自己依存" in result.output or "不正な依存関係" in result.output

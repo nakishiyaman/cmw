@@ -20,9 +20,9 @@ from .git_integration import GitIntegration
 
 
 @click.group()
-@click.version_option(version="0.2.0")
+@click.version_option(version="0.3.0")
 def cli():
-    """Claude Multi-Worker Framework - マルチワーカー開発フレームワーク v0.2.0"""
+    """Claude Multi-Worker Framework - マルチワーカー開発フレームワーク v0.3.0"""
     pass
 
 
@@ -68,17 +68,24 @@ def init(name: str):
     click.echo(f"\n次のステップ:")
     click.echo(f"  1. cd {name}")
     click.echo(f"  2. shared/docs/requirements.md を編集")
-    click.echo(f"  3. cmw tasks generate でタスク自動生成")
+    click.echo(f"  3. cmw task generate でタスク自動生成")
     click.echo(f"  4. cmw status でプロジェクト状況を確認")
 
 
-@cli.group()
-def tasks():
+@cli.group(name='task')
+def task():
     """タスク管理コマンド"""
     pass
 
 
-@tasks.command('generate')
+# 後方互換性のため tasks も残す（非推奨）
+@cli.group(name='tasks', hidden=True)
+def tasks():
+    """[非推奨] 'cmw task' を使用してください"""
+    pass
+
+
+@task.command('generate')
 @click.option('--requirements', '-r', default='shared/docs/requirements.md',
               help='requirements.mdのパス')
 @click.option('--output', '-o', default='shared/coordination/tasks.json',
@@ -89,9 +96,9 @@ def generate_tasks(requirements: str, output: str, force: bool):
     """requirements.mdからタスクを自動生成
 
     examples:
-        cmw tasks generate
-        cmw tasks generate -r docs/requirements.md
-        cmw tasks generate --force
+        cmw task generate
+        cmw task generate -r docs/requirements.md
+        cmw task generate --force
     """
     project_path = Path.cwd()
     requirements_path = project_path / requirements
@@ -103,7 +110,7 @@ def generate_tasks(requirements: str, output: str, force: bool):
         click.echo(f"\n次のステップ:")
         click.echo(f"  1. {requirements_path} を作成")
         click.echo(f"  2. プロジェクト要件を記載")
-        click.echo(f"  3. cmw tasks generate を再実行")
+        click.echo(f"  3. cmw task generate を再実行")
         return
 
     # 出力先の上書き確認
@@ -170,7 +177,7 @@ def generate_tasks(requirements: str, output: str, force: bool):
             click.echo(f"  {assigned_to}: {count}タスク")
 
         click.echo(f"\n次のステップ:")
-        click.echo(f"  1. タスク一覧を確認: cmw tasks list")
+        click.echo(f"  1. タスク一覧を確認: cmw task list")
         click.echo(f"  2. プロジェクト状況を確認: cmw status")
 
     except FileNotFoundError as e:
@@ -181,16 +188,16 @@ def generate_tasks(requirements: str, output: str, force: bool):
         traceback.print_exc()
 
 
-@tasks.command('list')
+@task.command('list')
 @click.option('--status', type=click.Choice(['pending', 'in_progress', 'completed', 'failed', 'blocked']),
               help='ステータスでフィルタ')
 def list_tasks(status: Optional[str]):
     """タスク一覧を表示"""
     project_path = Path.cwd()
     coordinator = Coordinator(project_path)
-    
+
     if not coordinator.tasks:
-        click.echo("タスクが見つかりません。'cmw tasks generate' を実行してください。")
+        click.echo("タスクが見つかりません。'cmw task generate' を実行してください。")
         return
     
     # フィルタリング
@@ -220,7 +227,7 @@ def list_tasks(status: Optional[str]):
         click.echo()
 
 
-@tasks.command('show')
+@task.command('show')
 @click.argument('task_id')
 def show_task(task_id: str):
     """タスクの詳細を表示"""
@@ -254,20 +261,20 @@ def show_task(task_id: str):
         click.echo(f"\nエラー: {task.error_message}")
 
 
-@tasks.command('analyze')
+@task.command('analyze')
 @click.option('--show-order', is_flag=True, help='推奨実行順序も表示')
 def analyze_conflicts(show_order: bool):
     """タスク間のファイル競合を分析
 
     examples:
-        cmw tasks analyze
-        cmw tasks analyze --show-order
+        cmw task analyze
+        cmw task analyze --show-order
     """
     project_path = Path.cwd()
     coordinator = Coordinator(project_path)
 
     if not coordinator.tasks:
-        click.echo("タスクが見つかりません。'cmw tasks generate' を実行してください。")
+        click.echo("タスクが見つかりません。'cmw task generate' を実行してください。")
         return
 
     # ConflictDetectorで分析
@@ -308,7 +315,7 @@ def analyze_conflicts(show_order: bool):
         click.echo()
 
 
-@tasks.command('validate')
+@task.command('validate')
 @click.option('--fix', is_flag=True, help='検出された問題を自動修正')
 @click.option('--tasks-file', default='shared/coordination/tasks.json',
               help='検証するtasks.jsonのパス')
@@ -318,8 +325,8 @@ def validate_tasks(fix: bool, tasks_file: str):
     循環依存、非タスク項目、依存関係の妥当性をチェックします。
 
     examples:
-        cmw tasks validate
-        cmw tasks validate --fix
+        cmw task validate
+        cmw task validate --fix
     """
     from rich.console import Console
     from rich.panel import Panel
@@ -333,8 +340,8 @@ def validate_tasks(fix: bool, tasks_file: str):
     if not tasks_path.exists():
         console.print(f"[red]❌ エラー: {tasks_file} が見つかりません[/red]")
         console.print(f"\n次のステップ:")
-        console.print(f"  1. cmw tasks generate でタスクを生成")
-        console.print(f"  2. cmw tasks validate で検証")
+        console.print(f"  1. cmw task generate でタスクを生成")
+        console.print(f"  2. cmw task validate で検証")
         return
 
     # タスクを読み込み
@@ -632,6 +639,11 @@ def sync(from_git: bool, since: str, branch: str, dry_run: bool):
         console.print(f"[red]❌ 予期しないエラー: {str(e)}[/red]")
         import traceback
         traceback.print_exc()
+
+
+# 後方互換性: task のすべてのコマンドを tasks にもコピー
+for name, cmd in task.commands.items():
+    tasks.add_command(cmd, name=name)
 
 
 def main():
