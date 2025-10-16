@@ -11,10 +11,10 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
 
 setup(
     name="claude-multi-worker",
-    version="0.1.0",
+    version="0.2.0",
     author="Nakishiyama",
     author_email="noreply@example.com",
-    description="Claude Code統合タスク管理フレームワーク - requirements.mdから自動でタスク生成、依存関係管理、進捗可視化",
+    description="Claude Code統合タスク管理フレームワーク v0.2.0 - requirements.mdから自動でタスク生成、循環依存自動修正、Git連携、進捗可視化",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/nakishiyaman/claude-multi-worker-framework",

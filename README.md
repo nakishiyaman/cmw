@@ -1,8 +1,8 @@
-# Claude Multi-Worker Framework (cmw)
+# Claude Multi-Worker Framework (cmw) v0.2.0
 
 **requirements.mdを書くだけで、大規模プロジェクトの開発を完全自動化**
 
-Claude Codeと統合した次世代タスク管理フレームワーク。要件定義から自動的にタスクを生成し、ファイル競合を検出し、進捗を可視化します。手動でタスク管理する必要はもうありません。
+Claude Codeと統合した次世代タスク管理フレームワーク。要件定義から自動的にタスクを生成し、循環依存を自動修正し、ファイル競合を検出し、Git連携で進捗を同期します。手動でタスク管理する必要はもうありません。
 
 ## 🎯 概要
 
@@ -48,7 +48,42 @@ cmwは**タスク管理・メタデータ層**として機能し、Claude Code�
 
 ## ✨ 主な機能
 
-### 🚀 実装完了（Phase 0-7）
+### 🚀 実装完了（Phase 0-7 + v0.2.0）
+
+#### 🔧 v0.2.0 新機能
+
+##### ✅ 循環依存の自動修正（Phase 1）
+- **DependencyValidator**: 循環依存の検出と自動修正
+  - NetworkXによる高精度な循環検出
+  - セマンティック分析による修正提案（信頼度スコアリング）
+  - 自動修正機能（信頼度100%で即座に適用）
+  - セクション番号・キーワードベースの判定
+- **TaskFilter**: 非タスク項目の自動除外
+  - 「技術スタック」「非機能要件」などを自動判定
+  - 実装タスクのみを抽出
+  - タスク動詞・受入基準の具体性を評価
+- **成果**: blog-apiで17→15タスクに最適化、手動修正不要
+
+##### 🔍 タスク検証コマンド（Phase 2.1）
+- **CLIコマンド**: `cmw tasks validate`
+  - 循環依存チェック
+  - 非タスク項目チェック
+  - 依存関係の妥当性チェック（存在しない依存先、自己依存）
+  - `--fix`オプションで自動修正
+  - Rich UIで視覚的に結果表示
+- **成果**: 全検証項目を自動化、問題の早期発見
+
+##### 🔄 Git連携による進捗自動更新（Phase 2.2）
+- **GitIntegration**: Gitコミットメッセージから進捗を同期
+  - コミットメッセージから`TASK-XXX`パターンを自動検出
+  - 検出したタスクを自動で完了にマーク
+  - タスク参照の妥当性検証
+  - 最近のアクティビティ取得
+- **CLIコマンド**: `cmw sync --from-git`
+  - `--since`: コミット検索の開始時点（1.day.ago, 1.week.ago等）
+  - `--branch`: 対象ブランチ
+  - `--dry-run`: 検出のみ実行（更新なし）
+- **成果**: 手動での進捗更新が不要に、Git履歴から自動同期
 
 #### 📋 自動タスク生成（Phase 5）
 - **RequirementsParser**: requirements.mdから自動でタスク生成
@@ -246,8 +281,21 @@ cmw tasks list --status completed
 # タスク詳細
 cmw tasks show TASK-001
 
+# タスク検証（v0.2.0）
+cmw tasks validate              # 循環依存、非タスク項目、依存関係をチェック
+cmw tasks validate --fix        # 検出した問題を自動修正
+
 # ファイル競合分析
 cmw tasks analyze
+```
+
+### 進捗管理
+
+```bash
+# Git連携で進捗を同期（v0.2.0）
+cmw sync --from-git                    # 過去1週間分のコミットから同期
+cmw sync --from-git --since=1.day.ago  # 過去1日分
+cmw sync --from-git --dry-run          # 検出のみ（更新なし）
 ```
 
 ## 📖 ドキュメント
@@ -274,7 +322,7 @@ python -m pytest tests/test_conflict_detector.py -v
 python -m pytest tests/test_progress_tracker.py -v
 ```
 
-現在119個のテストが全てパスしています。
+現在153個のテストが全てパスしています（v0.2.0）。
 
 ## 📊 開発ロードマップ
 
@@ -284,14 +332,35 @@ python -m pytest tests/test_progress_tracker.py -v
 - Coordinator機能
 - CLI基本機能
 
-### ✅ Phase 1: タスク管理層（100%）
-- **Phase 1.1**: TaskProvider実装
-- **Phase 1.2**: StateManager実装
-- **Phase 1.3**: ParallelExecutor実装
+### ✅ Phase 1: タスク管理層 + 品質向上（100%）- v0.2.0
+- **Phase 1.1**: TaskProvider実装（完了）
+- **Phase 1.2**: StateManager実装（完了）
+- **Phase 1.3**: ParallelExecutor実装（完了）
+- **Phase 1.4**: DependencyValidator実装（v0.2.0）
+  - 循環依存の自動検出と修正
+  - セマンティック分析による高精度判定
+  - 信頼度スコアリング
+  - 11テスト全パス
+- **Phase 1.5**: TaskFilter実装（v0.2.0）
+  - 非タスク項目の自動除外
+  - タスク動詞・受入基準の評価
+  - blog-apiで17→15タスクに最適化
 
-### ✅ Phase 2: Claude Code統合（65%）
-- **Phase 2.1**: ドキュメント作成（完了）
-- Phase 2.2: MCP統合（オプション）
+### ✅ Phase 2: Claude Code統合 + ユーザビリティ向上（100%）- v0.2.0
+- **Phase 2.1**: タスク検証コマンド（v0.2.0）
+  - `cmw tasks validate`実装
+  - 循環依存、非タスク項目、依存関係をチェック
+  - `--fix`オプションで自動修正
+  - Rich UIで視覚的表示
+  - 9テスト全パス
+- **Phase 2.2**: Git連携による進捗自動更新（v0.2.0）
+  - `cmw sync --from-git`実装
+  - コミットメッセージから自動でタスク完了を検出
+  - タスク参照の妥当性検証
+  - 手動での進捗更新が不要に
+  - 14テスト全パス
+- Phase 2.3: ドキュメント作成（完了）
+- Phase 2.4: MCP統合（オプション）
 
 ### ✅ Phase 3: エラーハンドリング（100%）
 - **Phase 3.1**: ErrorHandler実装（完了）
@@ -346,7 +415,15 @@ python -m pytest tests/test_progress_tracker.py -v
 - プロンプトテンプレート
 - 応答解析の自動化
 
-**全体進捗**: 約98%（Phase 7完了 + 実プロジェクト検証完了）
+**全体進捗**: 100%（v0.2.0リリース完了）
+
+**v0.2.0の主な改善:**
+- ✅ 循環依存の自動検出と修正
+- ✅ 非タスク項目の自動除外
+- ✅ タスク検証コマンド（`cmw tasks validate`）
+- ✅ Git連携による進捗自動更新（`cmw sync --from-git`）
+- ✅ 153個のテスト全パス
+- ✅ blog-apiとtodo-apiで実証完了
 
 ## 💡 主な特徴
 
