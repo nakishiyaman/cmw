@@ -25,13 +25,9 @@ classifiers = [
 ]
 
 dependencies = [
-    "pyyaml>=6.0",
-    "click>=8.0",
-    "rich>=13.0",
-    "watchdog>=3.0",
-    "pydantic>=2.0",
-    "httpx>=0.24",
-    "python-dotenv>=1.0",
+    "click>=8.1.0",
+    "rich>=13.7.0",
+    "networkx>=3.0",
 ]
 
 [project.optional-dependencies]
@@ -49,10 +45,10 @@ dashboard = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/claude-multi-worker-framework"
-Documentation = "https://github.com/yourusername/claude-multi-worker-framework/wiki"
-Repository = "https://github.com/yourusername/claude-multi-worker-framework"
-Issues = "https://github.com/yourusername/claude-multi-worker-framework/issues"
+Homepage = "https://github.com/nakishiyaman/claude-multi-worker-framework"
+Documentation = "https://github.com/nakishiyaman/claude-multi-worker-framework/wiki"
+Repository = "https://github.com/nakishiyaman/claude-multi-worker-framework"
+Issues = "https://github.com/nakishiyaman/claude-multi-worker-framework/issues"
 
 [project.scripts]
 cmw = "cmw.cli:cli"
@@ -61,7 +57,7 @@ cmw = "cmw.cli:cli"
 where = ["src"]
 
 [tool.setuptools.package-data]
-cmw = ["templates/**/*", "py.typed"]
+cmw = ["py.typed"]
 
 [tool.black]
 line-length = 100
