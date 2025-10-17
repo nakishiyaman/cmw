@@ -21,14 +21,14 @@ from .git_integration import GitIntegration
 
 @click.group()
 @click.version_option(version="0.3.1")
-def cli():
+def cli() -> None:
     """Claude Multi-Worker Framework - マルチワーカー開発フレームワーク v0.3.1"""
     pass
 
 
 @cli.command()
 @click.option('--name', default='new-project', help='プロジェクト名')
-def init(name: str):
+def init(name: str) -> None:
     """新しいプロジェクトを初期化"""
     project_path = Path.cwd() / name
     
@@ -73,14 +73,14 @@ def init(name: str):
 
 
 @cli.group(name='task')
-def task():
+def task() -> None:
     """タスク管理コマンド"""
     pass
 
 
 # 後方互換性のため tasks も残す（非推奨）
 @cli.group(name='tasks', hidden=True)
-def tasks():
+def tasks() -> None:
     """[非推奨] 'cmw task' を使用してください"""
     pass
 
@@ -92,7 +92,7 @@ def tasks():
               help='出力先のtasks.jsonパス')
 @click.option('--force', '-f', is_flag=True,
               help='既存のtasks.jsonを上書き')
-def generate_tasks(requirements: str, output: str, force: bool):
+def generate_tasks(requirements: str, output: str, force: bool) -> None:
     """requirements.mdからタスクを自動生成
 
     examples:
@@ -191,7 +191,7 @@ def generate_tasks(requirements: str, output: str, force: bool):
 @task.command('list')
 @click.option('--status', type=click.Choice(['pending', 'in_progress', 'completed', 'failed', 'blocked']),
               help='ステータスでフィルタ')
-def list_tasks(status: Optional[str]):
+def list_tasks(status: Optional[str]) -> None:
     """タスク一覧を表示"""
     project_path = Path.cwd()
     coordinator = Coordinator(project_path)
@@ -229,7 +229,7 @@ def list_tasks(status: Optional[str]):
 
 @task.command('show')
 @click.argument('task_id')
-def show_task(task_id: str):
+def show_task(task_id: str) -> None:
     """タスクの詳細を表示"""
     project_path = Path.cwd()
     coordinator = Coordinator(project_path)
@@ -263,7 +263,7 @@ def show_task(task_id: str):
 
 @task.command('analyze')
 @click.option('--show-order', is_flag=True, help='推奨実行順序も表示')
-def analyze_conflicts(show_order: bool):
+def analyze_conflicts(show_order: bool) -> None:
     """タスク間のファイル競合を分析
 
     examples:
@@ -319,7 +319,7 @@ def analyze_conflicts(show_order: bool):
 @click.option('--fix', is_flag=True, help='検出された問題を自動修正')
 @click.option('--tasks-file', default='shared/coordination/tasks.json',
               help='検証するtasks.jsonのパス')
-def validate_tasks(fix: bool, tasks_file: str):
+def validate_tasks(fix: bool, tasks_file: str) -> None:
     """タスクの品質を検証
 
     循環依存、非タスク項目、依存関係の妥当性をチェックします。
@@ -523,7 +523,7 @@ def validate_tasks(fix: bool, tasks_file: str):
 @click.option('--format', type=click.Choice(['ascii', 'mermaid']), default='ascii',
               help='出力形式（ascii, mermaid）')
 @click.option('--stats', is_flag=True, help='統計情報を表示')
-def show_graph(format: str, stats: bool):
+def show_graph(format: str, stats: bool) -> None:
     """タスクの依存関係グラフを表示
 
     examples:
@@ -611,7 +611,7 @@ def show_graph(format: str, stats: bool):
 @click.argument('task_id')
 @click.option('--output', '-o', type=click.Path(), help='プロンプトをファイルに保存')
 @click.option('--review', is_flag=True, help='レビュー用プロンプトを生成')
-def generate_prompt(task_id: str, output: Optional[str], review: bool):
+def generate_prompt(task_id: str, output: Optional[str], review: bool) -> None:
     """タスク実行用のプロンプトを生成
 
     examples:
@@ -681,7 +681,7 @@ def generate_prompt(task_id: str, output: Optional[str], review: bool):
 @click.argument('task_id')
 @click.option('--artifacts', '-a', help='生成されたファイル（JSON配列形式）')
 @click.option('--message', '-m', help='完了メッセージ')
-def complete_task(task_id: str, artifacts: Optional[str], message: Optional[str]):
+def complete_task(task_id: str, artifacts: Optional[str], message: Optional[str]) -> None:
     """タスクを完了としてマーク
 
     examples:
@@ -741,7 +741,7 @@ def complete_task(task_id: str, artifacts: Optional[str], message: Optional[str]
 
 @cli.command()
 @click.option('--compact', is_flag=True, help='コンパクト表示')
-def status(compact: bool):
+def status(compact: bool) -> None:
     """プロジェクトの進捗状況を表示"""
     project_path = Path.cwd()
     coordinator = Coordinator(project_path)
@@ -767,7 +767,7 @@ def status(compact: bool):
 @click.option('--since', default='1.week.ago', help='コミット検索の開始時点（例: 1.day.ago, 2.weeks.ago, 2025-01-01）')
 @click.option('--branch', default='HEAD', help='対象ブランチ（デフォルト: HEAD）')
 @click.option('--dry-run', is_flag=True, help='実際には更新せず、検出結果のみ表示')
-def sync(from_git: bool, since: str, branch: str, dry_run: bool):
+def sync(from_git: bool, since: str, branch: str, dry_run: bool) -> None:
     """進捗を同期
 
     examples:
@@ -861,7 +861,7 @@ def sync(from_git: bool, since: str, branch: str, dry_run: bool):
 
 
 @cli.group(name='requirements')
-def requirements():
+def requirements() -> None:
     """Requirements.md管理コマンド"""
     pass
 
@@ -873,7 +873,7 @@ def requirements():
               help='Claude Codeと統合して自動生成')
 @click.option('--prompt', '-p',
               help='Claude Codeに渡すプロンプト（--with-claude使用時）')
-def generate_requirements(output: str, with_claude: bool, prompt: Optional[str]):
+def generate_requirements(output: str, with_claude: bool, prompt: Optional[str]) -> None:
     """対話形式でrequirements.mdを生成
 
     examples:
@@ -947,7 +947,7 @@ for name, cmd in task.commands.items():
     tasks.add_command(cmd, name=name)
 
 
-def main():
+def main() -> None:
     """CLIのエントリーポイント"""
     cli()
 

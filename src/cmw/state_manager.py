@@ -7,7 +7,7 @@ StateManager - 状態の永続化とセッション管理
 - セッションの継続性保証
 """
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Any
 import json
 import time
 import os
@@ -118,7 +118,7 @@ class SessionContext:
     def __init__(self, project_path: Path):
         self.state_manager = StateManager(project_path)
 
-    def __enter__(self):
+    def __enter__(self) -> "SessionContext":
         if not self.state_manager.acquire_lock():
             raise RuntimeError(
                 "Could not acquire lock. "
@@ -126,5 +126,5 @@ class SessionContext:
             )
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         self.state_manager.release_lock()
