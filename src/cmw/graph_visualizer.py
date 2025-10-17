@@ -3,7 +3,7 @@
 
 タスクの依存関係をグラフとして可視化します。
 """
-from typing import List, Dict, Set
+from typing import List, Dict, Set, Any
 from pathlib import Path
 import networkx as nx
 from rich.tree import Tree
@@ -267,7 +267,7 @@ class GraphVisualizer:
             # サイクルがある場合
             return []
 
-    def get_statistics(self) -> Dict[str, any]:
+    def get_statistics(self) -> Dict[str, Any]:
         """グラフの統計情報を取得
 
         Returns:
