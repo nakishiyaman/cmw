@@ -139,14 +139,149 @@ def test_new_feature_edge_case():
         feature.process(None)
 ```
 
+## 🌿 ブランチ戦略
+
+cmwでは**GitHub Flow**ベースのブランチ戦略を採用しています。
+
+### ブランチの種類
+
+#### `main` ブランチ
+- **目的**: 本番環境用の安定版コード
+- **保護**: ブランチ保護ルールが適用されます
+- **マージ**: プルリクエスト経由のみ
+- **デプロイ**: PyPIへの公開リリース
+
+#### `develop` ブランチ
+- **目的**: 開発統合ブランチ
+- **ベース**: 新機能開発の基点
+- **マージ**: feature/bugfixブランチからのPR
+- **リリース**: main にマージ後にリリース
+
+#### `feature/*` ブランチ
+- **目的**: 新機能開発
+- **命名**: `feature/short-description` (例: `feature/mcp-integration`)
+- **ベース**: `develop` から分岐
+- **マージ先**: `develop` へPR
+
+#### `bugfix/*` ブランチ
+- **目的**: バグ修正
+- **命名**: `bugfix/short-description` (例: `bugfix/task-circular-dependency`)
+- **ベース**: `develop` から分岐
+- **マージ先**: `develop` へPR
+
+#### `hotfix/*` ブランチ
+- **目的**: 緊急の本番バグ修正
+- **命名**: `hotfix/short-description` (例: `hotfix/critical-parsing-error`)
+- **ベース**: `main` から分岐
+- **マージ先**: `main` と `develop` の両方へPR
+
+### ワークフロー例
+
+#### 新機能開発
+```bash
+# develop ブランチから最新を取得
+git checkout develop
+git pull origin develop
+
+# feature ブランチを作成
+git checkout -b feature/new-awesome-feature
+
+# 開発・コミット
+git add .
+git commit -m "feat(core): add awesome feature"
+
+# プッシュ
+git push origin feature/new-awesome-feature
+
+# GitHub でPR作成: feature/new-awesome-feature → develop
+```
+
+#### バグ修正
+```bash
+# develop ブランチから最新を取得
+git checkout develop
+git pull origin develop
+
+# bugfix ブランチを作成
+git checkout -b bugfix/fix-parsing-issue
+
+# 修正・コミット
+git add .
+git commit -m "fix(parser): resolve parsing issue with nested sections"
+
+# プッシュ
+git push origin bugfix/fix-parsing-issue
+
+# GitHub でPR作成: bugfix/fix-parsing-issue → develop
+```
+
+#### 緊急修正（Hotfix）
+```bash
+# main ブランチから最新を取得
+git checkout main
+git pull origin main
+
+# hotfix ブランチを作成
+git checkout -b hotfix/critical-security-fix
+
+# 修正・コミット
+git add .
+git commit -m "fix(security): patch critical vulnerability"
+
+# プッシュ
+git push origin hotfix/critical-security-fix
+
+# GitHub でPR作成: hotfix/critical-security-fix → main
+# マージ後、develop にもマージ
+git checkout develop
+git merge main
+git push origin develop
+```
+
+### リリースフロー
+
+```bash
+# 1. develop で全ての変更が完了
+git checkout develop
+git pull origin develop
+
+# 2. バージョン更新（pyproject.toml）
+# version = "0.4.0" に更新
+
+git add pyproject.toml
+git commit -m "chore: bump version to 0.4.0"
+
+# 3. develop → main へPR作成
+git push origin develop
+# GitHub でPR作成: develop → main
+
+# 4. PR マージ後、タグ作成
+git checkout main
+git pull origin main
+git tag -a v0.4.0 -m "Release v0.4.0"
+git push origin v0.4.0
+
+# 5. PyPIへリリース
+python -m build
+twine upload dist/*
+```
+
 ## 🔧 プルリクエストの作成
 
 ### 1. ブランチを作成
 
 ```bash
+# 新機能の場合
+git checkout develop
 git checkout -b feature/your-feature-name
-# または
-git checkout -b fix/your-bug-fix
+
+# バグ修正の場合
+git checkout develop
+git checkout -b bugfix/your-bug-fix
+
+# 緊急修正の場合
+git checkout main
+git checkout -b hotfix/your-urgent-fix
 ```
 
 ### 2. 変更をコミット
