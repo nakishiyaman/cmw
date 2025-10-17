@@ -273,7 +273,7 @@ class TaskProvider:
 
     def _save_progress(self) -> None:
         """進捗情報を保存"""
-        progress = {
+        progress: Dict = {
             "updated_at": datetime.now().isoformat(),
             "tasks": {}
         }
@@ -296,7 +296,7 @@ class TaskProvider:
 
     def _init_progress(self) -> None:
         """進捗情報を初期化"""
-        progress = {
+        progress: Dict = {
             "created_at": datetime.now().isoformat(),
             "tasks": {}
         }

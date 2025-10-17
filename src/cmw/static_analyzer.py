@@ -159,7 +159,7 @@ class StaticAnalyzer:
 
         return None
 
-    def _module_to_file(self, module_name: str, current_file: str, extra_paths: List[Path] = None) -> Set[str]:
+    def _module_to_file(self, module_name: str, current_file: str, extra_paths: Optional[List[Path]] = None) -> Set[str]:
         """モジュール名をファイルパスに変換
 
         Args:
@@ -199,7 +199,7 @@ class StaticAnalyzer:
             return results
 
         # 絶対インポートの場合
-        module_path = module_name.replace('.', '/')
+        module_path_str = module_name.replace('.', '/')
 
         # 現在のファイルのディレクトリを検索パスに追加
         current_file_dir = self.project_root / Path(current_file).parent
@@ -209,12 +209,12 @@ class StaticAnalyzer:
 
         for base in search_bases:
             # __init__.py を試す
-            candidate = base / module_path / '__init__.py'
+            candidate = base / module_path_str / '__init__.py'
             if candidate.exists() and candidate.is_relative_to(self.project_root):
                 results.add(str(candidate.relative_to(self.project_root)))
 
             # .py を試す
-            candidate = base / f"{module_path}.py"
+            candidate = base / f"{module_path_str}.py"
             if candidate.exists() and candidate.is_relative_to(self.project_root):
                 results.add(str(candidate.relative_to(self.project_root)))
 
@@ -341,7 +341,7 @@ class StaticAnalyzer:
         Returns:
             インポートパターンの統計情報
         """
-        stats = {
+        stats: Dict[str, Any] = {
             'total_files': 0,
             'total_imports': 0,
             'circular_imports': [],
@@ -350,8 +350,8 @@ class StaticAnalyzer:
         }
 
         # ファイルごとのインポート数と被インポート数をカウント
-        import_counts = {}  # ファイル -> インポートしているファイル数
-        imported_counts = {}  # ファイル -> インポートされている回数
+        import_counts: Dict[str, int] = {}  # ファイル -> インポートしているファイル数
+        imported_counts: Dict[str, int] = {}  # ファイル -> インポートされている回数
 
         all_files = []
         for task in tasks:
