@@ -1,4 +1,4 @@
-# Claude Multi-Worker Framework (cmw) v0.3.1
+# Claude Multi-Worker Framework (cmw) v0.5.0
 
 [![Tests](https://github.com/nakishiyaman/cmw/workflows/Tests/badge.svg)](https://github.com/nakishiyaman/cmw/actions)
 [![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
@@ -504,7 +504,7 @@ python -m pytest tests/test_coordinator.py -v           # v0.3.1
 python -m pytest tests/test_cli_complete.py -v          # v0.3.1
 ```
 
-現在291個のテストが全てパスしています（v0.3.1）。
+現在288個のテストが全てパスしています（v0.5.0）。
 
 ## 📊 開発ロードマップ
 
@@ -634,13 +634,44 @@ python -m pytest tests/test_cli_complete.py -v          # v0.3.1
   - 完了状態のコマンド間永続化
   - 18テスト全パス
 
-**全体進捗**: 100%（v0.3.1リリース完了）
+### ✅ v0.5.0: 完全型安全化（100%）- 2025-10-18
+
+#### 🔒 mypy 100%対応
+- **型エラーゼロを達成**: 142個のmypyエラーを全て解消
+- **22ファイル全てで型安全**: すべてのソースファイルで型チェックパス
+- **包括的な型アノテーション追加**:
+  - `Optional[Type]` for parameters with None defaults (PEP 484準拠)
+  - `Dict[str, Any]` for heterogeneous dictionaries
+  - `List[Dict[str, Any]]` for complex data structures
+  - `nx.DiGraph` type annotations for NetworkX graphs
+  - `Priority` enum usage instead of string literals
+- **型推論問題の解決**:
+  - Lambda function return types in sort operations
+  - json.loads return types with `cast()`
+  - Collection type assignments (dict_values vs List vs Iterable)
+  - datetime handling in dictionaries
+
+#### 🔧 CI/CD統合
+- GitHub Actions CIパイプラインにmypy追加
+- 全PRで自動型チェック実行
+- 型エラーの混入を防止
+
+#### 📚 ドキュメント
+- CHANGELOG.md にv0.5.0セクション追加
+- MYPY_IMPROVEMENTS.md で詳細な改善記録を提供
+
+**全体進捗**: 100%（v0.5.0リリース完了）
+
+**v0.5.0の新機能:**
+- ✅ 100%型安全（142 → 0 mypy errors）
+- ✅ CI/CDでの型チェック自動化
+- ✅ 包括的な型アノテーション
+- ✅ 288個のテスト全パス
 
 **v0.3.1の新機能:**
 - ✅ タスク完了コマンド（`cmw task complete`）
 - ✅ 進捗状態の永続化改善
 - ✅ Requirements.md自動生成（Claude Code統合）
-- ✅ 288個のテスト全パス（+18テスト）
 
 **v0.3.0の主な新機能:**
 - ✅ 依存関係グラフの可視化（`cmw task graph`）
@@ -713,13 +744,16 @@ requirements.mdを書くだけで、タスクの分解、ファイルパスの�
 ### 3. 📊 リアルタイム進捗可視化
 美しいターミナルダッシュボードで進捗を可視化。完了率、成功率、推定残り時間、ベロシティメトリクスを一目で確認できます。
 
-### 4. 💰 APIコストゼロ
+### 4. 🔒 100%型安全（v0.5.0 NEW!）
+**mypy完全対応**で型エラーゼロを達成。IDE補完が完璧に機能し、リファクタリングも安心。CI/CDで型チェックを自動化し、型エラーの混入を防ぎます。
+
+### 5. 💰 APIコストゼロ
 Claude Codeが直接コードを生成するため、追加のAPI呼び出しコストはかかりません。
 
-### 5. 🔄 セッション継続性
+### 6. 🔄 セッション継続性
 `progress.json`に状態を永続化するため、セッションを跨いで開発を継続できます。
 
-### 6. 🛡️ 堅牢なエラーハンドリング
+### 7. 🛡️ 堅牢なエラーハンドリング
 エラーの自動分類、リトライ判定、ロールバック、復旧提案まで完全自動化。
 
 ## 🔧 技術スタック
@@ -729,6 +763,7 @@ Claude Codeが直接コードを生成するため、追加のAPI呼び出しコ
 - **Rich**: ターミナルUI（ダッシュボード表示）
 - **NetworkX**: グラフアルゴリズム（依存関係、競合検出）
 - **pytest**: テストフレームワーク
+- **mypy**: 静的型チェック（100%型安全）
 - **Pydantic**: データバリデーション（モデル定義）
 
 ## 📝 ライセンス
