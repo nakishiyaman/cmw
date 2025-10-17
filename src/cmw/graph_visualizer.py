@@ -25,7 +25,7 @@ class GraphVisualizer:
 
     def _build_graph(self) -> nx.DiGraph:
         """タスクの依存関係からグラフを構築"""
-        G = nx.DiGraph()
+        G: nx.DiGraph = nx.DiGraph()
 
         # ノードを追加
         for task_id, task in self.tasks.items():
@@ -159,7 +159,7 @@ class GraphVisualizer:
             output_path: 出力ファイルパス (.dot)
         """
         try:
-            import pygraphviz  # noqa: F401
+            import pygraphviz  # noqa: F401  # type: ignore[import-not-found]
         except ImportError:
             raise ImportError(
                 "pygraphviz is not installed. "
@@ -273,7 +273,7 @@ class GraphVisualizer:
         Returns:
             統計情報の辞書
         """
-        stats = {
+        stats: Dict[str, Any] = {
             'total_tasks': len(self.tasks),
             'total_dependencies': self.graph.number_of_edges(),
             'root_tasks': len([

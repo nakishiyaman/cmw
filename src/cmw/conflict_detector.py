@@ -245,7 +245,7 @@ class ConflictDetector:
 
     def _build_dependency_graph(self, tasks: List[Task]) -> nx.DiGraph:
         """依存関係グラフを構築"""
-        G = nx.DiGraph()
+        G: nx.DiGraph = nx.DiGraph()
 
         for task in tasks:
             G.add_node(task.id)

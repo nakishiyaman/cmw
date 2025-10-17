@@ -43,7 +43,7 @@ class DependencyValidator:
         Returns:
             有向グラフ（タスクID → 依存先タスクID）
         """
-        G = nx.DiGraph()
+        G: nx.DiGraph = nx.DiGraph()
 
         for task in tasks:
             G.add_node(task.id)
