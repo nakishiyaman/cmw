@@ -637,7 +637,8 @@ python -m pytest tests/test_cli_complete.py -v          # v0.3.1
 **v0.3.1の新機能:**
 - ✅ タスク完了コマンド（`cmw task complete`）
 - ✅ 進捗状態の永続化改善
-- ✅ 291個のテスト全パス（+18テスト）
+- ✅ Requirements.md自動生成（Claude Code統合）
+- ✅ 288個のテスト全パス（+18テスト）
 
 **v0.3.0の主な新機能:**
 - ✅ 依存関係グラフの可視化（`cmw task graph`）
@@ -647,6 +648,54 @@ python -m pytest tests/test_cli_complete.py -v          # v0.3.1
 - ✅ Claude Code応答の自動解析
 - ✅ 273個のテスト全パス（+120テスト）
 - ✅ todo-apiで実ワークフロー検証完了
+
+---
+
+## 🚧 次期バージョン予告（v0.4.0）
+
+### MCP統合・Plugin化（開発予定）
+
+Claude Codeとのシームレスな統合を実現します。
+
+**予定機能:**
+- 🔌 **Model Context Protocol (MCP)サーバー実装**
+  - Claude Code内から直接cmw機能を呼び出し
+  - `get_next_task()`, `complete_task()` 等のMCP Tools
+  - タスク一覧、進捗状況等のMCP Resources
+
+- 📦 **Claude Code Plugin化**
+  - ワンコマンドインストール: `/plugin install cmw`
+  - スラッシュコマンド: `/next-task`, `/complete-task`
+  - Skills（ワークフロー指示書）の自動適用
+
+- ⚡ **ワークフロー自動化**
+  - Claude Codeが自動的にタスクを取得・完了マーク
+  - 手動のコマンド実行が不要に
+  - リアルタイムな進捗同期
+
+**リリース予定:** 2025年11月中旬
+
+**現在の使い方（v0.3.1）:**
+```bash
+# CLIで手動管理
+cmw task list              # タスク一覧表示
+cmw task prompt TASK-001   # プロンプト生成
+# → Claude Codeで実装
+cmw task complete TASK-001 # 完了マーク
+```
+
+**v0.4.0での使い方（予定）:**
+```bash
+# Claude Code内で
+ユーザー: 「次のタスクを実装して」
+→ Claude Codeが自動でget_next_task()呼び出し
+→ 実装
+→ 自動でcomplete_task()実行
+```
+
+進捗は[GitHub Issues](https://github.com/nakishiyaman/cmw/issues)で追跡できます。
+
+---
 
 ## 💡 主な特徴
 
