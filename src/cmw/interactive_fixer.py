@@ -241,7 +241,7 @@ class InteractiveFixer:
         cycles: List[List[str]],
         missing_deps: List[dict],
         self_deps: List[str]
-    ):
+    ) -> None:
         """
         検証レポートを表示
 
