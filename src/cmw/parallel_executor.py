@@ -36,7 +36,7 @@ class ParallelExecutor:
             return []
 
         # ファイル競合を考慮して選択
-        executable = []
+        executable: List[Task] = []
         used_files: Set[str] = set()
 
         for task in ready_tasks:

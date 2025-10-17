@@ -197,7 +197,7 @@ class GitIntegration:
         commits = self._get_commit_log(project_path, since, "HEAD")
 
         # タスクIDごとにコミットハッシュを集める
-        activity = {}
+        activity: Dict[str, List[str]] = {}
 
         for commit in commits:
             task_ids = self.task_pattern.findall(commit['message'])

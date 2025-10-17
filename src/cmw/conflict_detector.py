@@ -5,7 +5,7 @@
 最適な実行順序を提案します。
 """
 
-from typing import List, Dict
+from typing import List, Dict, Set
 import networkx as nx
 
 from .models import Task, TaskStatus
@@ -148,8 +148,8 @@ class ConflictDetector:
             return []
 
         # ファイル競合をチェック
-        parallel_tasks = []
-        used_files = set()
+        parallel_tasks: List[str] = []
+        used_files: Set[str] = set()
 
         for task in ready_tasks:
             # このタスクのファイルが既に使用されているかチェック
@@ -209,7 +209,7 @@ class ConflictDetector:
 
     def _group_by_file(self, tasks: List[Task]) -> Dict[str, List[str]]:
         """ファイルごとにタスクをグループ化"""
-        file_to_tasks = {}
+        file_to_tasks: Dict[str, List[str]] = {}
 
         for task in tasks:
             for file in task.target_files:
@@ -288,8 +288,8 @@ class ConflictDetector:
 
     def _filter_by_file_conflicts(self, task_ids: List[str], tasks_by_id: Dict[str, Task]) -> List[str]:
         """ファイル競合を考慮してタスクをフィルタリング"""
-        selected = []
-        used_files = set()
+        selected: List[str] = []
+        used_files: Set[str] = set()
 
         for task_id in task_ids:
             task = tasks_by_id.get(task_id)
@@ -336,7 +336,7 @@ class ConflictDetector:
         report.append("")
 
         # 深刻度別にグループ化
-        by_severity = {}
+        by_severity: Dict[str, List[Conflict]] = {}
         for conflict in conflicts:
             severity = conflict.severity
             if severity not in by_severity:
