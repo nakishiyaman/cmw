@@ -1,4 +1,4 @@
-# Claude Multi-Worker Framework (cmw) v0.5.0
+# Claude Multi-Worker Framework (cmw) v0.5.1
 
 [![Tests](https://github.com/nakishiyaman/cmw/workflows/Tests/badge.svg)](https://github.com/nakishiyaman/cmw/actions)
 [![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
@@ -504,7 +504,7 @@ python -m pytest tests/test_coordinator.py -v           # v0.3.1
 python -m pytest tests/test_cli_complete.py -v          # v0.3.1
 ```
 
-現在288個のテストが全てパスしています（v0.5.0）。
+現在288個のテストが全てパスしています（v0.5.1）。
 
 ## 📊 開発ロードマップ
 
@@ -634,6 +634,30 @@ python -m pytest tests/test_cli_complete.py -v          # v0.3.1
   - 完了状態のコマンド間永続化
   - 18テスト全パス
 
+### ✅ v0.5.1: コード品質向上（100%）- 2025-10-18
+
+#### 🧹 Lint/Format改善
+- **42個のlintエラーを修正**: W293, C414の全修正完了
+- **21ファイルに統一フォーマット適用**: ruff formatで一貫したコードスタイル
+- **全行を100文字以内に**: E501エラーを全て解消
+- コードの可読性と保守性が大幅に向上
+
+#### 📚 ドキュメント拡充
+- **CODE_QUALITY.md新設**: 複雑度の高い関数12個を文書化、リファクタリング推奨事項を提供
+- **MYPY_IMPROVEMENTS.md更新**: v0.5.0での100%型安全達成を詳細に記録
+- **CONTRIBUTING.md強化**: 型安全性ガイドライン追加、必須ルール5項目とベストプラクティス4項目
+
+#### 🧪 テストカバレッジ測定
+- **72%カバレッジ**: 2988行中2148行をカバー
+- 改善領域の特定: requirements_generator (0%), dashboard (17%), cli (45%)
+- 288個の全テストが引き続きパス
+
+**v0.5.1の改善内容:**
+- ✅ Lint/Format完全修正（42エラー→0）
+- ✅ 包括的なドキュメント整備
+- ✅ 72%テストカバレッジ測定完了
+- ✅ 全CI/CDチェック通過
+
 ### ✅ v0.5.0: 完全型安全化（100%）- 2025-10-18
 
 #### 🔒 mypy 100%対応
@@ -660,7 +684,13 @@ python -m pytest tests/test_cli_complete.py -v          # v0.3.1
 - CHANGELOG.md にv0.5.0セクション追加
 - MYPY_IMPROVEMENTS.md で詳細な改善記録を提供
 
-**全体進捗**: 100%（v0.5.0リリース完了）
+**全体進捗**: 100%（v0.5.1リリース完了）
+
+**v0.5.1の新機能:**
+- ✅ Lint/Format完全修正（42エラー→0）
+- ✅ コード品質ドキュメント整備
+- ✅ 72%テストカバレッジ測定
+- ✅ 型安全性ガイドライン追加
 
 **v0.5.0の新機能:**
 - ✅ 100%型安全（142 → 0 mypy errors）
@@ -709,9 +739,9 @@ Claude Codeとのシームレスな統合を実現します。
 
 **リリース予定:** 2025年11月中旬
 
-**注記:** v0.5.0では、Claude Code Pluginとしてのインストールはまだ対応していません。現在はCLIツールとしてPyPI経由でインストールしてください。Plugin対応はv0.6.0で実装予定です。
+**注記:** v0.5.1では、Claude Code Pluginとしてのインストールはまだ対応していません。現在はCLIツールとしてPyPI経由でインストールしてください。Plugin対応はv0.6.0で実装予定です。
 
-**現在の使い方（v0.5.0）:**
+**現在の使い方（v0.5.1）:**
 ```bash
 # CLIで手動管理
 cmw task list              # タスク一覧表示
@@ -744,8 +774,8 @@ requirements.mdを書くだけで、タスクの分解、ファイルパスの�
 ### 3. 📊 リアルタイム進捗可視化
 美しいターミナルダッシュボードで進捗を可視化。完了率、成功率、推定残り時間、ベロシティメトリクスを一目で確認できます。
 
-### 4. 🔒 100%型安全（v0.5.0 NEW!）
-**mypy完全対応**で型エラーゼロを達成。IDE補完が完璧に機能し、リファクタリングも安心。CI/CDで型チェックを自動化し、型エラーの混入を防ぎます。
+### 4. 🔒 100%型安全 + クリーンコード（v0.5.1 NEW!）
+**mypy完全対応**で型エラーゼロを達成。IDE補完が完璧に機能し、リファクタリングも安心。**ruff format**で統一されたコードスタイル、**72%テストカバレッジ**で高品質を保証。CI/CDで型チェックとlintを自動化し、品質の高いコードベースを維持します。
 
 ### 5. 💰 APIコストゼロ
 Claude Codeが直接コードを生成するため、追加のAPI呼び出しコストはかかりません。
