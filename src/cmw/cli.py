@@ -65,11 +65,11 @@ def init(name: str):
 """, encoding='utf-8')
 
     click.echo(f"✅ プロジェクト '{name}' を初期化しました")
-    click.echo(f"\n次のステップ:")
+    click.echo("\n次のステップ:")
     click.echo(f"  1. cd {name}")
-    click.echo(f"  2. shared/docs/requirements.md を編集")
-    click.echo(f"  3. cmw task generate でタスク自動生成")
-    click.echo(f"  4. cmw status でプロジェクト状況を確認")
+    click.echo("  2. shared/docs/requirements.md を編集")
+    click.echo("  3. cmw task generate でタスク自動生成")
+    click.echo("  4. cmw status でプロジェクト状況を確認")
 
 
 @cli.group(name='task')
@@ -107,10 +107,10 @@ def generate_tasks(requirements: str, output: str, force: bool):
     # requirements.mdの存在確認
     if not requirements_path.exists():
         click.echo(f"❌ エラー: requirements.md が見つかりません: {requirements_path}", err=True)
-        click.echo(f"\n次のステップ:")
+        click.echo("\n次のステップ:")
         click.echo(f"  1. {requirements_path} を作成")
-        click.echo(f"  2. プロジェクト要件を記載")
-        click.echo(f"  3. cmw task generate を再実行")
+        click.echo("  2. プロジェクト要件を記載")
+        click.echo("  3. cmw task generate を再実行")
         return
 
     # 出力先の上書き確認
@@ -172,13 +172,13 @@ def generate_tasks(requirements: str, output: str, force: bool):
         for task in tasks:
             assigned_to_counts[task.assigned_to] = assigned_to_counts.get(task.assigned_to, 0) + 1
 
-        click.echo(f"\n担当別:")
+        click.echo("\n担当別:")
         for assigned_to, count in sorted(assigned_to_counts.items()):
             click.echo(f"  {assigned_to}: {count}タスク")
 
-        click.echo(f"\n次のステップ:")
-        click.echo(f"  1. タスク一覧を確認: cmw task list")
-        click.echo(f"  2. プロジェクト状況を確認: cmw status")
+        click.echo("\n次のステップ:")
+        click.echo("  1. タスク一覧を確認: cmw task list")
+        click.echo("  2. プロジェクト状況を確認: cmw status")
 
     except FileNotFoundError as e:
         click.echo(f"❌ エラー: {str(e)}", err=True)
@@ -253,7 +253,7 @@ def show_task(task_id: str):
         click.echo(f"依存タスク: {', '.join(task.dependencies)}")
     
     if task.artifacts:
-        click.echo(f"\n生成されたファイル:")
+        click.echo("\n生成されたファイル:")
         for artifact in task.artifacts:
             click.echo(f"  - {artifact}")
     
@@ -331,7 +331,6 @@ def validate_tasks(fix: bool, tasks_file: str):
     from rich.console import Console
     from rich.panel import Panel
     from rich.table import Table
-    from rich.text import Text
 
     console = Console()
     project_path = Path.cwd()
@@ -339,9 +338,9 @@ def validate_tasks(fix: bool, tasks_file: str):
 
     if not tasks_path.exists():
         console.print(f"[red]❌ エラー: {tasks_file} が見つかりません[/red]")
-        console.print(f"\n次のステップ:")
-        console.print(f"  1. cmw task generate でタスクを生成")
-        console.print(f"  2. cmw task validate で検証")
+        console.print("\n次のステップ:")
+        console.print("  1. cmw task generate でタスクを生成")
+        console.print("  2. cmw task validate で検証")
         return
 
     # タスクを読み込み
@@ -383,7 +382,7 @@ def validate_tasks(fix: bool, tasks_file: str):
             console.print(f"  {i}. {cycle_str}")
 
         if fix:
-            console.print(f"\n[blue]🔧 自動修正を適用中...[/blue]")
+            console.print("\n[blue]🔧 自動修正を適用中...[/blue]")
             suggestions = validator.suggest_fixes(cycles, tasks_list)
 
             # 修正提案を表示
@@ -402,7 +401,7 @@ def validate_tasks(fix: bool, tasks_file: str):
             if remaining_cycles:
                 console.print(f"\n[yellow]⚠️  {len(remaining_cycles)}件の循環依存が残っています[/yellow]")
             else:
-                console.print(f"\n[green]✅ 全ての循環依存を解決しました[/green]")
+                console.print("\n[green]✅ 全ての循環依存を解決しました[/green]")
 
                 # tasks.jsonを更新
                 tasks_data['tasks'] = [
@@ -421,7 +420,7 @@ def validate_tasks(fix: bool, tasks_file: str):
                 tasks_path.write_text(json.dumps(tasks_data, ensure_ascii=False, indent=2), encoding='utf-8')
                 console.print(f"[green]💾 {tasks_file} を更新しました[/green]")
         else:
-            console.print(f"\n[dim]ヒント: --fix オプションで自動修正できます[/dim]")
+            console.print("\n[dim]ヒント: --fix オプションで自動修正できます[/dim]")
     else:
         console.print("[green]✅ 循環依存は見つかりませんでした[/green]")
 
@@ -435,10 +434,10 @@ def validate_tasks(fix: bool, tasks_file: str):
         for non_task in non_tasks:
             console.print(f"  • {non_task.id}: {non_task.title}")
 
-        console.print(f"\n[dim]これらは実装タスクではなく参照情報です[/dim]")
+        console.print("\n[dim]これらは実装タスクではなく参照情報です[/dim]")
 
         if fix:
-            console.print(f"\n[blue]🔧 非タスク項目を除外中...[/blue]")
+            console.print("\n[blue]🔧 非タスク項目を除外中...[/blue]")
             tasks_list = implementation_tasks
 
             # tasks.jsonを更新
@@ -459,7 +458,7 @@ def validate_tasks(fix: bool, tasks_file: str):
             console.print(f"[green]✅ {len(non_tasks)}件の非タスク項目を除外しました[/green]")
             console.print(f"[green]💾 {tasks_file} を更新しました[/green]")
         else:
-            console.print(f"\n[dim]ヒント: --fix オプションで自動除外できます[/dim]")
+            console.print("\n[dim]ヒント: --fix オプションで自動除外できます[/dim]")
     else:
         console.print("[green]✅ 全てのタスクが実装タスクです[/green]")
 
@@ -471,13 +470,13 @@ def validate_tasks(fix: bool, tasks_file: str):
 
     if validation_result['missing_dependencies']:
         issues_found = True
-        console.print(f"[red]❌ 存在しない依存先が見つかりました:[/red]\n")
+        console.print("[red]❌ 存在しない依存先が見つかりました:[/red]\n")
         for issue in validation_result['missing_dependencies']:
             console.print(f"  • {issue}")
 
     if validation_result['invalid_dependencies']:
         issues_found = True
-        console.print(f"[red]❌ 不正な依存関係が見つかりました:[/red]\n")
+        console.print("[red]❌ 不正な依存関係が見つかりました:[/red]\n")
         for issue in validation_result['invalid_dependencies']:
             console.print(f"  • {issue}")
 
@@ -729,7 +728,7 @@ def complete_task(task_id: str, artifacts: Optional[str], message: Optional[str]
         console.print(f"[dim]{task.title}[/dim]")
 
         if artifacts_list:
-            console.print(f"\n[cyan]生成されたファイル:[/cyan]")
+            console.print("\n[cyan]生成されたファイル:[/cyan]")
             for artifact in artifacts_list:
                 console.print(f"  • {artifact}")
 
@@ -807,7 +806,7 @@ def sync(from_git: bool, since: str, branch: str, dry_run: bool):
                 console.print(f"  • {task_id}")
 
             console.print(f"\n[cyan]📊 分析したコミット数:[/cyan] {len(commits)}")
-            console.print(f"\n[dim]ヒント: --dry-run なしで実行すると、これらのタスクが完了にマークされます[/dim]")
+            console.print("\n[dim]ヒント: --dry-run なしで実行すると、これらのタスクが完了にマークされます[/dim]")
             return
 
         # 実際に同期
@@ -828,7 +827,7 @@ def sync(from_git: bool, since: str, branch: str, dry_run: bool):
         console.print(table)
 
         if result['updated_count'] > 0:
-            console.print(f"\n[green]完了にマークしたタスク:[/green]")
+            console.print("\n[green]完了にマークしたタスク:[/green]")
             coordinator = Coordinator(project_path)
             for task_id in result['completed_tasks']:
                 if task_id in coordinator.tasks:
@@ -845,7 +844,7 @@ def sync(from_git: bool, since: str, branch: str, dry_run: bool):
             for task_id in validation['invalid']:
                 console.print(f"  • {task_id} (存在しないタスク)")
 
-            console.print(f"\n[dim]該当するコミット:[/dim]")
+            console.print("\n[dim]該当するコミット:[/dim]")
             for commit in validation['invalid_commits'][:5]:  # 最大5件表示
                 console.print(f"  {commit['hash']}: {commit['message'][:60]}")
         else:
@@ -922,7 +921,7 @@ def generate_requirements(output: str, with_claude: bool, prompt: Optional[str])
         click.echo("\n" + "-"*80)
         click.echo("次のステップ:")
         click.echo("  1. Claude Codeを開いてください")
-        click.echo(f"  2. 以下のプロンプトを Claude Code に送信してください:")
+        click.echo("  2. 以下のプロンプトを Claude Code に送信してください:")
         click.echo(f"\n     「{prompt_file} の内容に従って、requirements.mdを生成して")
         click.echo(f"      {output_path} に保存してください」")
         click.echo("\n  3. Claude Codeが生成完了したら:")
@@ -937,10 +936,10 @@ def generate_requirements(output: str, with_claude: bool, prompt: Optional[str])
     success = generator.generate_interactive(output_path)
 
     if success:
-        click.echo(f"\n次のステップ:")
+        click.echo("\n次のステップ:")
         click.echo(f"  1. {output} を確認・編集")
-        click.echo(f"  2. cmw task generate でタスク自動生成")
-        click.echo(f"  3. cmw status でプロジェクト状況を確認")
+        click.echo("  2. cmw task generate でタスク自動生成")
+        click.echo("  3. cmw status でプロジェクト状況を確認")
 
 
 # 後方互換性: task のすべてのコマンドを tasks にもコピー

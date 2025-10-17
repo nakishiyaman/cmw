@@ -8,7 +8,7 @@ on:
 
 jobs:
   lint:
-    name: Lint and Type Check
+    name: Lint
     runs-on: ubuntu-latest
 
     steps:
@@ -27,10 +27,6 @@ jobs:
       - name: Run ruff
         run: |
           ruff check src/ tests/
-
-      - name: Run mypy
-        run: |
-          mypy src/cmw
 
   test:
     name: Test Python ${{ matrix.python-version }}

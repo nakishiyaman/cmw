@@ -2,7 +2,6 @@
 ConflictDetectorのテスト
 """
 import pytest
-from pathlib import Path
 
 from src.cmw.conflict_detector import (
     ConflictDetector,

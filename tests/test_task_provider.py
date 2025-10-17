@@ -6,7 +6,7 @@ from pathlib import Path
 import tempfile
 import shutil
 from cmw.task_provider import TaskProvider
-from cmw.models import Task, TaskStatus
+from cmw.models import TaskStatus
 
 
 @pytest.fixture

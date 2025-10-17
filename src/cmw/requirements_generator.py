@@ -4,12 +4,10 @@ Requirements Generator - 対話型requirements.md生成
 ユーザーとの対話を通じて、プロジェクト要件を収集し、
 requirements.mdを自動生成する。
 """
-from typing import List, Dict, Optional
 from pathlib import Path
 from rich.console import Console
 from rich.prompt import Prompt, Confirm
 from rich.panel import Panel
-from rich.markdown import Markdown
 
 
 class RequirementsGenerator:
@@ -288,7 +286,7 @@ class RequirementsGenerator:
 
         # 技術スタック
         tech = self.requirements_data['tech_stack']
-        self.console.print(f"\n技術スタック:")
+        self.console.print("\n技術スタック:")
         self.console.print(f"  Backend: {tech['backend']}")
         self.console.print(f"  Database: {tech['database']}")
         self.console.print(f"  ORM: {tech['orm']}")
@@ -393,7 +391,7 @@ class RequirementsGenerator:
                     lines.append(f"- 説明: {feature['description']}\n")
                     lines.append("**受入基準:**")
                     lines.append(f"- 正常に{feature['name']}ができる")
-                    lines.append(f"- 適切なバリデーションが実装されている\n")
+                    lines.append("- 適切なバリデーションが実装されている\n")
 
             if other_features:
                 # モデル別にグループ化
@@ -415,7 +413,7 @@ class RequirementsGenerator:
                         lines.append(f"- 説明: {feature['description']}\n")
                         lines.append("**受入基準:**")
                         lines.append(f"- 正常に{feature['name']}ができる")
-                        lines.append(f"- 適切なエラーハンドリングがされている\n")
+                        lines.append("- 適切なエラーハンドリングがされている\n")
 
         # 非機能要件
         if self.requirements_data.get('non_functional'):

@@ -1,7 +1,7 @@
 # Claude Multi-Worker Framework (cmw) v0.3.1
 
 [![Tests](https://github.com/nakishiyaman/cmw/workflows/Tests/badge.svg)](https://github.com/nakishiyaman/cmw/actions)
-[![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![codecov](https://codecov.io/gh/nakishiyaman/cmw/branch/main/graph/badge.svg)](https://codecov.io/gh/nakishiyaman/cmw)
 
@@ -724,7 +724,7 @@ Claude Codeが直接コードを生成するため、追加のAPI呼び出しコ
 
 ## 🔧 技術スタック
 
-- **Python 3.12+**
+- **Python 3.9+**
 - **Click**: CLIフレームワーク
 - **Rich**: ターミナルUI（ダッシュボード表示）
 - **NetworkX**: グラフアルゴリズム（依存関係、競合検出）

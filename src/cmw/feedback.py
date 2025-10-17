@@ -7,8 +7,7 @@ FeedbackManager - リアルタイムフィードバック
 - 次のアクションの提案
 """
 from pathlib import Path
-from typing import Optional, List, Dict
-from datetime import datetime
+from typing import List
 
 from .models import Task, TaskStatus
 from .coordinator import Coordinator
@@ -247,14 +246,14 @@ class FeedbackManager:
 
             # 推奨アクション
             next_task = ready_tasks[0]
-            next_steps += f"\n💡 推奨アクション:\n"
+            next_steps += "\n💡 推奨アクション:\n"
             next_steps += f"  次のタスクを実行: {next_task.id} - {next_task.title}\n"
         else:
             if failed_tasks or blocked_tasks:
-                next_steps += f"\n💡 推奨アクション:\n"
-                next_steps += f"  失敗したタスクを修正してください\n"
+                next_steps += "\n💡 推奨アクション:\n"
+                next_steps += "  失敗したタスクを修正してください\n"
             else:
-                next_steps += f"\n🎉 全タスク完了！\n"
+                next_steps += "\n🎉 全タスク完了！\n"
 
         next_steps += f"\n{'=' * 50}"
         return next_steps.strip()
@@ -291,12 +290,12 @@ class FeedbackManager:
 """
 
         if task.target_files:
-            summary += f"\n対象ファイル:\n"
+            summary += "\n対象ファイル:\n"
             for file in task.target_files:
                 summary += f"  • {file}\n"
 
         if task.acceptance_criteria:
-            summary += f"\n受け入れ基準:\n"
+            summary += "\n受け入れ基準:\n"
             for criteria in task.acceptance_criteria:
                 summary += f"  • {criteria}\n"
 
@@ -304,7 +303,7 @@ class FeedbackManager:
             if task.completed_at:
                 summary += f"\n完了日時: {task.completed_at}\n"
             if task.artifacts:
-                summary += f"成果物:\n"
+                summary += "成果物:\n"
                 for artifact in task.artifacts:
                     summary += f"  • {artifact}\n"
 
