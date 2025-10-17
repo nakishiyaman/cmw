@@ -201,7 +201,8 @@ def list_tasks(status: Optional[str]) -> None:
         return
     
     # フィルタリング
-    tasks_to_show = coordinator.tasks.values()
+    from typing import Iterable
+    tasks_to_show: Iterable = coordinator.tasks.values()
     if status:
         tasks_to_show = [t for t in tasks_to_show if t.status.value == status]
     
