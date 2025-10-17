@@ -48,7 +48,7 @@ pytest tests/ -v
 
 ### Python コードスタイル
 
-- **フォーマッター**: Black (line-length=100)
+- **フォーマッター**: Ruff format (line-length=100)
 - **リンター**: Ruff
 - **型チェック**: mypy（型ヒントを必須とします）
 
@@ -56,14 +56,128 @@ pytest tests/ -v
 
 ```bash
 # フォーマット
-black src/ tests/
+ruff format src/ tests/
 
 # リント
 ruff check src/ tests/
 
-# 型チェック
+# 型チェック（strictモード）
 mypy src/
 ```
+
+### 型安全性ガイドライン (v0.5.0+)
+
+cmwは **100%型安全** を達成しています。全ての新しいコードも型安全を維持してください。
+
+#### 必須事項
+
+1. **全ての関数に型アノテーションを追加**
+   ```python
+   # ✅ Good
+   def create_task(title: str, priority: Priority = Priority.MEDIUM) -> Task:
+       ...
+
+   # ❌ Bad
+   def create_task(title, priority=Priority.MEDIUM):
+       ...
+   ```
+
+2. **Optional型を適切に使用**
+   ```python
+   # ✅ Good
+   def get_task(task_id: str) -> Optional[Task]:
+       return self.tasks.get(task_id)
+
+   # ❌ Bad
+   def get_task(task_id: str) -> Task:
+       return self.tasks.get(task_id)  # mypy error!
+   ```
+
+3. **None チェックを徹底**
+   ```python
+   # ✅ Good
+   task = get_task(task_id)
+   if task is None:
+       raise ValueError(f"Task {task_id} not found")
+   # ここから task は Task 型として扱われる
+   task.status = TaskStatus.COMPLETED
+
+   # ❌ Bad
+   task = get_task(task_id)
+   task.status = TaskStatus.COMPLETED  # mypy error!
+   ```
+
+4. **コレクション型に型パラメータを指定**
+   ```python
+   # ✅ Good
+   from typing import Dict, List
+
+   tasks: List[Task] = []
+   stats: Dict[str, int] = {}
+
+   # ❌ Bad
+   tasks = []  # error: Need type annotation
+   stats = {}  # error: Need type annotation
+   ```
+
+5. **Any型は極力避ける**
+   ```python
+   # ✅ Good - 型を明確に
+   from typing import Union
+
+   def load_config(path: Union[str, Path]) -> Dict[str, str]:
+       ...
+
+   # ⚠️  Avoid - Any は型安全性を損なう
+   def load_config(path: Any) -> Any:
+       ...
+   ```
+
+#### ベストプラクティス
+
+1. **Enum値を使用** (文字列リテラルは避ける)
+   ```python
+   # ✅ Good
+   if task.status == TaskStatus.COMPLETED:
+       ...
+
+   # ❌ Bad
+   if task.status == "completed":  # mypy error!
+       ...
+   ```
+
+2. **型エイリアスで可読性向上**
+   ```python
+   from typing import Dict, List
+
+   TaskDict = Dict[str, Task]
+   TaskList = List[Task]
+
+   def get_all_tasks() -> TaskDict:
+       ...
+   ```
+
+3. **dataclassで可変デフォルト値を扱う**
+   ```python
+   from dataclasses import dataclass, field
+   from typing import List
+
+   @dataclass
+   class Config:
+       name: str
+       options: List[str] = field(default_factory=list)  # ✅ Good
+       # options: List[str] = []  # ❌ Bad: mutable default
+   ```
+
+4. **cast()を使って型を明示**
+   ```python
+   from typing import Any, cast, Dict
+
+   data: Any = json.loads(file.read_text())
+   tasks_data: Dict = cast(Dict, data)
+   ```
+
+詳細は [MYPY_IMPROVEMENTS.md](MYPY_IMPROVEMENTS.md) を参照してください。
 
 ### コミットメッセージ
 
