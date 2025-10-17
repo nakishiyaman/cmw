@@ -245,19 +245,21 @@ cmwは**タスク管理・メタデータ層**として機能し、Claude Code�
 
 ## 📦 インストール
 
-### 方法1: Claude Codeプラグインとして（推奨）
-
-Claude Codeから直接インストールできます：
+### 方法1: PyPIから（推奨）
 
 ```bash
-# Claude Codeのコマンドで
-/plugin marketplace add nakishiyaman/cmw
-/plugin install cmw-cli@cmw
+pip install claude-multi-worker
 ```
 
-インストール後、Claude Codeから`cmw`コマンドを使用できます。
+インストール後、`cmw`コマンドが利用可能になります。
 
-### 方法2: pipで直接インストール（開発者向け）
+### 方法2: GitHubから
+
+```bash
+pip install git+https://github.com/nakishiyaman/cmw.git
+```
+
+### 方法3: ソースから（開発者向け）
 
 ```bash
 # リポジトリをクローン
@@ -664,9 +666,10 @@ Claude Codeとのシームレスな統合を実現します。
   - タスク一覧、進捗状況等のMCP Resources
 
 - 📦 **Claude Code Plugin化**
-  - ワンコマンドインストール: `/plugin install cmw`
+  - ワンコマンドインストール: `/plugin marketplace add nakishiyaman/cmw`
   - スラッシュコマンド: `/next-task`, `/complete-task`
   - Skills（ワークフロー指示書）の自動適用
+  - `claude.json`による設定ファイル対応
 
 - ⚡ **ワークフロー自動化**
   - Claude Codeが自動的にタスクを取得・完了マーク
@@ -674,6 +677,8 @@ Claude Codeとのシームレスな統合を実現します。
   - リアルタイムな進捗同期
 
 **リリース予定:** 2025年11月中旬
+
+**注記:** v0.3.1では、Claude Code Pluginとしてのインストールはまだ対応していません。現在はCLIツールとしてPyPI経由でインストールしてください。Plugin対応はv0.4.0で実装予定です。
 
 **現在の使い方（v0.3.1）:**
 ```bash
