@@ -7,7 +7,7 @@ StateManager - 状態の永続化とセッション管理
 - セッションの継続性保証
 """
 from pathlib import Path
-from typing import Optional, Any
+from typing import Optional, Any, Dict, cast
 import json
 import time
 import os
@@ -95,10 +95,11 @@ class StateManager:
 
         return True
 
-    def _read_lock(self) -> Optional[dict]:
+    def _read_lock(self) -> Optional[Dict]:
         """ロックファイルを読み込み"""
         try:
-            return json.loads(self.lock_file.read_text(encoding='utf-8'))
+            result: Any = json.loads(self.lock_file.read_text(encoding='utf-8'))
+            return cast(Dict, result)
         except (FileNotFoundError, json.JSONDecodeError):
             return None
 

@@ -219,7 +219,7 @@ class GraphVisualizer:
                     predecessor[successor] = node
 
         # 最長パスの終点を見つける
-        end_node = max(longest_path_to, key=longest_path_to.get)
+        end_node = max(longest_path_to, key=lambda x: longest_path_to[x])
 
         # パスを逆順にたどる
         path = []

@@ -5,7 +5,7 @@
 最適な実行順序を提案します。
 """
 
-from typing import List, Dict, Set
+from typing import List, Dict, Set, Any
 import networkx as nx
 
 from .models import Task, TaskStatus
@@ -178,7 +178,7 @@ class ConflictDetector:
                 }
             }
         """
-        file_usage = {}
+        file_usage: Dict[str, Dict[str, Any]] = {}
 
         for task in tasks:
             for file in task.target_files:

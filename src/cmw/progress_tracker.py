@@ -151,7 +151,10 @@ class ProgressTracker:
 
         # タイムスタンプでソート
         from typing import Any
-        events.sort(key=lambda x: x['timestamp'] if x['timestamp'] else datetime.min)
+        def get_timestamp(event: Dict[str, Any]) -> datetime:
+            ts = event['timestamp']
+            return ts if isinstance(ts, datetime) else datetime.min
+        events.sort(key=get_timestamp)
 
         return events
 
