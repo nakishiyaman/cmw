@@ -861,6 +861,88 @@ def sync(from_git: bool, since: str, branch: str, dry_run: bool):
         traceback.print_exc()
 
 
+@cli.group(name='requirements')
+def requirements():
+    """Requirements.md管理コマンド"""
+    pass
+
+
+@requirements.command('generate')
+@click.option('--output', '-o', default='shared/docs/requirements.md',
+              help='出力先パス')
+@click.option('--with-claude', is_flag=True,
+              help='Claude Codeと統合して自動生成')
+@click.option('--prompt', '-p',
+              help='Claude Codeに渡すプロンプト（--with-claude使用時）')
+def generate_requirements(output: str, with_claude: bool, prompt: Optional[str]):
+    """対話形式でrequirements.mdを生成
+
+    examples:
+        cmw requirements generate
+        cmw requirements generate -o my-requirements.md
+        cmw requirements generate --with-claude --prompt "ホテル予約管理API"
+    """
+    project_path = Path.cwd()
+    output_path = project_path / output
+
+    # 既存ファイルの確認
+    if output_path.exists():
+        if not click.confirm(f"\n{output} は既に存在します。上書きしますか?"):
+            click.echo("キャンセルしました")
+            return
+
+    if with_claude:
+        # Claude Code統合モード
+        if not prompt:
+            click.echo("❌ エラー: --with-claude を使用する場合は --prompt でプロンプトを指定してください", err=True)
+            click.echo("\n例:")
+            click.echo('  cmw requirements generate --with-claude --prompt "ホテル予約管理APIを作成"')
+            return
+
+        # プロンプトテンプレートを読み込み
+        template_path = Path(__file__).parent.parent.parent / "prompts" / "requirements_generator.md"
+
+        if not template_path.exists():
+            click.echo(f"❌ エラー: プロンプトテンプレートが見つかりません: {template_path}", err=True)
+            return
+
+        template_content = template_path.read_text(encoding='utf-8')
+        final_prompt = template_content.replace('{USER_PROMPT}', prompt)
+
+        # プロンプトを一時ファイルに保存
+        prompt_file = project_path / ".cmw_prompt.md"
+        prompt_file.write_text(final_prompt, encoding='utf-8')
+
+        click.echo("\n" + "="*80)
+        click.echo("🤖 Claude Code統合モード")
+        click.echo("="*80)
+        click.echo(f"\nユーザーの指示: {prompt}")
+        click.echo(f"\nプロンプトファイル: {prompt_file}")
+        click.echo(f"出力先: {output_path}")
+        click.echo("\n" + "-"*80)
+        click.echo("次のステップ:")
+        click.echo("  1. Claude Codeを開いてください")
+        click.echo(f"  2. 以下のプロンプトを Claude Code に送信してください:")
+        click.echo(f"\n     「{prompt_file} の内容に従って、requirements.mdを生成して")
+        click.echo(f"      {output_path} に保存してください」")
+        click.echo("\n  3. Claude Codeが生成完了したら:")
+        click.echo("     cmw task generate でタスク自動生成")
+        click.echo("-"*80)
+        return
+
+    # 対話型生成（従来のモード）
+    from .requirements_generator import RequirementsGenerator
+
+    generator = RequirementsGenerator()
+    success = generator.generate_interactive(output_path)
+
+    if success:
+        click.echo(f"\n次のステップ:")
+        click.echo(f"  1. {output} を確認・編集")
+        click.echo(f"  2. cmw task generate でタスク自動生成")
+        click.echo(f"  3. cmw status でプロジェクト状況を確認")
+
+
 # 後方互換性: task のすべてのコマンドを tasks にもコピー
 for name, cmd in task.commands.items():
     tasks.add_command(cmd, name=name)

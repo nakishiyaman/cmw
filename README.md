@@ -287,9 +287,46 @@ cmw init my-project
 cd my-project
 ```
 
-### 2. requirements.mdを編集
+### 2. requirements.mdを作成
 
-`shared/docs/requirements.md`に要件を記述：
+#### 方法A: Claude Code統合（推奨）
+
+`cmw requirements generate`コマンドを使用すると、Claude Codeと連携して自動でrequirements.mdを生成できます。
+
+```bash
+# 1行でプロジェクトの要望を伝えるだけ
+cmw requirements generate --with-claude --prompt "ToDoアプリを作りたい"
+
+# 次のステップが表示される:
+# 1. Claude Codeを開いてください
+# 2. 以下のプロンプトを Claude Code に送信してください:
+#    「.cmw_prompt.md の内容に従って、requirements.mdを生成して
+#     shared/docs/requirements.md に保存してください」
+# 3. Claude Codeが生成完了したら:
+#    cmw task generate でタスク自動生成
+```
+
+**仕組み:**
+- cmwがプロンプトテンプレートを生成（`.cmw_prompt.md`）
+- ユーザーがそのプロンプトをClaude Codeに渡す
+- Claude Codeが詳細なrequirements.mdを生成
+- 生成されたrequirements.mdから自動でタスクを生成
+
+#### 方法B: 対話型ウィザード
+
+対話形式で段階的にrequirements.mdを作成できます。
+
+```bash
+# 対話型ウィザードを起動
+cmw requirements generate
+
+# プロジェクト名、技術スタック、データモデル、API機能などを
+# 質問に答えながら入力していく
+```
+
+#### 方法C: 手動作成
+
+`shared/docs/requirements.md`に直接要件を記述：
 
 ```markdown
 # プロジェクト要件
@@ -375,6 +412,19 @@ cmw status
 
 # プロジェクト状態表示（コンパクト）
 cmw status --compact
+```
+
+### Requirements管理
+
+```bash
+# requirements.md生成（Claude Code統合）
+cmw requirements generate --with-claude --prompt "プロジェクトの説明"
+
+# requirements.md生成（対話型ウィザード）
+cmw requirements generate
+
+# requirements.md生成（出力先指定）
+cmw requirements generate -o custom/path/requirements.md
 ```
 
 ### タスク管理
