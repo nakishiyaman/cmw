@@ -94,12 +94,12 @@ class Coordinator:
         return self.tasks.get(task_id)
     
     def update_task_status(
-        self, 
-        task_id: str, 
+        self,
+        task_id: str,
         status: TaskStatus,
         error_message: Optional[str] = None,
         artifacts: Optional[List[str]] = None
-    ):
+    ) -> None:
         """
         タスクのステータスを更新
         
