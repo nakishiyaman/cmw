@@ -28,7 +28,7 @@ Sleep 500ms
 
 # requirements.mdを編集済みのものに置き換え（非表示）
 Hide
-Type "cp /home/kishiyama-n/workspace/projects/todo-api/shared/docs/requirements.md shared/docs/"
+Type "cp /tmp/sample-requirements.md shared/docs/requirements.md"
 Enter
 Sleep 500ms
 Show
