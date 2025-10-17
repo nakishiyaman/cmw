@@ -41,7 +41,7 @@ Type "# Generate requirements with one command"
 Enter
 Sleep 500ms
 
-Type "cmw requirements generate --with-claude --prompt 'Blog API'"
+Type "echo 'y' | cmw requirements generate --with-claude --prompt 'Blog API'"
 Enter
 Sleep 3s
 
@@ -72,7 +72,7 @@ Type "# Auto-generate tasks"
 Enter
 Sleep 500ms
 
-Type "cmw task generate"
+Type "echo 'y' | cmw task generate"
 Enter
 Sleep 3s
 
