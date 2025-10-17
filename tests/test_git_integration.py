@@ -3,10 +3,9 @@ GitIntegration のユニットテスト
 """
 import json
 import pytest
-from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
 from cmw.git_integration import GitIntegration
-from cmw.models import Task, TaskStatus, Priority
+from cmw.models import TaskStatus
 
 
 @pytest.fixture

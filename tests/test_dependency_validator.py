@@ -1,7 +1,6 @@
 """
 DependencyValidator のユニットテスト
 """
-import pytest
 from cmw.dependency_validator import DependencyValidator
 from cmw.models import Task, Priority
 

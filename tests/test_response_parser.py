@@ -1,8 +1,6 @@
 """
 ResponseParser のユニットテスト
 """
-import pytest
-from pathlib import Path
 from cmw.response_parser import ResponseParser
 
 

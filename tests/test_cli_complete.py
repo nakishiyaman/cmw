@@ -3,7 +3,6 @@ cmw task complete コマンドのユニットテスト
 """
 import json
 import pytest
-from pathlib import Path
 from click.testing import CliRunner
 from cmw.cli import cli
 

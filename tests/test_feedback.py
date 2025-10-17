@@ -7,7 +7,7 @@ import tempfile
 import shutil
 import json
 from cmw.feedback import FeedbackManager
-from cmw.models import Task, TaskStatus
+from cmw.models import TaskStatus
 
 
 @pytest.fixture
