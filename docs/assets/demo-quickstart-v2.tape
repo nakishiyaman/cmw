@@ -18,9 +18,9 @@ Type "export PS1='$ '"
 Enter
 Type "export PATH=$PATH:~/go/bin"
 Enter
-Type "cd /home/kishiyama-n/workspace/cmw"
+Type "cd /tmp && rm -rf cmw-demo && mkdir cmw-demo && cd cmw-demo"
 Enter
-Type "source venv/bin/activate"
+Type "source /home/kishiyama-n/workspace/cmw/venv/bin/activate"
 Enter
 Sleep 100ms
 Show
