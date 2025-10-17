@@ -6,13 +6,13 @@ Set FontSize 18
 Set Width 1200
 Set Height 600
 Set Shell bash
-Set FontFamily "monospace"
+Set FontFamily "DejaVu Sans Mono, Noto Color Emoji"
 
 # Demo: 依存関係グラフ（10秒）
 Hide
-Type "export LANG=ja_JP.UTF-8"
+Type "export LANG=C.UTF-8"
 Enter
-Type "export LC_ALL=ja_JP.UTF-8"
+Type "export LC_ALL=C.UTF-8"
 Enter
 Type "export PS1='$ '"
 Enter
