@@ -28,6 +28,10 @@ jobs:
         run: |
           ruff check src/ tests/
 
+      - name: Run mypy
+        run: |
+          mypy src/cmw
+
   test:
     name: Test Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
