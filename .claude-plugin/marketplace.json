@@ -1,0 +1,22 @@
+{
+  "name": "cmw",
+  "owner": {
+    "name": "nakishiyaman",
+    "email": "noreply@example.com"
+  },
+  "description": "Task management framework for large-scale Claude Code projects - 大規模プロジェクトの開発を完全自動化",
+  "plugins": [
+    {
+      "name": "cmw-cli",
+      "source": ".",
+      "description": "CLI tools for task generation, dependency management, and progress tracking",
+      "version": "0.3.1",
+      "category": "productivity",
+      "tags": ["task-management", "automation", "workflow", "project-management"],
+      "author": {
+        "name": "nakishiyaman"
+      },
+      "strict": false
+    }
+  ]
+}

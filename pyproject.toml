@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "claude-multi-worker"
-version = "0.3.0"
-description = "Claude Code統合タスク管理フレームワーク v0.3.0 - requirements.mdから自動でタスク生成、循環依存自動修正、Git連携、進捗可視化"
+version = "0.3.1"
+description = "Claude Code統合タスク管理フレームワーク v0.3.1 - requirements.mdから自動でタスク生成、循環依存自動修正、Git連携、進捗可視化"
 readme = "README.md"
 requires-python = ">=3.9"
 license = {text = "MIT"}
@@ -33,6 +33,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0",
+    "pytest-cov>=4.0",
     "pytest-asyncio>=0.21",
     "black>=23.0",
     "mypy>=1.0",

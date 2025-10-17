@@ -1,8 +1,82 @@
 # Claude Multi-Worker Framework (cmw) v0.3.1
 
+[![Tests](https://github.com/nakishiyaman/claude-multi-worker-framework/workflows/Tests/badge.svg)](https://github.com/nakishiyaman/claude-multi-worker-framework/actions)
+[![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![codecov](https://codecov.io/gh/nakishiyaman/claude-multi-worker-framework/branch/main/graph/badge.svg)](https://codecov.io/gh/nakishiyaman/claude-multi-worker-framework)
+
 **requirements.mdを書くだけで、大規模プロジェクトの開発を完全自動化**
 
 Claude Codeと統合した次世代タスク管理フレームワーク。要件定義から自動的にタスクを生成し、依存関係グラフを可視化し、タスク実行プロンプトを自動生成し、Claude Codeの応答を自動解析します。開発ワークフロー全体を最適化します。
+
+---
+
+## 🎯 cmwはいつ必要？
+
+| シチュエーション | Claude Code単体 | cmw併用 |
+|---------------|----------------|---------|
+| **プロジェクト規模** | 10タスク以下 | 30タスク以上 |
+| **開発期間** | 1日で完了 | 複数日〜数週間 |
+| **セッション管理** | 毎回文脈を再説明 | progress.jsonで自動継続 |
+| **依存関係管理** | 手動で追跡 | NetworkXで自動管理、循環検出 |
+| **ファイル競合** | 実行してみないと分からない | 事前に検出、実行順序を提案 |
+| **チーム開発** | 進捗共有が困難 | Git + cmw syncで同期 |
+
+**✅ cmwが役立つケース:**
+- 30タスク以上の大規模プロジェクト
+- 複数日に渡る開発（セッションを跨ぐ）
+- 複雑な依存関係がある（認証→API→テストなど）
+- チームで進捗を共有したい
+
+**❌ cmwが不要なケース:**
+- 10タスク以下の小規模プロジェクト
+- 1セッションで完結する開発
+- 単純な機能追加やバグ修正
+
+---
+
+## 🤔 なぜcmwが必要？
+
+Claude Codeは強力ですが、**大規模プロジェクト**では以下の限界があります：
+
+### 問題1: セッションを跨ぐと文脈が消える
+Claude Codeは1セッションで全てを完了させることを前提としています。しかし、大規模プロジェクトでは：
+- 30タスク以上の開発を1セッションで終えるのは現実的ではない
+- セッションを再開すると「どこまで完了したか」を毎回説明する必要がある
+
+**→ cmwの解決策:** `progress.json`で状態を永続化
+```bash
+# セッション1
+cmw task complete TASK-001 TASK-002 TASK-003
+
+# セッション2（翌日）
+cmw status  # → 「3/30タスク完了、残り27タスク」と即座に把握
+```
+
+### 問題2: 依存関係の追跡が手動
+Claude Codeは「どのタスクを先に実行すべきか」を自動判定できません：
+- 認証→API→テストという順序を守らないとエラーになる
+- 循環依存に気づかずタスクを定義してしまう
+
+**→ cmwの解決策:** NetworkXで自動管理
+```bash
+cmw task graph  # → 依存関係を可視化
+cmw tasks validate --fix  # → 循環依存を自動修正
+```
+
+### 問題3: ファイル競合の事前検出不可
+Claude Codeは「複数タスクが同じファイルを編集する」ことを事前に検出できません：
+- TASK-001とTASK-005が`auth.py`を同時に編集→競合
+- 実行してみないと分からない
+
+**→ cmwの解決策:** 事前に競合検出
+```bash
+cmw tasks analyze
+# ⚠️  CRITICAL: auth.py (5タスク競合)
+#   推奨実行順: TASK-001 → TASK-002 → TASK-005
+```
+
+---
 
 ## 🎯 概要
 
@@ -148,6 +222,20 @@ cmwは**タスク管理・メタデータ層**として機能し、Claude Code�
   - ファイル競合検出: 2件（CRITICAL 1件、MEDIUM 1件）
 
 ## 📦 インストール
+
+### 方法1: Claude Codeプラグインとして（推奨）
+
+Claude Codeから直接インストールできます：
+
+```bash
+# Claude Codeのコマンドで
+/plugin marketplace add nakishiyaman/claude-multi-worker-framework
+/plugin install cmw-cli@cmw
+```
+
+インストール後、Claude Codeから`cmw`コマンドを使用できます。
+
+### 方法2: pipで直接インストール（開発者向け）
 
 ```bash
 # リポジトリをクローン
