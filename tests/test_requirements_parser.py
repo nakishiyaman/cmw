@@ -243,67 +243,71 @@ class TestRequirementsParser:
             assert len(model_task.acceptance_criteria) > 0
 
 
-class TestRealWorldRequirements:
-    """実際のrequirements.mdを使用したテスト"""
+# Note: 以下のテストは、外部プロジェクト（todo-api）に依存しているため、
+# Public化にあたりコメントアウトしています。
+# ローカル環境で検証する場合は、適宜パスを修正してコメントを解除してください。
 
-    @pytest.fixture
-    def parser(self):
-        return RequirementsParser()
-
-    def test_parse_todo_api_requirements(self, parser):
-        """todo-apiのrequirements.mdを解析"""
-        # todo-apiのrequirements.mdパス
-        todo_api_req = Path("/home/kishiyama-n/workspace/projects/todo-api/shared/docs/requirements.md")
-
-        if not todo_api_req.exists():
-            pytest.skip("todo-api requirements.md not found")
-
-        tasks = parser.parse(todo_api_req)
-
-        # 少なくとも10タスク以上生成されるはず
-        assert len(tasks) >= 10
-
-        # タスクIDの確認
-        task_ids = [t.id for t in tasks]
-        assert len(task_ids) == len(set(task_ids))  # ユニーク
-
-        # データベースタスクが存在
-        db_tasks = [t for t in tasks if 'database' in ' '.join(t.target_files).lower()]
-        assert len(db_tasks) > 0
-
-        # 認証タスクが存在
-        auth_tasks = [t for t in tasks if 'auth' in ' '.join(t.target_files).lower()]
-        assert len(auth_tasks) > 0
-
-        # テストタスクが存在
-        test_tasks = [t for t in tasks if any('test' in f for f in t.target_files)]
-        assert len(test_tasks) > 0
-
-    def test_generated_tasks_have_valid_dependencies(self, parser):
-        """生成されたタスクの依存関係が有効"""
-        todo_api_req = Path("/home/kishiyama-n/workspace/projects/todo-api/shared/docs/requirements.md")
-
-        if not todo_api_req.exists():
-            pytest.skip("todo-api requirements.md not found")
-
-        tasks = parser.parse(todo_api_req)
-        task_ids = {t.id for t in tasks}
-
-        # 全ての依存関係が存在するタスクを参照している
-        for task in tasks:
-            for dep_id in task.dependencies:
-                assert dep_id in task_ids, f"Invalid dependency {dep_id} in {task.id}"
-
-    def test_no_self_dependencies(self, parser):
-        """自己依存がないことを確認"""
-        todo_api_req = Path("/home/kishiyama-n/workspace/projects/todo-api/shared/docs/requirements.md")
-
-        if not todo_api_req.exists():
-            pytest.skip("todo-api requirements.md not found")
-
-        tasks = parser.parse(todo_api_req)
-
-        # 各タスクが自分自身に依存していないことを確認
-        for task in tasks:
-            assert task.id not in task.dependencies, \
-                f"Task {task.id} depends on itself"
+# class TestRealWorldRequirements:
+#     """実際のrequirements.mdを使用したテスト"""
+#
+#     @pytest.fixture
+#     def parser(self):
+#         return RequirementsParser()
+#
+#     def test_parse_todo_api_requirements(self, parser):
+#         """todo-apiのrequirements.mdを解析"""
+#         # todo-apiのrequirements.mdパス（環境に応じて変更）
+#         todo_api_req = Path("path/to/todo-api/shared/docs/requirements.md")
+#
+#         if not todo_api_req.exists():
+#             pytest.skip("todo-api requirements.md not found")
+#
+#         tasks = parser.parse(todo_api_req)
+#
+#         # 少なくとも10タスク以上生成されるはず
+#         assert len(tasks) >= 10
+#
+#         # タスクIDの確認
+#         task_ids = [t.id for t in tasks]
+#         assert len(task_ids) == len(set(task_ids))  # ユニーク
+#
+#         # データベースタスクが存在
+#         db_tasks = [t for t in tasks if 'database' in ' '.join(t.target_files).lower()]
+#         assert len(db_tasks) > 0
+#
+#         # 認証タスクが存在
+#         auth_tasks = [t for t in tasks if 'auth' in ' '.join(t.target_files).lower()]
+#         assert len(auth_tasks) > 0
+#
+#         # テストタスクが存在
+#         test_tasks = [t for t in tasks if any('test' in f for f in t.target_files)]
+#         assert len(test_tasks) > 0
+#
+#     def test_generated_tasks_have_valid_dependencies(self, parser):
+#         """生成されたタスクの依存関係が有効"""
+#         todo_api_req = Path("path/to/todo-api/shared/docs/requirements.md")
+#
+#         if not todo_api_req.exists():
+#             pytest.skip("todo-api requirements.md not found")
+#
+#         tasks = parser.parse(todo_api_req)
+#         task_ids = {t.id for t in tasks}
+#
+#         # 全ての依存関係が存在するタスクを参照している
+#         for task in tasks:
+#             for dep_id in task.dependencies:
+#                 assert dep_id in task_ids, f"Invalid dependency {dep_id} in {task.id}"
+#
+#     def test_no_self_dependencies(self, parser):
+#         """自己依存がないことを確認"""
+#         todo_api_req = Path("path/to/todo-api/shared/docs/requirements.md")
+#
+#         if not todo_api_req.exists():
+#             pytest.skip("todo-api requirements.md not found")
+#
+#         tasks = parser.parse(todo_api_req)
+#
+#         # 各タスクが自分自身に依存していないことを確認
+#         for task in tasks:
+#             assert task.id not in task.dependencies, \
+#                 f"Task {task.id} depends on itself"

@@ -51,6 +51,112 @@
 
 ## 📋 Phase 1: 準備とソフトローンチ
 
+### ステップ1-0: デモGIF/動画作成（2時間）⭐⭐⭐⭐⭐
+
+**優先度**: 最高
+**実施者**: 自分
+**期限**: 即日（最優先）
+
+#### 目的
+- **30秒で価値を伝える**：READMEを読まなくても、GIF/動画だけでcmwの価値を理解できる
+- **視覚的インパクト**：テキストだけでは伝わらない、自動化の威力を見せる
+- **拡散性向上**：Twitter/Reddit等での共有時に注目を集める
+
+#### 制作内容
+
+**シナリオ1: クイックスタート（15秒）**
+```bash
+# 1. プロジェクト初期化
+cmw init todo-api
+cd todo-api
+
+# 2. requirements.mdを編集（既に用意済み）
+cat shared/docs/requirements.md
+
+# 3. タスク自動生成
+cmw tasks generate
+# → 17タスクが自動生成される様子
+
+# 4. タスク一覧表示
+cmw tasks list
+# → 依存関係が色分けされた一覧
+```
+
+**シナリオ2: 依存関係グラフ（10秒）**
+```bash
+# 依存関係グラフを表示
+cmw task graph
+# → ASCIIアートのグラフがアニメーション表示
+
+# Mermaid形式でも出力可能
+cmw task graph --format mermaid
+```
+
+**シナリオ3: 進捗ダッシュボード（5秒）**
+```bash
+# 進捗状況を表示
+cmw status
+# → Richライブラリの美しいダッシュボードが表示
+#   - プロジェクト概要
+#   - ベロシティメトリクス
+#   - 優先度別進捗テーブル
+#   - 最近のアクティビティ
+```
+
+#### 技術的実装
+
+**ツール選択肢**
+1. **asciinema + agg**（推奨）
+   ```bash
+   # インストール
+   pip install asciinema
+   cargo install --git https://github.com/asciinema/agg
+
+   # 録画
+   asciinema rec demo.cast
+
+   # GIFに変換
+   agg demo.cast demo.gif
+   ```
+
+2. **terminalizer**（代替案）
+   ```bash
+   npm install -g terminalizer
+   terminalizer record demo
+   terminalizer render demo -o demo.gif
+   ```
+
+3. **VHS**（最新、推奨度高）
+   ```bash
+   # https://github.com/charmbracelet/vhs
+   brew install vhs
+
+   # demo.tape を作成してスクリプト実行
+   vhs demo.tape
+   ```
+
+#### 成果物の配置
+```
+README.mdの冒頭:
+- demo-quickstart.gif（クイックスタート）
+- demo-graph.gif（依存関係グラフ）
+- demo-dashboard.gif（進捗ダッシュボード）
+
+docs/assets/:
+- より詳細なデモ動画（YouTube等）
+```
+
+#### チェックリスト
+- [ ] asciinema/VHSをインストール
+- [ ] クイックスタートシナリオを録画
+- [ ] 依存関係グラフシナリオを録画
+- [ ] 進捗ダッシュボードシナリオを録画
+- [ ] GIFに変換（最適化、ファイルサイズ削減）
+- [ ] README.mdに埋め込み
+- [ ] 表示テスト（GitHub上での見え方確認）
+
+---
+
 ### ステップ1-1: セキュリティ監査（30分）⭐⭐⭐⭐⭐
 
 **優先度**: 最高
@@ -61,7 +167,7 @@
 
 ```bash
 # 1. 機密情報の全履歴スキャン
-cd /home/kishiyama-n/workspace/claude-multi-worker-framework
+cd /path/to/claude-multi-worker-framework
 
 # APIキー、パスワード、トークンの検索
 git log --all --pretty=format: --name-only | \
@@ -765,13 +871,202 @@ Closes #
 
 ---
 
-### ステップ1-5: README.mdの最終確認と改善（1時間）⭐⭐⭐⭐⭐
+### ステップ1-5: README.mdの最終確認と改善（2-3時間）⭐⭐⭐⭐⭐
 
 **優先度**: 最高
 **実施者**: 自分
 **期限**: 即日
 
-#### チェックリスト
+#### 目的
+- **5分で価値を理解**：訪問者がすぐにcmwの価値を理解できる
+- **適切な期待値設定**：いつcmwを使うべきか、使わなくていいかを明確に
+- **Claude Codeとの関係を明確化**：競合ではなく補完関係であることを示す
+
+#### 追加・改善すべきセクション
+
+##### 1. **冒頭に比較表を追加**（最重要）
+
+```markdown
+## 🎯 cmwはいつ必要？
+
+### Claude Code単体 vs cmw併用
+
+| シチュエーション | Claude Code単体 | cmw併用 |
+|---------------|----------------|---------|
+| **プロジェクト規模** | 10タスク以下 | 30タスク以上 |
+| **開発期間** | 1日で完了 | 複数日〜数週間 |
+| **セッション管理** | 毎回文脈を再説明 | progress.jsonで自動継続 |
+| **依存関係管理** | 手動で追跡 | NetworkXで自動管理、循環検出 |
+| **ファイル競合** | 実行してみないと分からない | 事前に検出、実行順序を提案 |
+| **チーム開発** | 進捗共有が困難 | Git + cmw syncで同期 |
+
+### ✅ cmwを使うべきケース
+- 30タスク以上の大規模プロジェクト
+- 複数セッションにまたがる開発
+- 複雑な依存関係（10+の依存リンク）
+- チーム開発で進捗を共有したい
+- ファイル競合を事前に検出したい
+
+### ❌ cmwを使わなくていいケース
+- 10タスク以下の小規模プロジェクト
+- 1日で完了するシンプルな開発
+- 単純な1ファイル修正
+- 依存関係がない独立したタスク
+```
+
+##### 2. **冒頭に「なぜcmwが必要か」を追加**
+
+```markdown
+## 🤔 なぜcmwが必要？
+
+Claude Codeは強力ですが、**大規模プロジェクトでは限界**があります：
+
+**問題1: セッションを跨ぐと文脈が消える**
+```
+セッション1: "タスク1-10完了"
+...
+セッション2: "あれ、どこまでやったっけ？" ← 毎回説明が必要
+```
+
+**cmwの解決策**: progress.jsonで状態を永続化
+```bash
+cmw status  # → 即座に進捗を把握
+```
+
+**問題2: 依存関係の追跡が手動**
+```
+Claude Code: "タスクAはタスクBに依存してますよね？"
+あなた: "いや、タスクCにも依存してます"
+Claude Code: "循環依存してませんか？"
+あなた: "えっと...確認します"
+```
+
+**cmwの解決策**: NetworkXで自動管理
+```bash
+cmw task graph  # → 依存関係グラフを可視化
+cmw tasks validate --fix  # → 循環依存を自動検出・修正
+```
+
+**問題3: ファイル競合の事前検出不可**
+```
+TASK-001: auth.py を編集
+TASK-002: auth.py を編集（同じファイル！）
+→ 実行してみないと競合に気づかない
+```
+
+**cmwの解決策**: 事前に競合検出
+```bash
+cmw tasks analyze
+# → CRITICAL: auth.pyに2タスクが同時書き込み
+# → 推奨実行順序: TASK-001 → TASK-002
+```
+
+**結論**: Claude Codeが「実行層」、cmwが「メタデータ層」として協調
+```
+
+##### 3. **デモGIF/動画を冒頭に配置**
+
+```markdown
+## 📺 デモ
+
+### クイックスタート（30秒）
+![Quick Start Demo](docs/assets/demo-quickstart.gif)
+
+requirements.mdを書くだけで、タスク分解・依存関係・ファイル配置が全自動
+
+### 依存関係グラフ
+![Dependency Graph](docs/assets/demo-graph.gif)
+
+NetworkXで依存関係を可視化、並列実行グループを自動生成
+
+### 進捗ダッシュボード
+![Progress Dashboard](docs/assets/demo-dashboard.gif)
+
+Richライブラリで美しいターミナルUI
+```
+
+##### 4. **Claude Code統合のセクションを強調**
+
+```markdown
+## 🤝 Claude Code統合
+
+cmwはClaude Codeの**補完ツール**です。競合ではありません。
+
+### アーキテクチャ
+```
+あなた「ToDoアプリを作って」
+  ↓
+┌─────────────────────────────────────────┐
+│ Claude Code（司令塔 + 実行層）          │
+│  - 自然言語理解                          │
+│  - コード生成                            │
+│  - ファイル操作                          │
+│  - テスト実行                            │
+└─────────────────────────────────────────┘
+  ↓ ↑ タスク情報の取得・完了報告
+┌─────────────────────────────────────────┐
+│ cmw（タスク管理・メタデータ層）         │
+│  - requirements.md → タスク分解         │
+│  - 依存関係グラフ管理                   │
+│  - 進捗状態の永続化                     │
+│  - ファイル配置ルール                   │
+└─────────────────────────────────────────┘
+```
+
+### 典型的なワークフロー
+
+**1. プロジェクト初期化（cmw）**
+```bash
+cmw init my-project
+cd my-project
+```
+
+**2. 要件定義（あなた）**
+```markdown
+# shared/docs/requirements.md
+
+## 1. ユーザー認証
+- ユーザー登録
+- ログイン
+...
+```
+
+**3. タスク生成（cmw）**
+```bash
+cmw tasks generate
+# → 17タスクを自動生成
+```
+
+**4. タスク実行（Claude Code + cmw）**
+```python
+# Claude Codeのセッションで
+from cmw import TaskProvider
+
+provider = TaskProvider(Path.cwd())
+task = provider.get_next_task()
+# → "TASK-001: ユーザー登録"
+
+# Claude Codeがコード生成（自身の機能）
+# ...
+
+# 完了報告（cmw）
+provider.mark_completed(task.id, artifacts=["backend/auth.py"])
+```
+
+**5. 進捗確認（cmw）**
+```bash
+cmw status
+# → 美しいダッシュボードで進捗を可視化
+```
+```
+
+#### 既存のチェックリスト
+
+- [ ] **比較表を冒頭に追加**（最重要）
+- [ ] **「なぜcmwが必要か」セクション追加**（最重要）
+- [ ] **「いつ使うべきか」セクション追加**（最重要）
+- [ ] **デモGIF/動画を冒頭に配置**
+- [ ] **Claude Code統合セクションを強化**
 
 - [ ] **バッジの追加**
   ```markdown
@@ -795,7 +1090,7 @@ Closes #
 
 - [ ] **使用例が充実**
   - 実際のプロジェクトでの使用例
-  - スクリーンショット or GIF
+  - スクリーンショット or GIF（既に追加済み）
 
 - [ ] **ドキュメントへのリンク**
   - CONTRIBUTING.md
@@ -809,17 +1104,24 @@ Closes #
 
 ---
 
-### ステップ1-6: GitHub Actionsの設定（30分）⭐⭐⭐⭐
+### ステップ1-6: GitHub Actionsの設定（1-2時間）⭐⭐⭐⭐⭐
 
-**優先度**: 高
+**優先度**: 最高（Phase 9.0に追加）
 **実施者**: 自分
 **期限**: 即日
 
+#### 目的
+
+- **第一印象の向上**: バッジがREADMEに表示される
+- **継続的な品質保証**: PRごとに自動テストが走る
+- **信頼性の証明**: 「テスト通ってる？」への即答
+- **複数環境での互換性**: Python 3.10, 3.11, 3.12で動作確認
+
 #### ファイル作成
 
-```yaml
-# .github/workflows/tests.yml
+**`.github/workflows/tests.yml`**:
 
+```yaml
 name: Tests
 
 on:
@@ -848,19 +1150,55 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install -r requirements-dev.txt
           pip install -e .
 
       - name: Run tests
         run: |
-          pytest tests/ -v --cov=src/cmw --cov-report=xml
+          pytest tests/ -v --cov=src/cmw --cov-report=xml --cov-report=term
 
-      - name: Upload coverage
+      - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
           file: ./coverage.xml
           fail_ci_if_error: false
 ```
+
+#### READMEにバッジ追加
+
+README.md冒頭に以下を追加:
+
+```markdown
+[![Tests](https://github.com/nakishiyaman/claude-multi-worker-framework/workflows/Tests/badge.svg)](https://github.com/nakishiyaman/claude-multi-worker-framework/actions)
+[![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![codecov](https://codecov.io/gh/nakishiyaman/claude-multi-worker-framework/branch/main/graph/badge.svg)](https://codecov.io/gh/nakishiyaman/claude-multi-worker-framework)
+```
+
+#### チェックリスト
+
+- [ ] `.github/workflows/tests.yml`を作成
+- [ ] GitHubにプッシュ
+  ```bash
+  git add .github/workflows/tests.yml
+  git commit -m "ci: Add GitHub Actions for automated testing"
+  git push
+  ```
+- [ ] GitHub Actionsタブで実行を確認
+- [ ] 全テストがパスすることを確認（291テスト）
+- [ ] バッジが緑色になることを確認
+- [ ] READMEにバッジを追加
+- [ ] （オプション）Codecovアカウント作成・連携
+  - https://codecov.io/ でサインアップ
+  - GitHubリポジトリと連携
+  - カバレッジバッジの設定
+
+#### 期待される効果
+
+- ✅ Public化直後のユーザーが「品質が保証されている」と即座に理解
+- ✅ PRごとに自動テストが走る = 継続的な品質保証
+- ✅ 複数Pythonバージョンでの互換性を保証（3.10, 3.11, 3.12）
+- ✅ カバレッジを可視化 = 透明性の向上
+- ✅ コントリビューターがPRを出しやすくなる（自動テストで安心）
 
 ---
 
@@ -1073,17 +1411,215 @@ jobs:
 
 ---
 
+### ステップ2-5: Claude Codeマーケットプレイス対応（2-3時間）⭐⭐⭐⭐
+
+**優先度**: 高
+**実施者**: 自分
+**期限**: Phase 2期間中
+
+#### 目的
+- **ユーザーの摩擦を最小化**：`/plugin install`で即インストール
+- **公式エコシステムに参加**：Claude Code Pluginとして認知される
+- **発見性の向上**：マーケットプレイス経由での発見
+
+#### 実装内容
+
+##### 1. マーケットプレイスファイルの作成
+
+**最小構成（すぐに使える）**
+```bash
+mkdir -p .claude-plugin
+```
+
+**`.claude-plugin/marketplace.json`**
+```json
+{
+  "name": "cmw",
+  "owner": {
+    "name": "nakishiyaman",
+    "email": "your-email@example.com"
+  },
+  "description": "Task management framework for large-scale Claude Code projects - 大規模プロジェクトの開発を完全自動化",
+  "plugins": [
+    {
+      "name": "cmw-cli",
+      "source": ".",
+      "description": "CLI tools for task generation, dependency management, and progress tracking",
+      "version": "0.3.1",
+      "category": "productivity",
+      "tags": ["task-management", "automation", "workflow", "project-management"],
+      "author": {
+        "name": "nakishiyaman"
+      },
+      "strict": false
+    }
+  ]
+}
+```
+
+##### 2. プラグイン本体の作成（オプション、段階的に）
+
+**Phase 2では最小構成のみ、Phase 3で拡張**
+
+```bash
+mkdir -p plugins/cmw/.claude-plugin
+mkdir -p plugins/cmw/commands
+mkdir -p plugins/cmw/agents
+```
+
+**`plugins/cmw/.claude-plugin/plugin.json`**（将来の拡張用）
+```json
+{
+  "name": "cmw-coordinator",
+  "version": "0.3.1",
+  "description": "Claude Multi-Worker Framework - タスク自動生成・進捗管理",
+  "author": {
+    "name": "nakishiyaman"
+  },
+  "commands": [
+    "./commands/status.md",
+    "./commands/next.md"
+  ],
+  "agents": [],
+  "hooks": {}
+}
+```
+
+**`plugins/cmw/commands/status.md`**（将来の拡張用）
+```markdown
+---
+name: cmw-status
+description: プロジェクトの進捗状況を表示
+---
+
+現在のプロジェクトの進捗状況を表示します：
+
+\`\`\`bash
+cmw status --compact
+\`\`\`
+
+以下の情報が表示されます：
+- プロジェクト全体の完了率
+- 残りタスク数
+- 推定残り時間
+- 最近のアクティビティ
+```
+
+**`plugins/cmw/commands/next.md`**（将来の拡張用）
+```markdown
+---
+name: cmw-next
+description: 次に実行すべきタスクを取得
+---
+
+次に実行すべきタスクを取得し、実行プロンプトを生成します：
+
+\`\`\`bash
+cmw task prompt $(cmw tasks list --status pending | head -1 | awk '{print $1}')
+\`\`\`
+
+以下の情報が表示されます：
+- タスクID・タイトル
+- 受け入れ基準
+- 依存タスクの情報
+- 対象ファイル
+- 実装手順
+```
+
+##### 3. READMEにインストール手順を追記
+
+```markdown
+## 📦 インストール
+
+### 方法1: Claude Codeプラグインとして（推奨）
+
+\`\`\`bash
+# Claude Codeのセッションで
+/plugin marketplace add nakishiyaman/claude-multi-worker-framework
+/plugin install cmw-cli@cmw
+\`\`\`
+
+### 方法2: pipで直接インストール
+
+\`\`\`bash
+pip install claude-multi-worker-framework
+\`\`\`
+
+### 方法3: ソースからインストール
+
+\`\`\`bash
+git clone https://github.com/nakishiyaman/claude-multi-worker-framework.git
+cd claude-multi-worker-framework
+pip install -e .
+\`\`\`
+```
+
+##### 4. マーケットプレイス登録
+
+**自動的に利用可能**
+- GitHubにプッシュするだけで、ユーザーは`/plugin marketplace add`で追加可能
+- 追加の承認プロセスは不要
+
+**コミュニティマーケットプレイスに登録（オプション）**
+- claudecodemarketplace.com
+- claudecodemarketplace.net
+
+#### チェックリスト
+
+- [ ] `.claude-plugin/marketplace.json`を作成
+- [ ] マーケットプレイスファイルをテスト（JSONの妥当性確認）
+- [ ] READMEにインストール手順を追記
+- [ ] GitHubにコミット・プッシュ
+- [ ] 自分のClaude Codeで動作確認
+  ```bash
+  /plugin marketplace add nakishiyaman/claude-multi-worker-framework
+  /plugin install cmw-cli@cmw
+  ```
+- [ ] コミュニティマーケットプレイスに登録（オプション）
+
+#### 期待される効果
+
+- **ユーザーの摩擦が劇的に減少**：pip installすら不要
+- **発見性の向上**：Claude Codeユーザーがマーケットプレイス経由で発見
+- **エコシステムへの参加**：公式プラグインとして認知
+
+#### 注意事項
+
+- Phase 2では**最小構成のみ**実装（`.claude-plugin/marketplace.json`だけ）
+- スラッシュコマンドやエージェントは**Phase 3以降で段階的に追加**
+- 最初は既存のCLIコマンドをそのまま使えるようにするだけでOK
+
+---
+
 ## 📋 Phase 3: 正式公開と本格プロモーション
 
-**期間**: Phase 9.1完了後（推定2-3週間後）
+**期間**: Phase 2完了後（推定1-2週間後）
 **目標**: コミュニティへの本格的な告知とユーザー獲得
 
-### 前提条件
+**重要**: Phase 9.1（ファイル競合検出の高度化）の完了は**必須ではない**
+- v0.3.1の時点で291テスト全パス、実プロジェクト検証済みで十分に安定
+- Phase 9は「さらなる改善」であり、公開の前提条件ではない
+- **初期フィードバックを踏まえて優先順位を再評価**することが重要
 
-- ✅ Phase 9.1（ファイル競合検出の高度化）完了
-- ✅ v0.4.0リリース
-- ✅ ドキュメント充実
-- ✅ 初期フィードバック対応完了
+### 前提条件（必須）
+
+- ✅ Phase 1完了（準備とソフトローンチ）
+  - セキュリティ監査
+  - デモGIF作成
+  - README改善（比較表、使い分けガイド）
+  - CONTRIBUTING.md、CODE_OF_CONDUCT.md作成
+  - GitHub Actions設定
+- ✅ Phase 2完了（フィードバック対応）
+  - 初期フィードバック対応
+  - ドキュメント充実
+  - Claude Codeマーケットプレイス対応（最小構成）
+  - Criticalバグ修正
+
+### オプション（あれば望ましい）
+
+- 🟡 Phase 9の一部機能完了（ファイル競合検出の高度化など）
+- 🟡 もう1つの検証プロジェクト（blog-api以外のドメイン）
+- 🟡 スラッシュコマンドやエージェントの追加
 
 ---
 
@@ -1392,7 +1928,7 @@ terminalizer render demo
 
 1. **セキュリティチェック**（30分）
    ```bash
-   cd /home/kishiyama-n/workspace/claude-multi-worker-framework
+   cd /path/to/claude-multi-worker-framework
    # ステップ1-1のコマンドを実行
    ```
 
