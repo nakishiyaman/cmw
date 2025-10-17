@@ -13,28 +13,27 @@ from .models import Task, TaskStatus
 
 class ConflictType:
     """競合タイプの定義"""
+
     WRITE_WRITE = "write-write"  # 同じファイルへの書き込み
-    READ_WRITE = "read-write"    # 読み込みと書き込みの競合
-    DIRECTORY = "directory"       # ディレクトリレベルの競合
+    READ_WRITE = "read-write"  # 読み込みと書き込みの競合
+    DIRECTORY = "directory"  # ディレクトリレベルの競合
 
 
 class ConflictSeverity:
     """競合の深刻度"""
+
     CRITICAL = "critical"  # 必ず順序付けが必要
-    HIGH = "high"          # 推奨される順序付け
-    MEDIUM = "medium"      # 並列実行可能だが注意が必要
-    LOW = "low"            # ほぼ影響なし
+    HIGH = "high"  # 推奨される順序付け
+    MEDIUM = "medium"  # 並列実行可能だが注意が必要
+    LOW = "low"  # ほぼ影響なし
 
 
 class Conflict:
     """競合情報"""
 
-    def __init__(self,
-                 file: str,
-                 tasks: List[str],
-                 conflict_type: str,
-                 severity: str,
-                 suggestion: str = ""):
+    def __init__(
+        self, file: str, tasks: List[str], conflict_type: str, severity: str, suggestion: str = ""
+    ):
         self.file = file
         self.tasks = tasks
         self.conflict_type = conflict_type
@@ -44,11 +43,11 @@ class Conflict:
     def to_dict(self) -> Dict:
         """辞書形式に変換"""
         return {
-            'file': self.file,
-            'tasks': self.tasks,
-            'conflict_type': self.conflict_type,
-            'severity': self.severity,
-            'suggestion': self.suggestion
+            "file": self.file,
+            "tasks": self.tasks,
+            "conflict_type": self.conflict_type,
+            "severity": self.severity,
+            "suggestion": self.suggestion,
         }
 
 
@@ -83,7 +82,7 @@ class ConflictDetector:
                     tasks=task_ids,
                     conflict_type=conflict_type,
                     severity=severity,
-                    suggestion=suggestion
+                    suggestion=suggestion,
                 )
                 conflicts.append(conflict)
 
@@ -184,26 +183,26 @@ class ConflictDetector:
             for file in task.target_files:
                 if file not in file_usage:
                     file_usage[file] = {
-                        'tasks': [],
-                        'read_count': 0,
-                        'write_count': 0,
-                        'risk_level': 'low'
+                        "tasks": [],
+                        "read_count": 0,
+                        "write_count": 0,
+                        "risk_level": "low",
                     }
 
-                file_usage[file]['tasks'].append(task.id)
-                file_usage[file]['write_count'] += 1
+                file_usage[file]["tasks"].append(task.id)
+                file_usage[file]["write_count"] += 1
 
         # リスクレベルを計算
         for file, usage in file_usage.items():
-            task_count = len(usage['tasks'])
+            task_count = len(usage["tasks"])
             if task_count >= 5:
-                usage['risk_level'] = 'critical'
+                usage["risk_level"] = "critical"
             elif task_count >= 3:
-                usage['risk_level'] = 'high'
+                usage["risk_level"] = "high"
             elif task_count >= 2:
-                usage['risk_level'] = 'medium'
+                usage["risk_level"] = "medium"
             else:
-                usage['risk_level'] = 'low'
+                usage["risk_level"] = "low"
 
         return file_usage
 
@@ -254,7 +253,9 @@ class ConflictDetector:
 
         return G
 
-    def _group_by_execution_level(self, sorted_tasks: List[str], tasks: List[Task]) -> List[List[str]]:
+    def _group_by_execution_level(
+        self, sorted_tasks: List[str], tasks: List[Task]
+    ) -> List[List[str]]:
         """実行レベルごとにタスクをグループ化"""
         tasks_by_id = {t.id: t for t in tasks}
         groups = []
@@ -286,7 +287,9 @@ class ConflictDetector:
 
         return groups
 
-    def _filter_by_file_conflicts(self, task_ids: List[str], tasks_by_id: Dict[str, Task]) -> List[str]:
+    def _filter_by_file_conflicts(
+        self, task_ids: List[str], tasks_by_id: Dict[str, Task]
+    ) -> List[str]:
         """ファイル競合を考慮してタスクをフィルタリング"""
         selected: List[str] = []
         used_files: Set[str] = set()
@@ -344,8 +347,12 @@ class ConflictDetector:
             by_severity[severity].append(conflict)
 
         # 深刻度順に表示
-        for severity in [ConflictSeverity.CRITICAL, ConflictSeverity.HIGH,
-                        ConflictSeverity.MEDIUM, ConflictSeverity.LOW]:
+        for severity in [
+            ConflictSeverity.CRITICAL,
+            ConflictSeverity.HIGH,
+            ConflictSeverity.MEDIUM,
+            ConflictSeverity.LOW,
+        ]:
             if severity not in by_severity:
                 continue
 
@@ -354,10 +361,12 @@ class ConflictDetector:
                 ConflictSeverity.CRITICAL: "🔴",
                 ConflictSeverity.HIGH: "🟠",
                 ConflictSeverity.MEDIUM: "🟡",
-                ConflictSeverity.LOW: "🟢"
+                ConflictSeverity.LOW: "🟢",
             }
 
-            report.append(f"{severity_icon[severity]} {severity.upper()} ({len(severity_conflicts)}件)")
+            report.append(
+                f"{severity_icon[severity]} {severity.upper()} ({len(severity_conflicts)}件)"
+            )
             report.append("-" * 80)
 
             for conflict in severity_conflicts:

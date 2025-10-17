@@ -3,6 +3,7 @@ Pythonコードの静的解析機能
 
 ASTを使用してファイルの依存関係を解析し、タスク間の依存関係を推論します。
 """
+
 import ast
 from typing import List, Dict, Set, Optional, Any
 from pathlib import Path
@@ -35,11 +36,11 @@ class StaticAnalyzer:
         if not full_path.exists():
             return set()
 
-        if not full_path.suffix == '.py':
+        if not full_path.suffix == ".py":
             return set()
 
         try:
-            with open(full_path, 'r', encoding='utf-8') as f:
+            with open(full_path, "r", encoding="utf-8") as f:
                 source = f.read()
 
             tree = ast.parse(source, filename=str(full_path))
@@ -71,7 +72,9 @@ class StaticAnalyzer:
                     else:
                         # from . import Y の場合
                         for alias in node.names:
-                            dep_files = self._module_to_file(f".{alias.name}", file_path, extra_paths)
+                            dep_files = self._module_to_file(
+                                f".{alias.name}", file_path, extra_paths
+                            )
                             # 自分自身を除外
                             dep_files.discard(file_path)
                             dependencies.update(dep_files)
@@ -100,12 +103,13 @@ class StaticAnalyzer:
                 call = node.value
                 if isinstance(call.func, ast.Attribute):
                     # sys.path.insert や sys.path.append
-                    if (isinstance(call.func.value, ast.Attribute) and
-                        isinstance(call.func.value.value, ast.Name) and
-                        call.func.value.value.id == 'sys' and
-                        call.func.value.attr == 'path' and
-                        call.func.attr in ['insert', 'append']):
-
+                    if (
+                        isinstance(call.func.value, ast.Attribute)
+                        and isinstance(call.func.value.value, ast.Name)
+                        and call.func.value.value.id == "sys"
+                        and call.func.value.attr == "path"
+                        and call.func.attr in ["insert", "append"]
+                    ):
                         # 引数を解析（簡易版 - str(Path(__file__).parent.parent) など）
                         # 一般的なパターン: parent や parent.parent
                         for arg in call.args:
@@ -126,23 +130,26 @@ class StaticAnalyzer:
             評価されたパス
         """
         # str(Path(__file__).parent) や str(Path(__file__).parent.parent) を検出
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == 'str':
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "str":
             if len(node.args) > 0:
                 arg = node.args[0]
                 # Path(__file__).parent.parent などを解析
                 parent_count = 0
                 current = arg
 
-                while isinstance(current, ast.Attribute) and current.attr == 'parent':
+                while isinstance(current, ast.Attribute) and current.attr == "parent":
                     parent_count += 1
                     current = current.value
 
                 # Path(__file__) の部分を確認
                 if isinstance(current, ast.Call):
-                    if (isinstance(current.func, ast.Name) and current.func.id == 'Path' and
-                        len(current.args) > 0 and isinstance(current.args[0], ast.Name) and
-                        current.args[0].id == '__file__'):
-
+                    if (
+                        isinstance(current.func, ast.Name)
+                        and current.func.id == "Path"
+                        and len(current.args) > 0
+                        and isinstance(current.args[0], ast.Name)
+                        and current.args[0].id == "__file__"
+                    ):
                         # current_fileから parent_count 分上のディレクトリを取得
                         # current_fileはプロジェクトルートからの相対パスなので、
                         # Path(current_file)の親ディレクトリをparent_count回取得
@@ -159,7 +166,9 @@ class StaticAnalyzer:
 
         return None
 
-    def _module_to_file(self, module_name: str, current_file: str, extra_paths: Optional[List[Path]] = None) -> Set[str]:
+    def _module_to_file(
+        self, module_name: str, current_file: str, extra_paths: Optional[List[Path]] = None
+    ) -> Set[str]:
         """モジュール名をファイルパスに変換
 
         Args:
@@ -176,22 +185,22 @@ class StaticAnalyzer:
         results = set()
 
         # 相対インポート（.module）は現在のディレクトリからの相対パス
-        if module_name.startswith('.'):
+        if module_name.startswith("."):
             current_dir = Path(current_file).parent
             # . の数だけ上のディレクトリに移動
-            level = len(module_name) - len(module_name.lstrip('.'))
+            level = len(module_name) - len(module_name.lstrip("."))
             for _ in range(level - 1):
                 current_dir = current_dir.parent
 
             # 残りのモジュール名をパスに変換
-            remaining = module_name.lstrip('.')
+            remaining = module_name.lstrip(".")
             if remaining:
-                module_path = current_dir / remaining.replace('.', '/')
+                module_path = current_dir / remaining.replace(".", "/")
             else:
                 module_path = current_dir
 
             # __init__.py または .py を試す
-            for suffix in ['__init__.py', '.py']:
+            for suffix in ["__init__.py", ".py"]:
                 candidate = self.project_root / f"{module_path}{suffix}"
                 if candidate.exists():
                     results.add(str(candidate.relative_to(self.project_root)))
@@ -199,7 +208,7 @@ class StaticAnalyzer:
             return results
 
         # 絶対インポートの場合
-        module_path_str = module_name.replace('.', '/')
+        module_path_str = module_name.replace(".", "/")
 
         # 現在のファイルのディレクトリを検索パスに追加
         current_file_dir = self.project_root / Path(current_file).parent
@@ -209,7 +218,7 @@ class StaticAnalyzer:
 
         for base in search_bases:
             # __init__.py を試す
-            candidate = base / module_path_str / '__init__.py'
+            candidate = base / module_path_str / "__init__.py"
             if candidate.exists() and candidate.is_relative_to(self.project_root):
                 results.add(str(candidate.relative_to(self.project_root)))
 
@@ -221,9 +230,7 @@ class StaticAnalyzer:
         return results
 
     def infer_task_dependencies(
-        self,
-        tasks: List[Task],
-        existing_dependencies: bool = True
+        self, tasks: List[Task], existing_dependencies: bool = True
     ) -> List[Task]:
         """タスク間の依存関係を静的解析で推論
 
@@ -276,7 +283,7 @@ class StaticAnalyzer:
                 target_files=task.target_files,
                 acceptance_criteria=task.acceptance_criteria,
                 priority=task.priority,
-                status=task.status
+                status=task.status,
             )
             updated_tasks.append(updated_task)
 
@@ -342,11 +349,11 @@ class StaticAnalyzer:
             インポートパターンの統計情報
         """
         stats: Dict[str, Any] = {
-            'total_files': 0,
-            'total_imports': 0,
-            'circular_imports': [],
-            'most_imported_files': [],
-            'files_with_most_imports': [],
+            "total_files": 0,
+            "total_imports": 0,
+            "circular_imports": [],
+            "most_imported_files": [],
+            "files_with_most_imports": [],
         }
 
         # ファイルごとのインポート数と被インポート数をカウント
@@ -357,12 +364,12 @@ class StaticAnalyzer:
         for task in tasks:
             all_files.extend(task.target_files)
 
-        stats['total_files'] = len(all_files)
+        stats["total_files"] = len(all_files)
 
         for file in all_files:
             deps = self.analyze_file_dependencies(file)
             import_counts[file] = len(deps)
-            stats['total_imports'] += len(deps)
+            stats["total_imports"] += len(deps)
 
             for dep in deps:
                 if dep not in imported_counts:
@@ -370,29 +377,19 @@ class StaticAnalyzer:
                 imported_counts[dep] += 1
 
         # 最もインポートされているファイル（上位5件）
-        sorted_imported = sorted(
-            imported_counts.items(),
-            key=lambda x: x[1],
-            reverse=True
-        )
-        stats['most_imported_files'] = [
-            {'file': file, 'count': count}
-            for file, count in sorted_imported[:5]
+        sorted_imported = sorted(imported_counts.items(), key=lambda x: x[1], reverse=True)
+        stats["most_imported_files"] = [
+            {"file": file, "count": count} for file, count in sorted_imported[:5]
         ]
 
         # 最も多くインポートしているファイル（上位5件）
-        sorted_imports = sorted(
-            import_counts.items(),
-            key=lambda x: x[1],
-            reverse=True
-        )
-        stats['files_with_most_imports'] = [
-            {'file': file, 'count': count}
-            for file, count in sorted_imports[:5]
+        sorted_imports = sorted(import_counts.items(), key=lambda x: x[1], reverse=True)
+        stats["files_with_most_imports"] = [
+            {"file": file, "count": count} for file, count in sorted_imports[:5]
         ]
 
         # 循環インポート
-        stats['circular_imports'] = self.detect_circular_imports(tasks)
+        stats["circular_imports"] = self.detect_circular_imports(tasks)
 
         return stats
 
@@ -411,8 +408,8 @@ class StaticAnalyzer:
             for file in task.target_files:
                 # ディレクトリを取得
                 directory = str(Path(file).parent)
-                if directory == '.':
-                    directory = 'root'
+                if directory == ".":
+                    directory = "root"
 
                 if directory not in organization:
                     organization[directory] = []
@@ -436,28 +433,24 @@ class StaticAnalyzer:
             return []
 
         try:
-            with open(full_path, 'r', encoding='utf-8') as f:
+            with open(full_path, "r", encoding="utf-8") as f:
                 source = f.read()
 
             endpoints = []
 
             # 正規表現でHTTPメソッドデコレータを検出
             patterns = [
-                (r'@\w+\.get\(["\']([^"\']+)["\']\)', 'GET'),
-                (r'@\w+\.post\(["\']([^"\']+)["\']\)', 'POST'),
-                (r'@\w+\.put\(["\']([^"\']+)["\']\)', 'PUT'),
-                (r'@\w+\.delete\(["\']([^"\']+)["\']\)', 'DELETE'),
-                (r'@\w+\.patch\(["\']([^"\']+)["\']\)', 'PATCH'),
+                (r'@\w+\.get\(["\']([^"\']+)["\']\)', "GET"),
+                (r'@\w+\.post\(["\']([^"\']+)["\']\)', "POST"),
+                (r'@\w+\.put\(["\']([^"\']+)["\']\)', "PUT"),
+                (r'@\w+\.delete\(["\']([^"\']+)["\']\)', "DELETE"),
+                (r'@\w+\.patch\(["\']([^"\']+)["\']\)', "PATCH"),
             ]
 
             for pattern, method in patterns:
                 for match in re.finditer(pattern, source):
                     path = match.group(1)
-                    endpoints.append({
-                        'method': method,
-                        'path': path,
-                        'file': file_path
-                    })
+                    endpoints.append({"method": method, "path": path, "file": file_path})
 
             return endpoints
 
@@ -479,27 +472,27 @@ class StaticAnalyzer:
             return {}
 
         try:
-            with open(full_path, 'r', encoding='utf-8') as f:
+            with open(full_path, "r", encoding="utf-8") as f:
                 source = f.read()
 
             tree = ast.parse(source, filename=str(full_path))
 
             stats = {
-                'lines_of_code': len(source.split('\n')),
-                'num_functions': 0,
-                'num_classes': 0,
-                'num_imports': 0,
-                'max_nesting_depth': 0,
+                "lines_of_code": len(source.split("\n")),
+                "num_functions": 0,
+                "num_classes": 0,
+                "num_imports": 0,
+                "max_nesting_depth": 0,
             }
 
             # ASTを走査
             for node in ast.walk(tree):
                 if isinstance(node, ast.FunctionDef):
-                    stats['num_functions'] += 1
+                    stats["num_functions"] += 1
                 elif isinstance(node, ast.ClassDef):
-                    stats['num_classes'] += 1
+                    stats["num_classes"] += 1
                 elif isinstance(node, (ast.Import, ast.ImportFrom)):
-                    stats['num_imports'] += 1
+                    stats["num_imports"] += 1
 
             # ネストの深さを計算（簡易版）
             def get_max_depth(node: ast.AST, current_depth: int = 0) -> int:
@@ -510,7 +503,7 @@ class StaticAnalyzer:
                         max_depth = max(max_depth, child_depth)
                 return max_depth
 
-            stats['max_nesting_depth'] = get_max_depth(tree)
+            stats["max_nesting_depth"] = get_max_depth(tree)
 
             return stats
 

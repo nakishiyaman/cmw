@@ -3,6 +3,7 @@ Response Parser - Claude Code出力の自動解析
 
 Claude Codeの応答テキストを解析して、タスク完了を自動検出します。
 """
+
 import re
 import json
 from typing import List, Optional, Dict, Any
@@ -15,43 +16,43 @@ class ResponseParser:
     # ファイル作成/編集を示すパターン
     FILE_PATTERNS = [
         # 日本語パターン
-        r'`([^`]+\.[a-zA-Z0-9]+)`\s*を作成',
-        r'`([^`]+\.[a-zA-Z0-9]+)`\s*に.*を追加',
-        r'`([^`]+\.[a-zA-Z0-9]+)`\s*を.*更新',
-        r'`([^`]+\.[a-zA-Z0-9]+)`\s*を編集',
-        r'`([^`]+\.[a-zA-Z0-9]+)`\s*を修正',
-        r'`([^`]+\.[a-zA-Z0-9]+)`\s*に.*実装',
+        r"`([^`]+\.[a-zA-Z0-9]+)`\s*を作成",
+        r"`([^`]+\.[a-zA-Z0-9]+)`\s*に.*を追加",
+        r"`([^`]+\.[a-zA-Z0-9]+)`\s*を.*更新",
+        r"`([^`]+\.[a-zA-Z0-9]+)`\s*を編集",
+        r"`([^`]+\.[a-zA-Z0-9]+)`\s*を修正",
+        r"`([^`]+\.[a-zA-Z0-9]+)`\s*に.*実装",
         # 英語パターン
-        r'[Cc]reated\s+`([^`]+\.[a-zA-Z0-9]+)`',
-        r'[Uu]pdated\s+`([^`]+\.[a-zA-Z0-9]+)`',
-        r'[Mm]odified\s+`([^`]+\.[a-zA-Z0-9]+)`',
-        r'[Ee]dited\s+`([^`]+\.[a-zA-Z0-9]+)`',
-        r'[Aa]dded\s+`([^`]+\.[a-zA-Z0-9]+)`',
-        r'[Ii]mplemented\s+`([^`]+\.[a-zA-Z0-9]+)`',
+        r"[Cc]reated\s+`([^`]+\.[a-zA-Z0-9]+)`",
+        r"[Uu]pdated\s+`([^`]+\.[a-zA-Z0-9]+)`",
+        r"[Mm]odified\s+`([^`]+\.[a-zA-Z0-9]+)`",
+        r"[Ee]dited\s+`([^`]+\.[a-zA-Z0-9]+)`",
+        r"[Aa]dded\s+`([^`]+\.[a-zA-Z0-9]+)`",
+        r"[Ii]mplemented\s+`([^`]+\.[a-zA-Z0-9]+)`",
         # ファイルパス単独（より緩いパターン）
-        r'`([a-zA-Z0-9_/.-]+\.[a-zA-Z0-9]+)`',
+        r"`([a-zA-Z0-9_/.-]+\.[a-zA-Z0-9]+)`",
     ]
 
     # タスク完了を示すキーワード
     COMPLETION_KEYWORDS = [
         # 日本語
-        '完了しました',
-        '実装しました',
-        '作成しました',
-        '追加しました',
-        '完成しました',
-        '終了しました',
+        "完了しました",
+        "実装しました",
+        "作成しました",
+        "追加しました",
+        "完成しました",
+        "終了しました",
         # 英語
-        'completed',
-        'finished',
-        'done',
-        'implemented',
-        'created',
-        'added',
+        "completed",
+        "finished",
+        "done",
+        "implemented",
+        "created",
+        "added",
     ]
 
     # タスクIDパターン
-    TASK_ID_PATTERN = r'TASK-\d{3}'
+    TASK_ID_PATTERN = r"TASK-\d{3}"
 
     def __init__(self) -> None:
         """初期化"""
@@ -77,11 +78,7 @@ class ResponseParser:
         task_ids = self._extract_task_ids(response_text)
         is_completed = self._detect_completion(response_text)
 
-        return {
-            'artifacts': artifacts,
-            'task_ids': task_ids,
-            'is_completed': is_completed
-        }
+        return {"artifacts": artifacts, "task_ids": task_ids, "is_completed": is_completed}
 
     def _extract_artifacts(self, text: str) -> List[str]:
         """
@@ -107,9 +104,9 @@ class ResponseParser:
                 cleaned = match.strip()
 
                 # 有効なファイルパスかチェック
-                if '.' in cleaned and len(cleaned) < 200:
+                if "." in cleaned and len(cleaned) < 200:
                     # __pycache__や.pyc等は除外
-                    if not any(x in cleaned for x in ['__pycache__', '.pyc', '.pyo']):
+                    if not any(x in cleaned for x in ["__pycache__", ".pyc", ".pyo"]):
                         artifacts.add(cleaned)
 
         return sorted(artifacts)
@@ -154,26 +151,21 @@ class ResponseParser:
         result = self.parse_response(response_text)
 
         # 完了していない場合はNone
-        if not result['is_completed']:
+        if not result["is_completed"]:
             return None
 
         # タスクIDまたはアーティファクトが必要
-        if task_id not in result['task_ids'] and not result['artifacts']:
+        if task_id not in result["task_ids"] and not result["artifacts"]:
             return None
 
         # 完了コマンドを生成
-        if result['artifacts']:
-            artifacts_str = json.dumps(result['artifacts'])
+        if result["artifacts"]:
+            artifacts_str = json.dumps(result["artifacts"])
             return f"cmw task complete {task_id} --artifacts '{artifacts_str}'"
         else:
             return f"cmw task complete {task_id}"
 
-    def auto_mark_completed(
-        self,
-        response_text: str,
-        task_id: str,
-        project_path: Path
-    ) -> bool:
+    def auto_mark_completed(self, response_text: str, task_id: str, project_path: Path) -> bool:
         """
         応答からタスク完了を自動マーク
 
@@ -190,17 +182,17 @@ class ResponseParser:
         result = self.parse_response(response_text)
 
         # 完了判定
-        if not result['is_completed']:
+        if not result["is_completed"]:
             return False
 
         # タスクIDまたはアーティファクトが言及されているか
-        if task_id not in result['task_ids'] and not result['artifacts']:
+        if task_id not in result["task_ids"] and not result["artifacts"]:
             return False
 
         # タスク完了をマーク
         try:
             provider = TaskProvider(project_path)
-            provider.mark_completed(task_id, result['artifacts'])
+            provider.mark_completed(task_id, result["artifacts"])
             return True
         except Exception:
             return False
@@ -217,21 +209,21 @@ class ResponseParser:
             要約テキスト
         """
         # 最初の段落を取得
-        lines = response_text.strip().split('\n')
+        lines = response_text.strip().split("\n")
 
         summary_lines = []
         for line in lines:
             line = line.strip()
-            if line and not line.startswith('#'):
+            if line and not line.startswith("#"):
                 summary_lines.append(line)
-                if len(' '.join(summary_lines)) > max_length:
+                if len(" ".join(summary_lines)) > max_length:
                     break
 
-        summary = ' '.join(summary_lines)
+        summary = " ".join(summary_lines)
 
         # 長すぎる場合は切り詰め
         if len(summary) > max_length:
-            summary = summary[:max_length - 3] + '...'
+            summary = summary[: max_length - 3] + "..."
 
         return summary
 
@@ -249,20 +241,17 @@ class ResponseParser:
 
         # エラーパターン
         error_patterns = [
-            (r'Error:\s*(.+)', 'error'),
-            (r'Exception:\s*(.+)', 'exception'),
-            (r'Failed:\s*(.+)', 'failure'),
-            (r'エラー:\s*(.+)', 'error'),
-            (r'失敗:\s*(.+)', 'failure'),
+            (r"Error:\s*(.+)", "error"),
+            (r"Exception:\s*(.+)", "exception"),
+            (r"Failed:\s*(.+)", "failure"),
+            (r"エラー:\s*(.+)", "error"),
+            (r"失敗:\s*(.+)", "failure"),
         ]
 
         for pattern, error_type in error_patterns:
             matches = re.finditer(pattern, response_text, re.IGNORECASE)
             for match in matches:
-                errors.append({
-                    'type': error_type,
-                    'message': match.group(1).strip()
-                })
+                errors.append({"type": error_type, "message": match.group(1).strip()})
 
         return errors
 
@@ -277,15 +266,15 @@ class ResponseParser:
             質問を含んでいるか
         """
         question_patterns = [
-            r'\?',           # 英語の疑問符
-            r'？',          # 日本語の疑問符
-            r'ですか',
-            r'でしょうか',
-            r'よろしいですか',
-            r'ますか',
-            r'[Ss]hould I',
-            r'[Dd]o you want',
-            r'[Ww]ould you like',
+            r"\?",  # 英語の疑問符
+            r"？",  # 日本語の疑問符
+            r"ですか",
+            r"でしょうか",
+            r"よろしいですか",
+            r"ますか",
+            r"[Ss]hould I",
+            r"[Dd]o you want",
+            r"[Ww]ould you like",
         ]
 
         for pattern in question_patterns:

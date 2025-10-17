@@ -38,15 +38,15 @@ class Dashboard:
         summary = tracker.get_progress_summary(tasks)
 
         content = f"""
-📊 総タスク数: {summary['total']}
+📊 総タスク数: {summary["total"]}
 
-✅ 完了: {summary['completed']} ({summary['completion_rate']:.1f}%)
-🔄 実行中: {summary['in_progress']}
-⏳ 待機中: {summary['pending']}
-❌ 失敗: {summary['failed']}
-🚫 ブロック: {summary['blocked']}
+✅ 完了: {summary["completed"]} ({summary["completion_rate"]:.1f}%)
+🔄 実行中: {summary["in_progress"]}
+⏳ 待機中: {summary["pending"]}
+❌ 失敗: {summary["failed"]}
+🚫 ブロック: {summary["blocked"]}
 
-📈 成功率: {summary['success_rate']:.1f}%
+📈 成功率: {summary["success_rate"]:.1f}%
 """
 
         # 残り時間推定
@@ -61,9 +61,9 @@ class Dashboard:
         velocity = tracker.get_velocity_metrics(tasks)
 
         content = f"""
-🚀 タスク/時間: {velocity['tasks_per_hour']:.2f}
-⏱️  平均所要時間: {self.format_duration(velocity['avg_task_duration'])}
-🕐 総作業時間: {self.format_duration(velocity['total_working_time'])}
+🚀 タスク/時間: {velocity["tasks_per_hour"]:.2f}
+⏱️  平均所要時間: {self.format_duration(velocity["avg_task_duration"])}
+🕐 総作業時間: {self.format_duration(velocity["total_working_time"])}
 """
 
         return Panel(content.strip(), title="ベロシティ", border_style="green")
@@ -81,26 +81,22 @@ class Dashboard:
         table.add_column("失敗", justify="right", style="red")
         table.add_column("進捗率", justify="right")
 
-        priority_labels = {
-            'high': '🔴 高',
-            'medium': '🟡 中',
-            'low': '🟢 低'
-        }
+        priority_labels = {"high": "🔴 高", "medium": "🟡 中", "low": "🟢 低"}
 
-        for priority in ['high', 'medium', 'low']:
+        for priority in ["high", "medium", "low"]:
             data = breakdown[priority]
-            total = data['total']
-            completed = data['completed']
+            total = data["total"]
+            completed = data["completed"]
             rate = (completed / total * 100) if total > 0 else 0
 
             table.add_row(
                 priority_labels[priority],
                 str(total),
                 str(completed),
-                str(data['in_progress']),
-                str(data['pending']),
-                str(data['failed']),
-                f"{rate:.1f}%"
+                str(data["in_progress"]),
+                str(data["pending"]),
+                str(data["failed"]),
+                f"{rate:.1f}%",
             )
 
         return table
@@ -118,17 +114,17 @@ class Dashboard:
         table.add_column("進捗率", justify="right")
 
         for worker, data in sorted(workers.items()):
-            total = data['total']
-            completed = data['completed']
+            total = data["total"]
+            completed = data["completed"]
             rate = (completed / total * 100) if total > 0 else 0
 
             table.add_row(
                 worker,
                 str(total),
                 str(completed),
-                str(data['in_progress']),
-                str(data['pending']),
-                f"{rate:.1f}%"
+                str(data["in_progress"]),
+                str(data["pending"]),
+                f"{rate:.1f}%",
             )
 
         return table
@@ -143,16 +139,12 @@ class Dashboard:
         table.add_column("タスク", style="white")
         table.add_column("イベント", style="yellow")
 
-        event_icons = {
-            'started': '▶️  開始',
-            'completed': '✅ 完了',
-            'failed': '❌ 失敗'
-        }
+        event_icons = {"started": "▶️  開始", "completed": "✅ 完了", "failed": "❌ 失敗"}
 
         for event in reversed(recent):
-            timestamp = event['timestamp'].strftime("%H:%M:%S")
+            timestamp = event["timestamp"].strftime("%H:%M:%S")
             task_label = f"{event['task_id']}: {event['title']}"
-            event_label = event_icons.get(event['event'], event['event'])
+            event_label = event_icons.get(event["event"], event["event"])
 
             table.add_row(timestamp, task_label, event_label)
 
@@ -169,11 +161,14 @@ class Dashboard:
 
         # サマリーとベロシティを横並びで表示
         from rich.columns import Columns
+
         self.console.print(
-            Columns([
-                self.create_summary_panel(tracker, tasks),
-                self.create_velocity_panel(tracker, tasks)
-            ])
+            Columns(
+                [
+                    self.create_summary_panel(tracker, tasks),
+                    self.create_velocity_panel(tracker, tasks),
+                ]
+            )
         )
         self.console.print("\n")
 
@@ -198,25 +193,25 @@ class Dashboard:
             BarColumn(),
             TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
         ) as progress:
-            task_progress = progress.add_task(
-                "全体進捗",
-                total=summary['total']
-            )
-            progress.update(task_progress, completed=summary['completed'])
+            task_progress = progress.add_task("全体進捗", total=summary["total"])
+            progress.update(task_progress, completed=summary["completed"])
 
             # 少し待機して表示
             import time
+
             time.sleep(0.1)
 
     def show_compact_summary(self, tracker: ProgressTracker, tasks: List[Task]) -> None:
         """コンパクトなサマリーを表示（CLIコマンド用）"""
         summary = tracker.get_progress_summary(tasks)
 
-        self.console.print(f"\n📊 進捗: {summary['completed']}/{summary['total']} ({summary['completion_rate']:.1f}%)")
+        self.console.print(
+            f"\n📊 進捗: {summary['completed']}/{summary['total']} ({summary['completion_rate']:.1f}%)"
+        )
 
         # プログレスバー
         bar_width = 40
-        completed_width = int(bar_width * summary['completion_rate'] / 100)
+        completed_width = int(bar_width * summary["completion_rate"] / 100)
         bar = "█" * completed_width + "░" * (bar_width - completed_width)
         self.console.print(f"[green]{bar}[/green]")
 
@@ -232,6 +227,8 @@ class Dashboard:
         # 残り時間
         remaining = tracker.estimate_remaining_time(tasks)
         if remaining:
-            self.console.print(f"\n⏱️  推定残り時間: {self.format_duration(remaining.total_seconds())}")
+            self.console.print(
+                f"\n⏱️  推定残り時間: {self.format_duration(remaining.total_seconds())}"
+            )
 
         self.console.print()

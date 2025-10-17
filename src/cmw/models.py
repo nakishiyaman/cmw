@@ -3,6 +3,7 @@
 
 タスク、ワーカー、実行結果などのデータ構造を定義します。
 """
+
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional, List
@@ -11,15 +12,17 @@ from datetime import datetime
 
 class TaskStatus(str, Enum):
     """タスクの実行ステータス"""
-    PENDING = "pending"          # 実行待機中
+
+    PENDING = "pending"  # 実行待機中
     IN_PROGRESS = "in_progress"  # 実行中
-    COMPLETED = "completed"      # 完了
-    FAILED = "failed"           # 失敗
-    BLOCKED = "blocked"         # ブロック中（依存タスク未完了）
+    COMPLETED = "completed"  # 完了
+    FAILED = "failed"  # 失敗
+    BLOCKED = "blocked"  # ブロック中（依存タスク未完了）
 
 
 class Priority(str, Enum):
     """タスクの優先度"""
+
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
@@ -28,6 +31,7 @@ class Priority(str, Enum):
 @dataclass
 class Task:
     """タスク定義"""
+
     id: str
     title: str
     description: str
@@ -45,14 +49,14 @@ class Task:
     artifacts: List[str] = field(default_factory=list)  # 生成されたファイルのパス
     error_message: Optional[str] = None
     error: Optional[str] = None  # エラー詳細（error_messageと互換性のため）
-    
+
     def __post_init__(self) -> None:
         """初期化後の処理"""
         if self.created_at is None:
             self.created_at = datetime.now()
         if self.updated_at is None:
             self.updated_at = datetime.now()
-    
+
     def to_dict(self) -> dict:
         """辞書形式に変換"""
         return {
@@ -72,16 +76,18 @@ class Task:
             "failed_at": self.failed_at.isoformat() if self.failed_at else None,
             "artifacts": self.artifacts,
             "error_message": self.error_message,
-            "error": self.error
+            "error": self.error,
         }
-    
+
     @classmethod
     def from_dict(cls, data: dict) -> "Task":
         """辞書から Task を作成"""
         # datetime文字列をパース
         created_at = datetime.fromisoformat(data["created_at"]) if data.get("created_at") else None
         updated_at = datetime.fromisoformat(data["updated_at"]) if data.get("updated_at") else None
-        completed_at = datetime.fromisoformat(data["completed_at"]) if data.get("completed_at") else None
+        completed_at = (
+            datetime.fromisoformat(data["completed_at"]) if data.get("completed_at") else None
+        )
         started_at = datetime.fromisoformat(data["started_at"]) if data.get("started_at") else None
         failed_at = datetime.fromisoformat(data["failed_at"]) if data.get("failed_at") else None
 
@@ -102,19 +108,20 @@ class Task:
             failed_at=failed_at,
             artifacts=data.get("artifacts", []),
             error_message=data.get("error_message"),
-            error=data.get("error")
+            error=data.get("error"),
         )
 
 
 @dataclass
 class Worker:
     """ワーカー定義"""
+
     id: str
     name: str
     description: str
     skills: List[str] = field(default_factory=list)
     assigned_tasks: List[str] = field(default_factory=list)  # タスクIDのリスト
-    
+
     def to_dict(self) -> dict:
         """辞書形式に変換"""
         return {
@@ -122,20 +129,21 @@ class Worker:
             "name": self.name,
             "description": self.description,
             "skills": self.skills,
-            "assigned_tasks": self.assigned_tasks
+            "assigned_tasks": self.assigned_tasks,
         }
 
 
 @dataclass
 class ExecutionResult:
     """タスク実行結果"""
+
     success: bool
     task_id: str
     generated_files: List[str] = field(default_factory=list)
     output: Optional[str] = None
     error: Optional[str] = None
     execution_time: Optional[float] = None  # 実行時間（秒）
-    
+
     def to_dict(self) -> dict:
         """辞書形式に変換"""
         return {
@@ -144,5 +152,5 @@ class ExecutionResult:
             "generated_files": self.generated_files,
             "output": self.output,
             "error": self.error,
-            "execution_time": self.execution_time
+            "execution_time": self.execution_time,
         }

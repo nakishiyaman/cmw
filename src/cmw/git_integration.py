@@ -3,6 +3,7 @@ Git Integration - Git連携による進捗自動更新
 
 Gitコミットメッセージからタスク完了を自動検出し、進捗を同期します。
 """
+
 import re
 import subprocess
 from pathlib import Path
@@ -17,13 +18,10 @@ class GitIntegration:
 
     def __init__(self) -> None:
         """GitIntegrationを初期化"""
-        self.task_pattern = re.compile(r'TASK-\d{3}')
+        self.task_pattern = re.compile(r"TASK-\d{3}")
 
     def sync_progress_from_git(
-        self,
-        project_path: Path,
-        since: Optional[str] = None,
-        branch: str = "HEAD"
+        self, project_path: Path, since: Optional[str] = None, branch: str = "HEAD"
     ) -> Dict[str, Any]:
         """
         Gitコミット履歴から進捗を同期
@@ -67,10 +65,10 @@ class GitIntegration:
                     skipped_count += 1
 
         return {
-            'completed_tasks': sorted(completed_tasks),
-            'updated_count': updated_count,
-            'skipped_count': skipped_count,
-            'commits_analyzed': len(commits)
+            "completed_tasks": sorted(completed_tasks),
+            "updated_count": updated_count,
+            "skipped_count": skipped_count,
+            "commits_analyzed": len(commits),
         }
 
     def _is_git_repo(self, path: Path) -> bool:
@@ -79,10 +77,7 @@ class GitIntegration:
         return git_dir.exists() and git_dir.is_dir()
 
     def _get_commit_log(
-        self,
-        project_path: Path,
-        since: Optional[str],
-        branch: str
+        self, project_path: Path, since: Optional[str], branch: str
     ) -> List[Dict[str, str]]:
         """
         Gitコミットログを取得
@@ -94,33 +89,26 @@ class GitIntegration:
             ]
         """
         # git log コマンドを構築
-        cmd = ['git', 'log', '--pretty=format:%H|||%s', branch]
+        cmd = ["git", "log", "--pretty=format:%H|||%s", branch]
 
         if since:
-            cmd.insert(2, f'--since={since}')
+            cmd.insert(2, f"--since={since}")
 
         try:
             result = subprocess.run(
-                cmd,
-                cwd=project_path,
-                capture_output=True,
-                text=True,
-                check=True
+                cmd, cwd=project_path, capture_output=True, text=True, check=True
             )
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"Git log取得エラー: {e.stderr}")
 
         commits = []
-        for line in result.stdout.strip().split('\n'):
+        for line in result.stdout.strip().split("\n"):
             if not line:
                 continue
 
             try:
-                commit_hash, message = line.split('|||', 1)
-                commits.append({
-                    'hash': commit_hash,
-                    'message': message
-                })
+                commit_hash, message = line.split("|||", 1)
+                commits.append({"hash": commit_hash, "message": message})
             except ValueError:
                 # パースエラーは無視
                 continue
@@ -140,7 +128,7 @@ class GitIntegration:
         task_ids = set()
 
         for commit in commits:
-            message = commit['message']
+            message = commit["message"]
             # TASK-XXX パターンを検索
             matches = self.task_pattern.findall(message)
             task_ids.update(matches)
@@ -148,10 +136,7 @@ class GitIntegration:
         return task_ids
 
     def get_task_commits(
-        self,
-        project_path: Path,
-        task_id: str,
-        branch: str = "HEAD"
+        self, project_path: Path, task_id: str, branch: str = "HEAD"
     ) -> List[Dict[str, str]]:
         """
         特定のタスクに関連するコミットを取得
@@ -168,18 +153,11 @@ class GitIntegration:
         commits = self._get_commit_log(project_path, since=None, branch=branch)
 
         # task_idを含むコミットのみフィルタ
-        task_commits = [
-            commit for commit in commits
-            if task_id in commit['message']
-        ]
+        task_commits = [commit for commit in commits if task_id in commit["message"]]
 
         return task_commits
 
-    def get_recent_activity(
-        self,
-        project_path: Path,
-        days: int = 7
-    ) -> Dict[str, List[str]]:
+    def get_recent_activity(self, project_path: Path, days: int = 7) -> Dict[str, List[str]]:
         """
         最近のタスクアクティビティを取得
 
@@ -200,18 +178,15 @@ class GitIntegration:
         activity: Dict[str, List[str]] = {}
 
         for commit in commits:
-            task_ids = self.task_pattern.findall(commit['message'])
+            task_ids = self.task_pattern.findall(commit["message"])
             for task_id in task_ids:
                 if task_id not in activity:
                     activity[task_id] = []
-                activity[task_id].append(commit['hash'])
+                activity[task_id].append(commit["hash"])
 
         return activity
 
-    def validate_task_references(
-        self,
-        project_path: Path
-    ) -> Dict[str, Any]:
+    def validate_task_references(self, project_path: Path) -> Dict[str, Any]:
         """
         コミットメッセージ内のタスク参照を検証
 
@@ -243,16 +218,14 @@ class GitIntegration:
         # 不正なタスクIDを含むコミットを特定
         invalid_commits = []
         for commit in commits:
-            commit_task_ids = set(self.task_pattern.findall(commit['message']))
+            commit_task_ids = set(self.task_pattern.findall(commit["message"]))
             for task_id in commit_task_ids & invalid:
-                invalid_commits.append({
-                    'hash': commit['hash'][:7],
-                    'message': commit['message'],
-                    'task_id': task_id
-                })
+                invalid_commits.append(
+                    {"hash": commit["hash"][:7], "message": commit["message"], "task_id": task_id}
+                )
 
         return {
-            'valid': sorted(valid),
-            'invalid': sorted(invalid),
-            'invalid_commits': invalid_commits
+            "valid": sorted(valid),
+            "invalid": sorted(invalid),
+            "invalid_commits": invalid_commits,
         }

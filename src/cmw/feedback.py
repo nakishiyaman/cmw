@@ -6,6 +6,7 @@ FeedbackManager - リアルタイムフィードバック
 - エラーの分かりやすい説明
 - 次のアクションの提案
 """
+
 from pathlib import Path
 from typing import List
 
@@ -59,7 +60,7 @@ class FeedbackManager:
         # レポート構築
         report = f"""
 📊 プロジェクト進捗状況
-{'=' * 50}
+{"=" * 50}
 
 完了: {completed}/{total_tasks} タスク ({progress_percent:.1f}%)
 
@@ -70,7 +71,7 @@ class FeedbackManager:
   ❌ 失敗:     {failed}
   🚫 ブロック: {blocked}
 
-{'=' * 50}
+{"=" * 50}
 """
         return report.strip()
 
@@ -178,12 +179,12 @@ class FeedbackManager:
 
         # 説明文の構築
         error_explanation = f"""
-🔴 エラー: {explanation['title']}
+🔴 エラー: {explanation["title"]}
 
 タスク: {task.id} - {task.title}
 
 説明:
-  {explanation['description']}
+  {explanation["description"]}
 
 エラーメッセージ:
   {error_msg}
@@ -207,22 +208,18 @@ class FeedbackManager:
 
         # 失敗したタスクを取得
         failed_tasks = [
-            task
-            for task in self.coordinator.tasks.values()
-            if task.status == TaskStatus.FAILED
+            task for task in self.coordinator.tasks.values() if task.status == TaskStatus.FAILED
         ]
 
         # ブロックされたタスクを取得
         blocked_tasks = [
-            task
-            for task in self.coordinator.tasks.values()
-            if task.status == TaskStatus.BLOCKED
+            task for task in self.coordinator.tasks.values() if task.status == TaskStatus.BLOCKED
         ]
 
         # 次のステップを構築
         next_steps = f"""
 📋 次のステップ
-{'=' * 50}
+{"=" * 50}
 """
 
         if failed_tasks:
@@ -283,7 +280,7 @@ class FeedbackManager:
 
 ステータス: {task.status.value}
 優先度: {task.priority}
-依存: {', '.join(task.dependencies) if task.dependencies else 'なし'}
+依存: {", ".join(task.dependencies) if task.dependencies else "なし"}
 
 説明:
   {task.description}
@@ -327,8 +324,7 @@ class FeedbackManager:
         """
         total_tasks = len(self.coordinator.tasks)
         completed = sum(
-            1 for task in self.coordinator.tasks.values()
-            if task.status == TaskStatus.COMPLETED
+            1 for task in self.coordinator.tasks.values() if task.status == TaskStatus.COMPLETED
         )
         remaining = total_tasks - completed
 
@@ -341,7 +337,7 @@ class FeedbackManager:
 
         estimate = f"""
 ⏱️  残り時間の見積もり
-{'=' * 50}
+{"=" * 50}
 
 残りタスク: {remaining}/{total_tasks}
 
@@ -350,7 +346,7 @@ class FeedbackManager:
 
 ※ 1タスクあたり {avg_task_time_minutes:.0f}分として計算
 
-{'=' * 50}
+{"=" * 50}
 """
         return estimate.strip()
 
