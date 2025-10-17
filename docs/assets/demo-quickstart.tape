@@ -25,11 +25,11 @@ Type "cat shared/docs/requirements.md | head -20"
 Enter
 Sleep 2s
 
-Type "cmw tasks generate"
+Type "cmw task generate"
 Enter
 Sleep 3s
 
-Type "cmw tasks list | head -25"
+Type "cmw task list | head -25"
 Enter
 Sleep 3s
 
