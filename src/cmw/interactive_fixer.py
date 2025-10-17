@@ -16,7 +16,7 @@ from .dependency_validator import DependencyValidator
 class InteractiveFixer:
     """対話的な問題修正機能"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """初期化"""
         self.console = Console()
         self.validator = DependencyValidator()
@@ -241,7 +241,7 @@ class InteractiveFixer:
         cycles: List[List[str]],
         missing_deps: List[dict],
         self_deps: List[str]
-    ):
+    ) -> None:
         """
         検証レポートを表示
 

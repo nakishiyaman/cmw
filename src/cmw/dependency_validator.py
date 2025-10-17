@@ -3,7 +3,7 @@ Dependency Validator - 依存関係の検証と修正
 
 循環依存の検出、分析、修正提案を行うモジュール
 """
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 import networkx as nx
 import re
 
@@ -43,7 +43,7 @@ class DependencyValidator:
         Returns:
             有向グラフ（タスクID → 依存先タスクID）
         """
-        G = nx.DiGraph()
+        G: nx.DiGraph = nx.DiGraph()
 
         for task in tasks:
             G.add_node(task.id)
@@ -101,7 +101,7 @@ class DependencyValidator:
         Returns:
             修正提案のリスト（信頼度順にソート）
         """
-        suggestions = []
+        suggestions: List[Dict[str, Any]] = []
         task_map = {t.id: t for t in tasks}
 
         # サイクル内の各エッジを評価
@@ -131,7 +131,7 @@ class DependencyValidator:
                 )
 
         # 信頼度順にソート（高い順）
-        suggestions.sort(key=lambda x: x["confidence"], reverse=True)
+        suggestions.sort(key=lambda x: float(x["confidence"]), reverse=True)
 
         return suggestions
 
@@ -314,7 +314,7 @@ class DependencyValidator:
             }
         """
         task_ids = {t.id for t in tasks}
-        result = {
+        result: Dict[str, Any] = {
             "has_cycles": False,
             "cycles": [],
             "missing_dependencies": [],

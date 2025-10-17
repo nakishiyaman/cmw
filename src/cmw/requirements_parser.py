@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import List, Dict, Optional
 import re
 
-from .models import Task
+from .models import Task, Priority
 from .dependency_validator import DependencyValidator
 from .task_filter import TaskFilter
 
@@ -17,7 +17,7 @@ from .task_filter import TaskFilter
 class RequirementsParser:
     """requirements.mdを解析してタスクを自動生成"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.task_counter = 0
         self.validator = DependencyValidator()
         self.task_filter = TaskFilter()
@@ -109,9 +109,10 @@ class RequirementsParser:
         - リストアイテムを受け入れ基準として抽出
         - コードブロックを技術仕様として抽出
         """
-        sections = []
-        current_section = None
-        current_subsection = None
+        from typing import Any
+        sections: List[Dict[str, Any]] = []
+        current_section: Optional[Dict[str, Any]] = None
+        current_subsection: Optional[Dict[str, Any]] = None
         in_code_block = False
 
         for line in content.split('\n'):
@@ -287,7 +288,7 @@ class RequirementsParser:
 
         return sorted(list(files))
 
-    def _infer_priority(self, title: str) -> str:
+    def _infer_priority(self, title: str) -> Priority:
         """タイトルから優先度を推論"""
         title_lower = title.lower()
 
@@ -295,21 +296,22 @@ class RequirementsParser:
         high_keywords = ['データベース', 'database', 'モデル', 'model', '認証', 'auth',
                         'requirements', 'セキュリティ', 'security']
         if any(keyword in title_lower for keyword in high_keywords):
-            return 'high'
+            return Priority.HIGH
 
         # 低優先度キーワード
         low_keywords = ['readme', 'ドキュメント', 'documentation', '削除', 'delete']
         if any(keyword in title_lower for keyword in low_keywords):
-            return 'low'
+            return Priority.LOW
 
         # デフォルトは中優先度
-        return 'medium'
+        return Priority.MEDIUM
 
     def _generate_description(self, section: Dict) -> str:
         """セクションから説明を生成"""
         if section['criteria']:
-            return f"{section['title']}を実装する"
-        return section['title']
+            title_str = str(section['title'])
+            return f"{title_str}を実装する"
+        return str(section['title'])
 
     def _infer_assigned_to(self, target_files: List[str]) -> str:
         """ターゲットファイルから担当を推論"""
@@ -339,7 +341,7 @@ class RequirementsParser:
         {task.id: task for task in tasks}
 
         # ファイルごとのタスクをグルーピング
-        file_to_tasks = {}
+        file_to_tasks: Dict[str, List[str]] = {}
         for task in tasks:
             for file in task.target_files:
                 if file not in file_to_tasks:

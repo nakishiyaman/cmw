@@ -40,13 +40,13 @@ class Task:
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
-    started_at: Optional[str] = None  # 開始時刻（ISO形式）
-    failed_at: Optional[str] = None  # 失敗時刻（ISO形式）
+    started_at: Optional[datetime] = None  # 開始時刻
+    failed_at: Optional[datetime] = None  # 失敗時刻
     artifacts: List[str] = field(default_factory=list)  # 生成されたファイルのパス
     error_message: Optional[str] = None
     error: Optional[str] = None  # エラー詳細（error_messageと互換性のため）
     
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """初期化後の処理"""
         if self.created_at is None:
             self.created_at = datetime.now()
@@ -68,8 +68,8 @@ class Task:
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
             "completed_at": self.completed_at.isoformat() if self.completed_at else None,
-            "started_at": self.started_at,
-            "failed_at": self.failed_at,
+            "started_at": self.started_at.isoformat() if self.started_at else None,
+            "failed_at": self.failed_at.isoformat() if self.failed_at else None,
             "artifacts": self.artifacts,
             "error_message": self.error_message,
             "error": self.error
@@ -82,6 +82,8 @@ class Task:
         created_at = datetime.fromisoformat(data["created_at"]) if data.get("created_at") else None
         updated_at = datetime.fromisoformat(data["updated_at"]) if data.get("updated_at") else None
         completed_at = datetime.fromisoformat(data["completed_at"]) if data.get("completed_at") else None
+        started_at = datetime.fromisoformat(data["started_at"]) if data.get("started_at") else None
+        failed_at = datetime.fromisoformat(data["failed_at"]) if data.get("failed_at") else None
 
         return cls(
             id=data["id"],
@@ -96,8 +98,8 @@ class Task:
             created_at=created_at,
             updated_at=updated_at,
             completed_at=completed_at,
-            started_at=data.get("started_at"),
-            failed_at=data.get("failed_at"),
+            started_at=started_at,
+            failed_at=failed_at,
             artifacts=data.get("artifacts", []),
             error_message=data.get("error_message"),
             error=data.get("error")

@@ -5,7 +5,7 @@ Claude Codeの応答テキストを解析して、タスク完了を自動検出
 """
 import re
 import json
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 from pathlib import Path
 
 
@@ -53,12 +53,12 @@ class ResponseParser:
     # タスクIDパターン
     TASK_ID_PATTERN = r'TASK-\d{3}'
 
-    def __init__(self):
+    def __init__(self) -> None:
         """初期化"""
         self.file_regex = [re.compile(p, re.IGNORECASE | re.MULTILINE) for p in self.FILE_PATTERNS]
         self.task_id_regex = re.compile(self.TASK_ID_PATTERN)
 
-    def parse_response(self, response_text: str) -> Dict[str, any]:
+    def parse_response(self, response_text: str) -> Dict[str, Any]:
         """
         Claude Codeの応答を解析
 

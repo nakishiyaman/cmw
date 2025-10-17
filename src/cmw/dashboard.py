@@ -18,7 +18,7 @@ from .progress_tracker import ProgressTracker
 class Dashboard:
     """ターミナルダッシュボード"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.console = Console()
 
     def format_duration(self, seconds: float) -> str:

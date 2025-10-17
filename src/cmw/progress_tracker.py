@@ -150,7 +150,11 @@ class ProgressTracker:
                 })
 
         # タイムスタンプでソート
-        events.sort(key=lambda x: x['timestamp'])
+        from typing import Any
+        def get_timestamp(event: Dict[str, Any]) -> datetime:
+            ts = event['timestamp']
+            return ts if isinstance(ts, datetime) else datetime.min
+        events.sort(key=get_timestamp)
 
         return events
 
@@ -284,7 +288,8 @@ class ProgressTracker:
         Args:
             tasks: タスクリスト
         """
-        metrics = {
+        from typing import Any
+        metrics: Dict[str, Any] = {
             'timestamp': datetime.now().isoformat(),
             'summary': self.get_progress_summary(tasks),
             'velocity': self.get_velocity_metrics(tasks),
@@ -314,6 +319,8 @@ class ProgressTracker:
             return None
 
         try:
-            return json.loads(self.metrics_file.read_text(encoding='utf-8'))
+            from typing import Any, cast
+            result: Any = json.loads(self.metrics_file.read_text(encoding='utf-8'))
+            return cast(Dict, result)
         except (json.JSONDecodeError, IOError):
             return None

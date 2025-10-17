@@ -5,6 +5,64 @@ All notable changes to Claude Multi-Worker Framework will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2025-10-18
+
+### Added
+
+#### Complete Type Safety - mypy 100% Clean
+- **142 → 0 mypy errors** - Achieved 100% type safety across all 22 source files
+- Added comprehensive type annotations throughout the codebase:
+  - `Optional[Type]` for all parameters with `None` defaults (PEP 484 compliant)
+  - `Dict[str, Any]` for heterogeneous dictionaries
+  - `List[Dict[str, Any]]` for complex data structures
+  - `nx.DiGraph` type annotations for NetworkX graphs
+  - `Priority` enum usage instead of string literals
+- Fixed type inference issues:
+  - Lambda function return types in sort operations
+  - json.loads return types with `cast()`
+  - Collection type assignments (dict_values vs List vs Iterable)
+  - datetime handling in dictionaries
+
+#### CI/CD Improvements
+- Added mypy type checking to GitHub Actions CI pipeline
+- All PRs now automatically validated for type safety
+- Prevents type errors from being introduced in the future
+
+### Improved
+
+- **Code Quality**: Enhanced type safety improves IDE autocomplete and catches bugs at development time
+- **Documentation**: Type annotations serve as inline documentation for function signatures
+- **Maintainability**: Easier refactoring with confidence thanks to type checking
+
+### Dependencies
+
+- Added `types-networkx>=3.0` to dev dependencies for NetworkX type stubs
+
+### Configuration
+
+- Updated `pyproject.toml` with mypy overrides for optional dependencies (pygraphviz)
+- Configured strict mypy settings: `disallow_untyped_defs = true`
+
+### Technical Details
+
+**Phase 4 Part 1**: Optional and Collection fixes (29→21 errors)
+- static_analyzer.py: Fixed Optional[List[Path]], variable naming, Dict annotations
+- task_provider.py: Added Dict type annotations
+- progress_tracker.py: Fixed lambda timestamp handling
+
+**Phase 4 Part 2**: requirements_parser.py fixes (21→19 errors)
+- Added type annotations for section dictionaries
+- Changed _infer_priority() to return Priority enum
+- Fixed Any return types with explicit conversions
+
+**Phase 4 Part 3**: Final fixes (19→0 errors)
+- cli.py: Fixed Iterable type for tasks_to_show
+- state_manager.py: Added cast() for json.loads
+- dependency_validator.py: Fixed Dict[str, Any] and lambda sort keys
+- conflict_detector.py: Added Dict[str, Any] annotations
+- progress_tracker.py: Replaced lambda with proper function for datetime sorting
+- graph_visualizer.py: Fixed max() key function and added nx.DiGraph annotations
+
 ## [0.3.1] - 2025-10-16
 
 ### Added

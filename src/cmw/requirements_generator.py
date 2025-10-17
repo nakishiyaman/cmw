@@ -5,6 +5,7 @@ Requirements Generator - 対話型requirements.md生成
 requirements.mdを自動生成する。
 """
 from pathlib import Path
+from typing import Dict, Any, List
 from rich.console import Console
 from rich.prompt import Prompt, Confirm
 from rich.panel import Panel
@@ -13,9 +14,9 @@ from rich.panel import Panel
 class RequirementsGenerator:
     """対話型requirements.md生成機能"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.console = Console()
-        self.requirements_data = {}
+        self.requirements_data: Dict[str, Any] = {}
 
     def generate_interactive(self, output_path: Path) -> bool:
         """
@@ -64,7 +65,7 @@ class RequirementsGenerator:
         self.console.print(f"\n[green]✅ {output_path} を生成しました[/green]")
         return True
 
-    def _collect_basic_info(self):
+    def _collect_basic_info(self) -> None:
         """プロジェクト基本情報を収集"""
         self.console.print("[bold]1. プロジェクト基本情報[/bold]\n")
 
@@ -84,7 +85,7 @@ class RequirementsGenerator:
             default="rest-api"
         )
 
-    def _collect_tech_stack(self):
+    def _collect_tech_stack(self) -> None:
         """技術スタックを収集"""
         self.console.print("\n[bold]2. 技術スタック[/bold]\n")
 
@@ -126,7 +127,7 @@ class RequirementsGenerator:
             'auth': auth_method
         }
 
-    def _collect_data_models(self):
+    def _collect_data_models(self) -> None:
         """データモデルを収集"""
         self.console.print("\n[bold]3. データモデル[/bold]\n")
 
@@ -180,7 +181,7 @@ class RequirementsGenerator:
 
         self.requirements_data['models'] = models
 
-    def _collect_api_features(self):
+    def _collect_api_features(self) -> None:
         """API機能を収集"""
         self.console.print("\n[bold]4. API機能[/bold]\n")
 
@@ -252,7 +253,7 @@ class RequirementsGenerator:
 
         self.requirements_data['features'] = features
 
-    def _collect_non_functional(self):
+    def _collect_non_functional(self) -> None:
         """非機能要件を収集"""
         self.console.print("\n[bold]5. 非機能要件[/bold]\n")
 
@@ -277,7 +278,7 @@ class RequirementsGenerator:
             'security': needs_security
         }
 
-    def _show_summary(self):
+    def _show_summary(self) -> None:
         """収集した情報のサマリーを表示"""
         # プロジェクト情報
         self.console.print(f"プロジェクト名: {self.requirements_data['project_name']}")
@@ -395,7 +396,7 @@ class RequirementsGenerator:
 
             if other_features:
                 # モデル別にグループ化
-                model_features = {}
+                model_features: Dict[str, List[Dict[str, str]]] = {}
                 for feature in other_features:
                     # エンドポイントからモデル名を抽出
                     parts = feature['endpoint'].split('/')

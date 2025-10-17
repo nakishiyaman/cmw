@@ -5,6 +5,7 @@ Task Filter - タスクと非タスクを判別
 適切にフィルタリングするモジュール
 """
 from datetime import datetime
+from pathlib import Path
 from typing import List, Tuple, Dict
 from cmw.models import Task
 
@@ -258,7 +259,7 @@ class TaskFilter:
         return references
 
     def save_references(
-        self, references: List[Dict], references_path
+        self, references: List[Dict], references_path: Path
     ) -> None:
         """
         参照情報をJSONファイルに保存

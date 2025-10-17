@@ -4,7 +4,7 @@ Pythonコードの静的解析機能
 ASTを使用してファイルの依存関係を解析し、タスク間の依存関係を推論します。
 """
 import ast
-from typing import List, Dict, Set, Optional
+from typing import List, Dict, Set, Optional, Any
 from pathlib import Path
 import re
 
@@ -159,7 +159,7 @@ class StaticAnalyzer:
 
         return None
 
-    def _module_to_file(self, module_name: str, current_file: str, extra_paths: List[Path] = None) -> Set[str]:
+    def _module_to_file(self, module_name: str, current_file: str, extra_paths: Optional[List[Path]] = None) -> Set[str]:
         """モジュール名をファイルパスに変換
 
         Args:
@@ -199,7 +199,7 @@ class StaticAnalyzer:
             return results
 
         # 絶対インポートの場合
-        module_path = module_name.replace('.', '/')
+        module_path_str = module_name.replace('.', '/')
 
         # 現在のファイルのディレクトリを検索パスに追加
         current_file_dir = self.project_root / Path(current_file).parent
@@ -209,12 +209,12 @@ class StaticAnalyzer:
 
         for base in search_bases:
             # __init__.py を試す
-            candidate = base / module_path / '__init__.py'
+            candidate = base / module_path_str / '__init__.py'
             if candidate.exists() and candidate.is_relative_to(self.project_root):
                 results.add(str(candidate.relative_to(self.project_root)))
 
             # .py を試す
-            candidate = base / f"{module_path}.py"
+            candidate = base / f"{module_path_str}.py"
             if candidate.exists() and candidate.is_relative_to(self.project_root):
                 results.add(str(candidate.relative_to(self.project_root)))
 
@@ -235,8 +235,8 @@ class StaticAnalyzer:
             依存関係が更新されたタスクのリスト
         """
         # タスクIDとtarget_filesのマッピングを作成
-        task_files = {}
-        file_to_task = {}
+        task_files: Dict[str, Set[str]] = {}
+        file_to_task: Dict[str, List[str]] = {}
 
         for task in tasks:
             task_files[task.id] = set(task.target_files)
@@ -298,7 +298,7 @@ class StaticAnalyzer:
                 all_files.add(file)
 
         # ファイル間の依存関係グラフを構築
-        file_graph = {}
+        file_graph: Dict[str, Set[str]] = {}
         for file in all_files:
             file_graph[file] = set()
             deps = self.analyze_file_dependencies(file)
@@ -332,7 +332,7 @@ class StaticAnalyzer:
 
         return cycles
 
-    def analyze_import_patterns(self, tasks: List[Task]) -> Dict[str, any]:
+    def analyze_import_patterns(self, tasks: List[Task]) -> Dict[str, Any]:
         """インポートパターンを分析
 
         Args:
@@ -341,7 +341,7 @@ class StaticAnalyzer:
         Returns:
             インポートパターンの統計情報
         """
-        stats = {
+        stats: Dict[str, Any] = {
             'total_files': 0,
             'total_imports': 0,
             'circular_imports': [],
@@ -350,8 +350,8 @@ class StaticAnalyzer:
         }
 
         # ファイルごとのインポート数と被インポート数をカウント
-        import_counts = {}  # ファイル -> インポートしているファイル数
-        imported_counts = {}  # ファイル -> インポートされている回数
+        import_counts: Dict[str, int] = {}  # ファイル -> インポートしているファイル数
+        imported_counts: Dict[str, int] = {}  # ファイル -> インポートされている回数
 
         all_files = []
         for task in tasks:
@@ -405,7 +405,7 @@ class StaticAnalyzer:
         Returns:
             ディレクトリごとのファイルリスト
         """
-        organization = {}
+        organization: Dict[str, List[str]] = {}
 
         for task in tasks:
             for file in task.target_files:
@@ -464,7 +464,7 @@ class StaticAnalyzer:
         except (UnicodeDecodeError, FileNotFoundError):
             return []
 
-    def analyze_complexity(self, file_path: str) -> Dict[str, any]:
+    def analyze_complexity(self, file_path: str) -> Dict[str, Any]:
         """ファイルの複雑度を分析
 
         Args:

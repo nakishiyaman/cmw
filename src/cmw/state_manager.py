@@ -7,7 +7,7 @@ StateManager - 状態の永続化とセッション管理
 - セッションの継続性保証
 """
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Any, Dict, cast
 import json
 import time
 import os
@@ -42,7 +42,7 @@ class StateManager:
 
         return False
 
-    def release_lock(self):
+    def release_lock(self) -> None:
         """ロックを解放"""
         if self.lock_file.exists():
             try:
@@ -95,10 +95,11 @@ class StateManager:
 
         return True
 
-    def _read_lock(self) -> Optional[dict]:
+    def _read_lock(self) -> Optional[Dict]:
         """ロックファイルを読み込み"""
         try:
-            return json.loads(self.lock_file.read_text(encoding='utf-8'))
+            result: Any = json.loads(self.lock_file.read_text(encoding='utf-8'))
+            return cast(Dict, result)
         except (FileNotFoundError, json.JSONDecodeError):
             return None
 
@@ -118,7 +119,7 @@ class SessionContext:
     def __init__(self, project_path: Path):
         self.state_manager = StateManager(project_path)
 
-    def __enter__(self):
+    def __enter__(self) -> "SessionContext":
         if not self.state_manager.acquire_lock():
             raise RuntimeError(
                 "Could not acquire lock. "
@@ -126,5 +127,5 @@ class SessionContext:
             )
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         self.state_manager.release_lock()

@@ -6,7 +6,7 @@ Gitコミットメッセージからタスク完了を自動検出し、進捗�
 import re
 import subprocess
 from pathlib import Path
-from typing import List, Set, Dict, Optional
+from typing import List, Set, Dict, Optional, Any
 
 from .coordinator import Coordinator
 from .models import TaskStatus
@@ -15,7 +15,7 @@ from .models import TaskStatus
 class GitIntegration:
     """Git連携機能を提供するクラス"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """GitIntegrationを初期化"""
         self.task_pattern = re.compile(r'TASK-\d{3}')
 
@@ -24,7 +24,7 @@ class GitIntegration:
         project_path: Path,
         since: Optional[str] = None,
         branch: str = "HEAD"
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """
         Gitコミット履歴から進捗を同期
 
@@ -61,7 +61,7 @@ class GitIntegration:
             if task_id in coordinator.tasks:
                 task = coordinator.tasks[task_id]
                 if task.status != TaskStatus.COMPLETED:
-                    coordinator.mark_task_completed(task_id)
+                    coordinator.update_task_status(task_id, TaskStatus.COMPLETED)
                     updated_count += 1
                 else:
                     skipped_count += 1
@@ -197,7 +197,7 @@ class GitIntegration:
         commits = self._get_commit_log(project_path, since, "HEAD")
 
         # タスクIDごとにコミットハッシュを集める
-        activity = {}
+        activity: Dict[str, List[str]] = {}
 
         for commit in commits:
             task_ids = self.task_pattern.findall(commit['message'])
@@ -211,7 +211,7 @@ class GitIntegration:
     def validate_task_references(
         self,
         project_path: Path
-    ) -> Dict[str, List[str]]:
+    ) -> Dict[str, Any]:
         """
         コミットメッセージ内のタスク参照を検証
 
