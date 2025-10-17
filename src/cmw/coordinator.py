@@ -58,6 +58,9 @@ class Coordinator:
                 progress_data = json.load(f)
 
                 for task_data in progress_data.get("tasks", []):
+                    # task_dataが辞書でない場合はスキップ（古い形式対応）
+                    if not isinstance(task_data, dict):
+                        continue
                     task_id = task_data.get("id")
                     if task_id in self.tasks:
                         # 進捗状況のみをマージ（status, artifacts, completed_at, error_message など）
