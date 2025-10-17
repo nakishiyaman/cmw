@@ -13,7 +13,7 @@ from rich.panel import Panel
 class RequirementsGenerator:
     """対話型requirements.md生成機能"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.console = Console()
         self.requirements_data = {}
 

@@ -53,7 +53,7 @@ class ResponseParser:
     # タスクIDパターン
     TASK_ID_PATTERN = r'TASK-\d{3}'
 
-    def __init__(self):
+    def __init__(self) -> None:
         """初期化"""
         self.file_regex = [re.compile(p, re.IGNORECASE | re.MULTILINE) for p in self.FILE_PATTERNS]
         self.task_id_regex = re.compile(self.TASK_ID_PATTERN)

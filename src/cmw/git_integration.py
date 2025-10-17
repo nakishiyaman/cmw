@@ -15,7 +15,7 @@ from .models import TaskStatus
 class GitIntegration:
     """Git連携機能を提供するクラス"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """GitIntegrationを初期化"""
         self.task_pattern = re.compile(r'TASK-\d{3}')
 

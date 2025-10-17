@@ -46,7 +46,7 @@ class Task:
     error_message: Optional[str] = None
     error: Optional[str] = None  # エラー詳細（error_messageと互換性のため）
     
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """初期化後の処理"""
         if self.created_at is None:
             self.created_at = datetime.now()
