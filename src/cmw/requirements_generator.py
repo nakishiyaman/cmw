@@ -5,7 +5,7 @@ Requirements Generator - 対話型requirements.md生成
 requirements.mdを自動生成する。
 """
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, List
 from rich.console import Console
 from rich.prompt import Prompt, Confirm
 from rich.panel import Panel
