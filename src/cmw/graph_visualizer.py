@@ -3,7 +3,7 @@
 
 タスクの依存関係をグラフとして可視化します。
 """
-from typing import List, Dict, Set, Tuple, Optional
+from typing import List, Dict, Set
 from pathlib import Path
 import networkx as nx
 from rich.tree import Tree
@@ -49,7 +49,7 @@ class GraphVisualizer:
         Returns:
             ASCII形式のグラフ文字列
         """
-        console = Console()
+        Console()
 
         # ルートタスク（依存関係のないタスク）を取得
         root_tasks = [
@@ -159,7 +159,7 @@ class GraphVisualizer:
             output_path: 出力ファイルパス (.dot)
         """
         try:
-            import pygraphviz as pgv
+            import pygraphviz  # noqa: F401
         except ImportError:
             raise ImportError(
                 "pygraphviz is not installed. "

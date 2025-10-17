@@ -3,7 +3,7 @@ Interactive Fixer - 対話的な問題修正UI
 
 Rich UIを使用して、タスクの問題を対話的に修正する機能を提供します。
 """
-from typing import List, Optional
+from typing import List
 from rich.console import Console
 from rich.prompt import Prompt, Confirm
 from rich.table import Table
@@ -90,7 +90,7 @@ class InteractiveFixer:
                 # 選択した修正を適用
                 selected = fix_suggestions[int(choice) - 1]
                 tasks = self._apply_fix(tasks, selected)
-                self.console.print(f"[green]✅ 修正を適用しました[/green]")
+                self.console.print("[green]✅ 修正を適用しました[/green]")
 
         return tasks
 

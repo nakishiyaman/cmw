@@ -7,11 +7,11 @@ ErrorHandler - タスク失敗時の処理
 - 復旧方法の提案
 """
 from pathlib import Path
-from typing import Optional, List
+from typing import List
 from enum import Enum
 import shutil
 
-from .models import Task, TaskStatus
+from .models import Task
 
 
 class TaskFailureAction(Enum):

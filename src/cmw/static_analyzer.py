@@ -4,7 +4,7 @@ Pythonコードの静的解析機能
 ASTを使用してファイルの依存関係を解析し、タスク間の依存関係を推論します。
 """
 import ast
-from typing import List, Dict, Set, Optional, Tuple
+from typing import List, Dict, Set, Optional
 from pathlib import Path
 import re
 
