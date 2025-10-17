@@ -6,7 +6,7 @@ Gitコミットメッセージからタスク完了を自動検出し、進捗�
 import re
 import subprocess
 from pathlib import Path
-from typing import List, Set, Dict, Optional
+from typing import List, Set, Dict, Optional, Any
 
 from .coordinator import Coordinator
 from .models import TaskStatus
@@ -24,7 +24,7 @@ class GitIntegration:
         project_path: Path,
         since: Optional[str] = None,
         branch: str = "HEAD"
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """
         Gitコミット履歴から進捗を同期
 

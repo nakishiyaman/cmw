@@ -4,7 +4,7 @@ Pythonコードの静的解析機能
 ASTを使用してファイルの依存関係を解析し、タスク間の依存関係を推論します。
 """
 import ast
-from typing import List, Dict, Set, Optional
+from typing import List, Dict, Set, Optional, Any
 from pathlib import Path
 import re
 
@@ -332,7 +332,7 @@ class StaticAnalyzer:
 
         return cycles
 
-    def analyze_import_patterns(self, tasks: List[Task]) -> Dict[str, any]:
+    def analyze_import_patterns(self, tasks: List[Task]) -> Dict[str, Any]:
         """インポートパターンを分析
 
         Args:
@@ -464,7 +464,7 @@ class StaticAnalyzer:
         except (UnicodeDecodeError, FileNotFoundError):
             return []
 
-    def analyze_complexity(self, file_path: str) -> Dict[str, any]:
+    def analyze_complexity(self, file_path: str) -> Dict[str, Any]:
         """ファイルの複雑度を分析
 
         Args:

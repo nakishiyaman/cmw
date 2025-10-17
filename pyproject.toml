@@ -37,6 +37,7 @@ dev = [
     "black>=23.0",
     "mypy>=1.0",
     "ruff>=0.1",
+    "types-networkx>=3.0",
 ]
 dashboard = [
     "fastapi>=0.100",
