@@ -27,7 +27,7 @@ Type "# cmw Quickstart - Claude Code Integration"
 Enter
 Sleep 1s
 
-Type "cmw init demo-blog-api"
+Type "cmw init --name demo-blog-api"
 Enter
 Sleep 2s
 
