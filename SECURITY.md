@@ -17,7 +17,7 @@
 ### 報告方法
 
 1. **非公開報告（推奨）**: noreply@example.com にメールで報告
-2. **GitHub Security Advisory**: [こちら](https://github.com/nakishiyaman/claude-multi-worker-framework/security/advisories/new)から報告
+2. **GitHub Security Advisory**: [こちら](https://github.com/nakishiyaman/cmw/security/advisories/new)から報告
 
 ### 含めるべき情報
 

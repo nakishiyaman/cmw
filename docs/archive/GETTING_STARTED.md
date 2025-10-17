@@ -36,7 +36,7 @@ GitHubにプッシュして再利用可能なフレームワークとして使�
 
 ```bash
 # 1. このディレクトリで
-cd /path/to/claude-multi-worker-framework
+cd /path/to/cmw
 
 # 2. Gitリポジトリを初期化
 git init
@@ -44,7 +44,7 @@ git add .
 git commit -m "Initial commit: Claude Multi-Worker Framework v0.1.0"
 
 # 3. GitHub リポジトリを作成後
-git remote add origin https://github.com/あなたのユーザー名/claude-multi-worker-framework.git
+git remote add origin https://github.com/あなたのユーザー名/cmw.git
 git branch -M main
 git push -u origin main
 ```
@@ -71,7 +71,7 @@ git push -u origin main
 
 ```bash
 # 1. フレームワークのディレクトリで
-cd /path/to/claude-multi-worker-framework
+cd /path/to/cmw
 
 # 2. 仮想環境を作成（推奨）
 python -m venv venv
@@ -114,7 +114,7 @@ cmw status
 **ディレクトリ構造イメージ：**
 ```
 あなたのPC/
-├── claude-multi-worker-framework/  ← フレームワーク（ツール）
+├── cmw/  ← フレームワーク（ツール）
 │   └── pip install -e . でインストール
 │
 └── my-projects/                     ← プロジェクト置き場
@@ -314,7 +314,7 @@ MIT License - 自由に使用・改変・配布可能
 次のコマンドを実行して始めましょう：
 
 ```bash
-cd /mnt/user-data/outputs/claude-multi-worker-framework
+cd /mnt/user-data/outputs/cmw
 pip install -e .
 cmw init my-first-project
 ```

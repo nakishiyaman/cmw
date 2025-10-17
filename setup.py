@@ -17,7 +17,7 @@ setup(
     description="Claude Code統合タスク管理フレームワーク v0.3.1 - requirements.mdから自動でタスク生成、循環依存自動修正、Git連携、進捗可視化",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/nakishiyaman/claude-multi-worker-framework",
+    url="https://github.com/nakishiyaman/cmw",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     classifiers=[

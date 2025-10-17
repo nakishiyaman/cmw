@@ -211,7 +211,7 @@ cmw tasks execute TASK-004
 ### 準備
 ```bash
 # フレームワークディレクトリに移動
-cd ~/workspace/claude-multi-worker-framework
+cd ~/workspace/cmw
 
 # 最新の状態を確認
 git status

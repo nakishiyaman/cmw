@@ -7,8 +7,8 @@
 ### 1. リポジトリをフォーク・クローン
 
 ```bash
-git clone https://github.com/yourusername/claude-multi-worker-framework.git
-cd claude-multi-worker-framework
+git clone https://github.com/yourusername/cmw.git
+cd cmw
 ```
 
 ### 2. 仮想環境を作成

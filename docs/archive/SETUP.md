@@ -6,7 +6,7 @@
 
 1. GitHub (https://github.com) にログイン
 2. 右上の `+` → `New repository` をクリック
-3. Repository name: `claude-multi-worker-framework`
+3. Repository name: `cmw`
 4. Description: `Document-Driven Multi-Agent Development Orchestration Framework`
 5. Public または Private を選択
 6. **Initialize this repository with a README のチェックを外す**
@@ -16,7 +16,7 @@
 
 ```bash
 # プロジェクトディレクトリに移動
-cd claude-multi-worker-framework
+cd cmw
 
 # Gitリポジトリを初期化
 git init
@@ -32,7 +32,7 @@ git commit -m "Initial commit: Claude Multi-Worker Framework v0.1.0"
 
 ```bash
 # リモートリポジトリを追加（URLは自分のものに変更）
-git remote add origin https://github.com/yourusername/claude-multi-worker-framework.git
+git remote add origin https://github.com/yourusername/cmw.git
 
 # デフォルトブランチ名を確認（mainまたはmaster）
 git branch -M main
@@ -232,7 +232,7 @@ mkdocs gh-deploy
 ## プロジェクト構造の説明
 
 ```
-claude-multi-worker-framework/
+cmw/
 ├── src/
 │   └── cmw/                    # メインパッケージ
 │       ├── __init__.py         # パッケージ初期化

@@ -193,7 +193,7 @@ cmw tasks show TASK-001          # タスク詳細表示
 
 ### テスト環境
 ```bash
-cd /home/claude/workspace/claude-multi-worker-framework
+cd /home/claude/workspace/cmw
 pip install -e . --break-system-packages
 ```
 
@@ -374,7 +374,7 @@ Phase 1.2が完了したので、次は Phase 2（Worker間連携）に進むこ
 
 ### Git初期化とコミット
 ```bash
-cd /home/claude/workspace/claude-multi-worker-framework
+cd /home/claude/workspace/cmw
 
 git init
 git add .

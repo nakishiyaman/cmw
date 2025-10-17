@@ -8,13 +8,13 @@
 
 ### 1. リポジトリをフォーク
 
-GitHubで[cmwリポジトリ](https://github.com/nakishiyaman/claude-multi-worker-framework)をフォークしてください。
+GitHubで[cmwリポジトリ](https://github.com/nakishiyaman/cmw)をフォークしてください。
 
 ### 2. ローカルにクローン
 
 ```bash
-git clone https://github.com/<your-username>/claude-multi-worker-framework.git
-cd claude-multi-worker-framework
+git clone https://github.com/<your-username>/cmw.git
+cd cmw
 ```
 
 ### 3. 仮想環境を作成
@@ -183,7 +183,7 @@ GitHubでプルリクエストを作成してください。以下を含めて�
 
 ## 🐛 バグ報告
 
-バグを発見した場合、[GitHubのIssues](https://github.com/nakishiyaman/claude-multi-worker-framework/issues)で報告してください。
+バグを発見した場合、[GitHubのIssues](https://github.com/nakishiyaman/cmw/issues)で報告してください。
 
 **含めるべき情報:**
 - **タイトル**: 簡潔で分かりやすいタイトル
@@ -223,7 +223,7 @@ GitHubでプルリクエストを作成してください。以下を含めて�
 
 ## 💡 機能リクエスト
 
-新機能のアイデアがある場合、[GitHubのIssues](https://github.com/nakishiyaman/claude-multi-worker-framework/issues)で提案してください。
+新機能のアイデアがある場合、[GitHubのIssues](https://github.com/nakishiyaman/cmw/issues)で提案してください。
 
 **含めるべき情報:**
 - **タイトル**: 簡潔で分かりやすいタイトル
@@ -246,7 +246,7 @@ GitHubでプルリクエストを作成してください。以下を含めて�
 
 質問がある場合：
 1. まず[README.md](README.md)と[ドキュメント](docs/)を確認
-2. [GitHubのIssues](https://github.com/nakishiyaman/claude-multi-worker-framework/issues)で既存の議論を検索
+2. [GitHubのIssues](https://github.com/nakishiyaman/cmw/issues)で既存の議論を検索
 3. 見つからない場合、新しいIssueを作成
 
 ## 🙏 行動規範

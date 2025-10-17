@@ -179,20 +179,20 @@ mkdir -p .claude-plugin
 
 ### 方法1: Claude Codeプラグインとして（推奨）
 \`\`\`bash
-/plugin marketplace add nakishiyaman/claude-multi-worker-framework
+/plugin marketplace add nakishiyaman/cmw
 /plugin install cmw-cli@cmw
 \`\`\`
 
 ### 方法2: pipで直接インストール
 \`\`\`bash
-pip install claude-multi-worker-framework
+pip install cmw
 \`\`\`
 ```
 
 **3. 動作確認**
 ```bash
 # 自分のClaude Codeで確認
-/plugin marketplace add nakishiyaman/claude-multi-worker-framework
+/plugin marketplace add nakishiyaman/cmw
 /plugin install cmw-cli@cmw
 ```
 
@@ -278,10 +278,10 @@ jobs:
 
 README.md冒頭に以下を追加:
 ```markdown
-[![Tests](https://github.com/nakishiyaman/claude-multi-worker-framework/workflows/Tests/badge.svg)](https://github.com/nakishiyaman/claude-multi-worker-framework/actions)
+[![Tests](https://github.com/nakishiyaman/cmw/workflows/Tests/badge.svg)](https://github.com/nakishiyaman/cmw/actions)
 [![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![codecov](https://codecov.io/gh/nakishiyaman/claude-multi-worker-framework/branch/main/graph/badge.svg)](https://codecov.io/gh/nakishiyaman/claude-multi-worker-framework)
+[![codecov](https://codecov.io/gh/nakishiyaman/cmw/branch/main/graph/badge.svg)](https://codecov.io/gh/nakishiyaman/cmw)
 ```
 
 **3. 動作確認**
@@ -821,7 +821,7 @@ jobs:
           python-version: '3.10'
 
       - name: Install CMW
-        run: pip install claude-multi-worker-framework
+        run: pip install cmw
 
       - name: Sync progress from Git
         run: cmw sync --from-git --since=1.day.ago

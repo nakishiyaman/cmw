@@ -212,7 +212,7 @@ src/cmw/parallel_executor.py # ✅ 並列実行制御
 
 1. **Phase 1.1: TaskProvider実装**（2時間）
 ```bash
-cd ~/workspace/claude-multi-worker-framework
+cd ~/workspace/cmw
 vi src/cmw/task_provider.py
 # phase-1-implementation-guide.md のコードを実装
 ```

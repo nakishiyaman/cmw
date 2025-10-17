@@ -5,7 +5,7 @@
 ## 📁 ディレクトリ構造
 
 ```
-claude-multi-worker-framework/
+cmw/
 │
 ├── src/cmw/                           # メインパッケージ
 │   ├── __init__.py                    # パッケージ初期化、バージョン情報

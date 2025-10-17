@@ -1,9 +1,9 @@
 # Claude Multi-Worker Framework (cmw) v0.3.1
 
-[![Tests](https://github.com/nakishiyaman/claude-multi-worker-framework/workflows/Tests/badge.svg)](https://github.com/nakishiyaman/claude-multi-worker-framework/actions)
+[![Tests](https://github.com/nakishiyaman/cmw/workflows/Tests/badge.svg)](https://github.com/nakishiyaman/cmw/actions)
 [![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![codecov](https://codecov.io/gh/nakishiyaman/claude-multi-worker-framework/branch/main/graph/badge.svg)](https://codecov.io/gh/nakishiyaman/claude-multi-worker-framework)
+[![codecov](https://codecov.io/gh/nakishiyaman/cmw/branch/main/graph/badge.svg)](https://codecov.io/gh/nakishiyaman/cmw)
 
 **requirements.mdを書くだけで、大規模プロジェクトの開発を完全自動化**
 
@@ -251,7 +251,7 @@ Claude Codeから直接インストールできます：
 
 ```bash
 # Claude Codeのコマンドで
-/plugin marketplace add nakishiyaman/claude-multi-worker-framework
+/plugin marketplace add nakishiyaman/cmw
 /plugin install cmw-cli@cmw
 ```
 
@@ -261,8 +261,8 @@ Claude Codeから直接インストールできます：
 
 ```bash
 # リポジトリをクローン
-git clone https://github.com/nakishiyaman/claude-multi-worker-framework.git
-cd claude-multi-worker-framework
+git clone https://github.com/nakishiyaman/cmw.git
+cd cmw
 
 # 仮想環境を作成（推奨）
 python3 -m venv venv
@@ -633,7 +633,7 @@ MIT License
 
 ## 👥 開発者
 
-- GitHub: https://github.com/nakishiyaman/claude-multi-worker-framework
+- GitHub: https://github.com/nakishiyaman/cmw
 
 ## 🤝 貢献
 

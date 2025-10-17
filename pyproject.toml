@@ -46,10 +46,10 @@ dashboard = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/nakishiyaman/claude-multi-worker-framework"
-Documentation = "https://github.com/nakishiyaman/claude-multi-worker-framework/wiki"
-Repository = "https://github.com/nakishiyaman/claude-multi-worker-framework"
-Issues = "https://github.com/nakishiyaman/claude-multi-worker-framework/issues"
+Homepage = "https://github.com/nakishiyaman/cmw"
+Documentation = "https://github.com/nakishiyaman/cmw/wiki"
+Repository = "https://github.com/nakishiyaman/cmw"
+Issues = "https://github.com/nakishiyaman/cmw/issues"
 
 [project.scripts]
 cmw = "cmw.cli:cli"

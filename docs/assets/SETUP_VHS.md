@@ -25,7 +25,7 @@ ffmpeg -version
 
 ```bash
 # プロジェクトルートに移動
-cd /path/to/claude-multi-worker-framework
+cd /path/to/cmw
 
 # VHSのPATHを設定
 export PATH=$PATH:~/go/bin

@@ -167,7 +167,7 @@ docs/assets/:
 
 ```bash
 # 1. 機密情報の全履歴スキャン
-cd /path/to/claude-multi-worker-framework
+cd /path/to/cmw
 
 # APIキー、パスワード、トークンの検索
 git log --all --pretty=format: --name-only | \
@@ -284,8 +284,8 @@ Claude Multi-Worker Framework (cmw) への貢献に興味を持っていただ�
 # GitHubのWebインターフェースで「Fork」ボタンをクリック
 
 # 2. クローン
-git clone https://github.com/YOUR_USERNAME/claude-multi-worker-framework.git
-cd claude-multi-worker-framework
+git clone https://github.com/YOUR_USERNAME/cmw.git
+cd cmw
 
 # 3. 仮想環境の作成
 python3 -m venv venv
@@ -1070,7 +1070,7 @@ cmw status
 
 - [ ] **バッジの追加**
   ```markdown
-  [![Tests](https://github.com/nakishiyaman/claude-multi-worker-framework/workflows/Tests/badge.svg)](...)
+  [![Tests](https://github.com/nakishiyaman/cmw/workflows/Tests/badge.svg)](...)
   [![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](...)
   [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
   ```
@@ -1082,7 +1082,7 @@ cmw status
 
 - [ ] **インストール手順が明確**
   ```bash
-  pip install claude-multi-worker-framework
+  pip install cmw
   ```
 
 - [ ] **クイックスタートが実行可能**
@@ -1168,10 +1168,10 @@ jobs:
 README.md冒頭に以下を追加:
 
 ```markdown
-[![Tests](https://github.com/nakishiyaman/claude-multi-worker-framework/workflows/Tests/badge.svg)](https://github.com/nakishiyaman/claude-multi-worker-framework/actions)
+[![Tests](https://github.com/nakishiyaman/cmw/workflows/Tests/badge.svg)](https://github.com/nakishiyaman/cmw/actions)
 [![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![codecov](https://codecov.io/gh/nakishiyaman/claude-multi-worker-framework/branch/main/graph/badge.svg)](https://codecov.io/gh/nakishiyaman/claude-multi-worker-framework)
+[![codecov](https://codecov.io/gh/nakishiyaman/cmw/branch/main/graph/badge.svg)](https://codecov.io/gh/nakishiyaman/cmw)
 ```
 
 #### チェックリスト
@@ -1211,7 +1211,7 @@ README.md冒頭に以下を追加:
 #### 手順
 
 1. **GitHubリポジトリにアクセス**
-   - https://github.com/nakishiyaman/claude-multi-worker-framework
+   - https://github.com/nakishiyaman/cmw
 
 2. **Settings → General**
    - 一番下までスクロール
@@ -1253,7 +1253,7 @@ README.md冒頭に以下を追加:
    公開しました。requirements.mdを書くだけで、大規模プロジェクトの開発を
    完全自動化するツールです。
 
-   🔗 https://github.com/nakishiyaman/claude-multi-worker-framework
+   🔗 https://github.com/nakishiyaman/cmw
 
    フィードバックをいただけると嬉しいです！
 
@@ -1274,7 +1274,7 @@ README.md冒頭に以下を追加:
 
    🚧 アルファ版：フィードバック歓迎！
 
-   🔗 https://github.com/nakishiyaman/claude-multi-worker-framework
+   🔗 https://github.com/nakishiyaman/cmw
 
    #Python #AI #OpenSource
    ```
@@ -1535,21 +1535,21 @@ cmw task prompt $(cmw tasks list --status pending | head -1 | awk '{print $1}')
 
 \`\`\`bash
 # Claude Codeのセッションで
-/plugin marketplace add nakishiyaman/claude-multi-worker-framework
+/plugin marketplace add nakishiyaman/cmw
 /plugin install cmw-cli@cmw
 \`\`\`
 
 ### 方法2: pipで直接インストール
 
 \`\`\`bash
-pip install claude-multi-worker-framework
+pip install cmw
 \`\`\`
 
 ### 方法3: ソースからインストール
 
 \`\`\`bash
-git clone https://github.com/nakishiyaman/claude-multi-worker-framework.git
-cd claude-multi-worker-framework
+git clone https://github.com/nakishiyaman/cmw.git
+cd cmw
 pip install -e .
 \`\`\`
 ```
@@ -1572,7 +1572,7 @@ pip install -e .
 - [ ] GitHubにコミット・プッシュ
 - [ ] 自分のClaude Codeで動作確認
   ```bash
-  /plugin marketplace add nakishiyaman/claude-multi-worker-framework
+  /plugin marketplace add nakishiyaman/cmw
   /plugin install cmw-cli@cmw
   ```
 - [ ] コミュニティマーケットプレイスに登録（オプション）
@@ -1727,7 +1727,7 @@ terminalizer render demo
    It automatically generates tasks, manages dependencies, and tracks
    progress - all with zero API costs.
 
-   リンク: https://github.com/nakishiyaman/claude-multi-worker-framework
+   リンク: https://github.com/nakishiyaman/cmw
    ```
 
 2. **Hacker News** ⭐⭐⭐⭐⭐
@@ -1785,7 +1785,7 @@ terminalizer render demo
    - ファイルパスの精密な推論
    - 精度が大幅に向上
 
-   🔗 https://github.com/nakishiyaman/claude-multi-worker-framework
+   🔗 https://github.com/nakishiyaman/cmw
 
    📊 291テスト全パス
    💰 APIコストゼロ
@@ -1928,7 +1928,7 @@ terminalizer render demo
 
 1. **セキュリティチェック**（30分）
    ```bash
-   cd /path/to/claude-multi-worker-framework
+   cd /path/to/cmw
    # ステップ1-1のコマンドを実行
    ```
 

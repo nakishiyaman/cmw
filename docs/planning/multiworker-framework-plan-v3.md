@@ -665,7 +665,7 @@ project = workspace.get_active_project()
 
 ```bash
 # 1. フレームワークディレクトリに移動
-cd ~/workspace/claude-multi-worker-framework
+cd ~/workspace/cmw
 
 # 2. 最新状態を確認
 git status

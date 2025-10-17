@@ -782,7 +782,7 @@ schemas.py:          1タスク
 ## 🔗 参考リンク
 
 - [todo-api検証プロジェクト](https://github.com/nakishiyaman/todo-api)
-- [cmwフレームワーク](https://github.com/nakishiyaman/claude-multi-worker-framework)
+- [cmwフレームワーク](https://github.com/nakishiyaman/cmw)
 - [Claude Code統合ガイド](./CLAUDE_CODE_INTEGRATION.md)
 
 ---

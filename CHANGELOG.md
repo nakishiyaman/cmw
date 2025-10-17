@@ -214,7 +214,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 17タスク、2000行コード、106テスト
   - 全タスク完了、全テストパス
 
-[0.3.1]: https://github.com/nakishiyaman/claude-multi-worker-framework/releases/tag/v0.3.1
-[0.3.0]: https://github.com/nakishiyaman/claude-multi-worker-framework/releases/tag/v0.3.0
-[0.2.0]: https://github.com/nakishiyaman/claude-multi-worker-framework/releases/tag/v0.2.0
-[0.1.0]: https://github.com/nakishiyaman/claude-multi-worker-framework/releases/tag/v0.1.0
+[0.3.1]: https://github.com/nakishiyaman/cmw/releases/tag/v0.3.1
+[0.3.0]: https://github.com/nakishiyaman/cmw/releases/tag/v0.3.0
+[0.2.0]: https://github.com/nakishiyaman/cmw/releases/tag/v0.2.0
+[0.1.0]: https://github.com/nakishiyaman/cmw/releases/tag/v0.1.0

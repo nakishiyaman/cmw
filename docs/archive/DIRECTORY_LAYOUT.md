@@ -25,7 +25,7 @@
 ```
 ~/workspace/
 │
-├── 📦 claude-multi-worker-framework/    # フレームワーク（このリポジトリ）
+├── 📦 cmw/    # フレームワーク（このリポジトリ）
 │   ├── src/cmw/                         # Pythonパッケージ
 │   │   ├── coordinator.py
 │   │   ├── workers.py
@@ -69,7 +69,7 @@
 
 ```
 ~/tools/
-└── 📦 claude-multi-worker-framework/    # フレームワーク
+└── 📦 cmw/    # フレームワーク
 
 ~/work/
 ├── 📂 client-a/
@@ -88,7 +88,7 @@
 
 ```bash
 # フレームワークをシステム全体にインストール
-cd claude-multi-worker-framework
+cd cmw
 pip install .  # -e なしで永続インストール
 
 # その後、フレームワークのディレクトリは削除してもOK
@@ -109,10 +109,10 @@ pip install .  # -e なしで永続インストール
 ```bash
 # ステップ1: フレームワークを配置
 cd ~/workspace  # または好きな場所
-# claude-multi-worker-framework/ をここに配置
+# cmw/ をここに配置
 
 # ステップ2: インストール
-cd claude-multi-worker-framework
+cd cmw
 python -m venv venv           # 仮想環境（推奨）
 source venv/bin/activate      # 有効化
 pip install -e .              # 開発モードでインストール
@@ -160,13 +160,13 @@ cmw status
 ### フレームワーク（1つのリポジトリ）
 
 ```bash
-cd ~/workspace/claude-multi-worker-framework
+cd ~/workspace/cmw
 
 # 初回
 git init
 git add .
 git commit -m "Initial framework"
-git remote add origin https://github.com/you/claude-multi-worker-framework.git
+git remote add origin https://github.com/you/cmw.git
 git push -u origin main
 
 # 更新があったとき
@@ -177,8 +177,8 @@ git push
 
 **他のマシンで使う：**
 ```bash
-git clone https://github.com/you/claude-multi-worker-framework.git
-cd claude-multi-worker-framework
+git clone https://github.com/you/cmw.git
+cd cmw
 pip install -e .
 ```
 
@@ -205,15 +205,15 @@ git init
 
 ```bash
 # ❌ フレームワークの中にプロジェクトを作る
-cd claude-multi-worker-framework
+cd cmw
 cmw init my-project  # ← ダメ！
 
 # ❌ プロジェクトをフレームワークのサブディレクトリに
-claude-multi-worker-framework/
+cmw/
 └── my-project/  # ← ダメ！
 
 # ❌ フレームワークをプロジェクトにコピー
-cp -r claude-multi-worker-framework/ my-project/tools/  # ← ダメ！
+cp -r cmw/ my-project/tools/  # ← ダメ！
 ```
 
 ### ✅ 正しい方法
@@ -236,7 +236,7 @@ cmw init another-project
 ### フレームワークのファイル（編集しない）
 
 ```
-claude-multi-worker-framework/
+cmw/
 ├── src/cmw/
 │   ├── coordinator.py        # ← 編集しない（フレームワークのコア）
 │   ├── workers.py            # ← 編集しない
