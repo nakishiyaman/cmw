@@ -8,7 +8,7 @@ Set Height 600
 Set Shell bash
 Set FontFamily "monospace"
 
-# Demo: クイックスタート（15秒）
+# Demo: クイックスタート
 Type "# cmw クイックスタートデモ"
 Enter
 Sleep 1s
@@ -21,17 +21,28 @@ Type "cd todo-api"
 Enter
 Sleep 500ms
 
+# requirements.mdを編集済みのものに置き換え（非表示）
+Hide
+Type "cp /home/kishiyama-n/workspace/projects/todo-api/shared/docs/requirements.md shared/docs/"
+Enter
+Sleep 500ms
+Show
+
+Type "# requirements.mdを編集しました"
+Enter
+Sleep 500ms
+
 Type "cat shared/docs/requirements.md | head -20"
 Enter
-Sleep 2s
+Sleep 3s
 
 Type "cmw task generate"
 Enter
-Sleep 3s
+Sleep 4s
 
 Type "cmw task list | head -25"
 Enter
-Sleep 3s
+Sleep 4s
 
 Type "# 17タスクが自動生成されました！"
 Enter
