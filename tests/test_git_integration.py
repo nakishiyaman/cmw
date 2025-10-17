@@ -177,8 +177,11 @@ class TestGitIntegration:
         assert result['skipped_count'] == 0
         assert result['commits_analyzed'] == 2
 
-        # mark_task_completedが呼ばれたか確認
-        assert mock_coordinator.mark_task_completed.call_count == 2
+        # update_task_statusが呼ばれたか確認
+        assert mock_coordinator.update_task_status.call_count == 2
+        # COMPLETED ステータスで呼ばれたか確認
+        mock_coordinator.update_task_status.assert_any_call('TASK-001', TaskStatus.COMPLETED)
+        mock_coordinator.update_task_status.assert_any_call('TASK-002', TaskStatus.COMPLETED)
 
     @patch('cmw.git_integration.Coordinator')
     @patch('subprocess.run')
@@ -204,7 +207,7 @@ class TestGitIntegration:
         # 結果を検証
         assert result['updated_count'] == 0
         assert result['skipped_count'] == 1
-        assert mock_coordinator.mark_task_completed.call_count == 0
+        assert mock_coordinator.update_task_status.call_count == 0
 
     def test_sync_progress_from_git_not_git_repo(self, tmp_path):
         """進捗同期 - Gitリポジトリではない"""
