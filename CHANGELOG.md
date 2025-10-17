@@ -5,6 +5,50 @@ All notable changes to Claude Multi-Worker Framework will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2025-10-18
+
+### Code Quality
+
+#### Lint and Format Improvements
+- **Fixed 42 lint errors** (W293 whitespace, C414 unnecessary list())
+- **Applied ruff format to 21 files** - Consistent code formatting across entire codebase
+- **Fixed all E501 line length violations** - All lines now within 100 character limit
+- Improved code readability and maintainability
+
+### Documentation
+
+#### New Documentation
+- **CODE_QUALITY.md** - Comprehensive tracking of code quality issues
+  - Documents 12 functions with high complexity (C901 > 10)
+  - Provides refactoring recommendations categorized by priority
+  - Tracks improvement progress and next steps
+
+- **MYPY_IMPROVEMENTS.md** - Complete type safety achievement documentation
+  - Updated to reflect 100% type safety (142 → 0 errors)
+  - Documents all phases of type safety improvements
+  - Provides best practices and examples for future development
+
+#### Updated Documentation
+- **CONTRIBUTING.md** - Enhanced with comprehensive type safety guidelines
+  - 5 mandatory type annotation rules with examples
+  - 4 best practices for maintainable type hints
+  - Updated to use ruff format instead of black
+
+### Testing
+- **288 tests passing** - All existing tests continue to pass
+- **72% code coverage** - Measured and documented baseline coverage
+- Coverage report identifies areas for improvement in future releases
+
+### Improvements
+- All CI/CD checks passing
+- Cleaner, more maintainable codebase
+- Better developer experience with consistent formatting
+- Comprehensive documentation for contributors
+
+### Technical Details
+- PR #14: Lint/format fixes
+- PR #15: Documentation improvements
+
 ## [0.5.0] - 2025-10-18
 
 ### Added
