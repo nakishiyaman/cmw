@@ -191,7 +191,7 @@ class ErrorHandler:
         """
         affected = []
 
-        def find_dependents(task_id: str):
+        def find_dependents(task_id: str) -> None:
             """再帰的に依存タスクを探索"""
             for task in all_tasks:
                 if task_id in task.dependencies and task not in affected:

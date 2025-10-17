@@ -61,7 +61,7 @@ class GitIntegration:
             if task_id in coordinator.tasks:
                 task = coordinator.tasks[task_id]
                 if task.status != TaskStatus.COMPLETED:
-                    coordinator.mark_task_completed(task_id)
+                    coordinator.update_task_status(task_id, TaskStatus.COMPLETED)
                     updated_count += 1
                 else:
                     skipped_count += 1
@@ -211,7 +211,7 @@ class GitIntegration:
     def validate_task_references(
         self,
         project_path: Path
-    ) -> Dict[str, List[str]]:
+    ) -> Dict[str, Any]:
         """
         コミットメッセージ内のタスク参照を検証
 
