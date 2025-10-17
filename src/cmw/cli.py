@@ -6,7 +6,7 @@ cmw コマンドの実装
 import json
 import click
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict
 
 from .models import TaskStatus
 from .coordinator import Coordinator
@@ -168,7 +168,7 @@ def generate_tasks(requirements: str, output: str, force: bool) -> None:
         click.echo(f"  🟢 低優先度: {priority_counts['low']}")
 
         # 担当別カウント
-        assigned_to_counts = {}
+        assigned_to_counts: Dict[str, int] = {}
         for task in tasks:
             assigned_to_counts[task.assigned_to] = assigned_to_counts.get(task.assigned_to, 0) + 1
 

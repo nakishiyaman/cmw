@@ -5,6 +5,7 @@ Requirements Generator - 対話型requirements.md生成
 requirements.mdを自動生成する。
 """
 from pathlib import Path
+from typing import Dict, Any
 from rich.console import Console
 from rich.prompt import Prompt, Confirm
 from rich.panel import Panel
@@ -15,7 +16,7 @@ class RequirementsGenerator:
 
     def __init__(self) -> None:
         self.console = Console()
-        self.requirements_data = {}
+        self.requirements_data: Dict[str, Any] = {}
 
     def generate_interactive(self, output_path: Path) -> bool:
         """
@@ -395,7 +396,7 @@ class RequirementsGenerator:
 
             if other_features:
                 # モデル別にグループ化
-                model_features = {}
+                model_features: Dict[str, List[Dict[str, str]]] = {}
                 for feature in other_features:
                     # エンドポイントからモデル名を抽出
                     parts = feature['endpoint'].split('/')

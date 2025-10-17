@@ -235,8 +235,8 @@ class StaticAnalyzer:
             依存関係が更新されたタスクのリスト
         """
         # タスクIDとtarget_filesのマッピングを作成
-        task_files = {}
-        file_to_task = {}
+        task_files: Dict[str, Set[str]] = {}
+        file_to_task: Dict[str, List[str]] = {}
 
         for task in tasks:
             task_files[task.id] = set(task.target_files)
@@ -298,7 +298,7 @@ class StaticAnalyzer:
                 all_files.add(file)
 
         # ファイル間の依存関係グラフを構築
-        file_graph = {}
+        file_graph: Dict[str, Set[str]] = {}
         for file in all_files:
             file_graph[file] = set()
             deps = self.analyze_file_dependencies(file)
@@ -405,7 +405,7 @@ class StaticAnalyzer:
         Returns:
             ディレクトリごとのファイルリスト
         """
-        organization = {}
+        organization: Dict[str, List[str]] = {}
 
         for task in tasks:
             for file in task.target_files:

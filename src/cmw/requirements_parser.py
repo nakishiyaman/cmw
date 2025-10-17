@@ -339,7 +339,7 @@ class RequirementsParser:
         {task.id: task for task in tasks}
 
         # ファイルごとのタスクをグルーピング
-        file_to_tasks = {}
+        file_to_tasks: Dict[str, List[str]] = {}
         for task in tasks:
             for file in task.target_files:
                 if file not in file_to_tasks:
