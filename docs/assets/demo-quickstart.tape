@@ -13,7 +13,7 @@ Type "# cmw クイックスタートデモ"
 Enter
 Sleep 1s
 
-Type "cmw init todo-api"
+Type "cmw init --name todo-api"
 Enter
 Sleep 2s
 
