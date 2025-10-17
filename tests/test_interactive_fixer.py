@@ -2,7 +2,7 @@
 InteractiveFixer のユニットテスト
 """
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from cmw.interactive_fixer import InteractiveFixer
 from cmw.models import Task, Priority, TaskStatus
 

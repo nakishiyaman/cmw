@@ -3,7 +3,7 @@ Dependency Validator - 依存関係の検証と修正
 
 循環依存の検出、分析、修正提案を行うモジュール
 """
-from typing import List, Set, Tuple, Optional, Dict
+from typing import List, Optional, Dict
 import networkx as nx
 import re
 
@@ -258,7 +258,6 @@ class DependencyValidator:
         modifications = []
 
         for suggestion in suggestions:
-            cycle = suggestion["cycle"]
             fixes = suggestion["suggestions"]
 
             if not fixes:

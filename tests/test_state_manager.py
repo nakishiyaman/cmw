@@ -103,7 +103,7 @@ def test_session_context_success(test_project):
     manager = StateManager(test_project)
 
     # コンテキストマネージャーでロック取得
-    with SessionContext(test_project) as session:
+    with SessionContext(test_project):
         # ロックが取得されている
         assert manager.is_locked()
 

@@ -4,7 +4,7 @@ StaticAnalyzer のユニットテスト
 import pytest
 from pathlib import Path
 from cmw.static_analyzer import StaticAnalyzer
-from cmw.models import Task, Priority, TaskStatus
+from cmw.models import Task, Priority
 
 
 @pytest.fixture

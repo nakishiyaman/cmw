@@ -5,7 +5,6 @@ progress.json読み込み・マージ機能のテスト
 """
 import json
 import pytest
-from pathlib import Path
 from datetime import datetime
 from cmw.coordinator import Coordinator
 from cmw.models import TaskStatus

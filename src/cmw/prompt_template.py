@@ -3,7 +3,7 @@ Claude Code用プロンプトテンプレート
 
 タスク実行のための最適化されたプロンプトを生成します。
 """
-from typing import List, Dict, Optional
+from typing import List, Optional
 from pathlib import Path
 
 from .models import Task, Priority
@@ -242,7 +242,7 @@ class PromptTemplate:
         # ステップ5: 完了報告
         steps.append(f"{step_num}. **完了報告**")
         steps.append(f"   - タスク {task.id} が完了したことを報告")
-        steps.append(f"   - 作成したファイルと主な変更点を記載")
+        steps.append("   - 作成したファイルと主な変更点を記載")
 
         lines.extend(steps)
 

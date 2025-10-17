@@ -4,7 +4,6 @@ RequirementsParserのテスト
 import pytest
 from pathlib import Path
 import tempfile
-import json
 
 from src.cmw.requirements_parser import RequirementsParser
 from src.cmw.models import Task

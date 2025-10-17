@@ -7,7 +7,7 @@ import tempfile
 import shutil
 import json
 from cmw.parallel_executor import ParallelExecutor
-from cmw.models import Task, TaskStatus
+from cmw.models import TaskStatus
 
 
 @pytest.fixture

@@ -4,17 +4,14 @@
 リアルタイムでタスク進捗を表示するターミナルダッシュボード
 """
 
-from typing import List, Optional
-from datetime import timedelta
+from typing import List
 from rich.console import Console
 from rich.table import Table
-from rich.progress import Progress, BarColumn, TextColumn, TimeRemainingColumn
-from rich.layout import Layout
+from rich.progress import Progress, BarColumn, TextColumn
 from rich.panel import Panel
-from rich.live import Live
 from rich import box
 
-from .models import Task, TaskStatus
+from .models import Task
 from .progress_tracker import ProgressTracker
 
 

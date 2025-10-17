@@ -6,7 +6,7 @@ from pathlib import Path
 import tempfile
 import shutil
 from cmw.error_handler import ErrorHandler, TaskFailureAction
-from cmw.models import Task, TaskStatus
+from cmw.models import Task
 
 
 @pytest.fixture

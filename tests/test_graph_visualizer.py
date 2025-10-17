@@ -2,7 +2,6 @@
 GraphVisualizer のユニットテスト
 """
 import pytest
-from pathlib import Path
 from cmw.graph_visualizer import GraphVisualizer
 from cmw.models import Task, TaskStatus, Priority
 

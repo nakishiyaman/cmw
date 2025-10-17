@@ -6,9 +6,8 @@ requirements.mdを解析してタスクを自動生成するモジュール
 """
 
 from pathlib import Path
-from typing import List, Dict, Optional, Set
+from typing import List, Dict, Optional
 import re
-from datetime import datetime
 
 from .models import Task
 from .dependency_validator import DependencyValidator
@@ -62,7 +61,7 @@ class RequirementsParser:
             for non_task in non_tasks:
                 print(f"  - {non_task.id}: {non_task.title}")
 
-            print(f"\n💡 これらは実装タスクではなく参照情報です")
+            print("\n💡 これらは実装タスクではなく参照情報です")
             print(f"✅ {len(tasks)}個の実装タスクを生成しました\n")
 
         # 依存関係を推論
@@ -337,7 +336,7 @@ class RequirementsParser:
         3. 機能依存: 認証 → 認証が必要な機能
         """
         # タスクをIDでマッピング
-        tasks_by_id = {task.id: task for task in tasks}
+        {task.id: task for task in tasks}
 
         # ファイルごとのタスクをグルーピング
         file_to_tasks = {}

@@ -4,6 +4,7 @@ Task Filter - タスクと非タスクを判別
 実装タスクと非タスク項目（ガイドライン、要件定義など）を判別し、
 適切にフィルタリングするモジュール
 """
+from datetime import datetime
 from typing import List, Tuple, Dict
 from cmw.models import Task
 
@@ -273,7 +274,3 @@ class TaskFilter:
         references_path.write_text(
             json.dumps(output, ensure_ascii=False, indent=2), encoding="utf-8"
         )
-
-
-# datetime import for save_references
-from datetime import datetime

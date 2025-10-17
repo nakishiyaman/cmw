@@ -5,8 +5,7 @@
 最適な実行順序を提案します。
 """
 
-from typing import List, Dict, Set, Tuple, Optional
-from pathlib import Path
+from typing import List, Dict
 import networkx as nx
 
 from .models import Task, TaskStatus
@@ -322,7 +321,6 @@ class ConflictDetector:
             人間が読みやすい競合レポート
         """
         conflicts = self.detect_conflicts(tasks)
-        file_usage = self.analyze_file_usage(tasks)
 
         report = []
         report.append("=" * 80)
