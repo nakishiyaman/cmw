@@ -8,7 +8,7 @@ version = "0.3.1"
 description = "Claude Code統合タスク管理フレームワーク v0.3.1 - requirements.mdから自動でタスク生成、循環依存自動修正、Git連携、進捗可視化"
 readme = "README.md"
 requires-python = ">=3.9"
-license = {text = "MIT"}
+license = "MIT"
 authors = [
     {name = "Nakishiyama", email = "noreply@example.com"}
 ]
@@ -16,7 +16,6 @@ keywords = ["claude", "claude-code", "task-management", "automation", "developme
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
