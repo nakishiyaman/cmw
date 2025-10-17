@@ -10,6 +10,10 @@ Set FontFamily "monospace"
 
 # Demo: クイックスタート
 Hide
+Type "export LANG=ja_JP.UTF-8"
+Enter
+Type "export LC_ALL=ja_JP.UTF-8"
+Enter
 Type "export PS1='$ '"
 Enter
 Sleep 100ms
