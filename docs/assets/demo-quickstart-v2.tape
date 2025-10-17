@@ -20,6 +20,8 @@ Type "export PATH=$PATH:~/go/bin"
 Enter
 Type "cd /home/kishiyama-n/workspace/cmw"
 Enter
+Type "source venv/bin/activate"
+Enter
 Sleep 100ms
 Show
 
