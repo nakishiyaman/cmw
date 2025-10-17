@@ -6,6 +6,7 @@ TaskProvider - Claude Codeにタスク情報を提供
 - タスク実行に必要な全情報を提供
 - タスク完了/失敗の記録
 """
+
 from pathlib import Path
 from typing import Optional, Dict, List
 from datetime import datetime
@@ -47,11 +48,14 @@ class TaskProvider:
             return None
 
         # 優先度でソート
-        ready_tasks.sort(key=lambda t: (
-            t.priority == "high",    # 高優先度を先に
-            t.priority == "medium",
-            -len(t.dependencies)     # 依存が少ないものを先に
-        ), reverse=True)
+        ready_tasks.sort(
+            key=lambda t: (
+                t.priority == "high",  # 高優先度を先に
+                t.priority == "medium",
+                -len(t.dependencies),  # 依存が少ないものを先に
+            ),
+            reverse=True,
+        )
 
         return ready_tasks[0]
 
@@ -75,13 +79,13 @@ class TaskProvider:
                 "title": task.title,
                 "description": task.description,
                 "target_files": task.target_files,
-                "acceptance_criteria": task.acceptance_criteria
+                "acceptance_criteria": task.acceptance_criteria,
             },
             "requirements": self._load_requirements_section(task),
             "api_spec": self._load_api_spec(task),
             "related_files": self._get_related_files(task),
             "dependencies_artifacts": self._get_dependency_artifacts(task),
-            "project_structure": self._get_project_structure()
+            "project_structure": self._get_project_structure(),
         }
 
     def mark_started(self, task_id: str) -> None:
@@ -181,7 +185,7 @@ class TaskProvider:
         if not req_file.exists():
             return ""
 
-        content = req_file.read_text(encoding='utf-8')
+        content = req_file.read_text(encoding="utf-8")
 
         # タスクに関連するセクションを抽出
         # （簡易実装: 将来的にはセクションマッピングを使用）
@@ -193,7 +197,7 @@ class TaskProvider:
         if not api_file.exists():
             return ""
 
-        return api_file.read_text(encoding='utf-8')
+        return api_file.read_text(encoding="utf-8")
 
     def _get_related_files(self, task: Task) -> List[Dict]:
         """タスクに関連する既存ファイルを取得"""
@@ -204,10 +208,7 @@ class TaskProvider:
         for target in task.target_files:
             target_path = artifacts_dir / target
             if target_path.exists():
-                related.append({
-                    "path": target,
-                    "content": target_path.read_text(encoding='utf-8')
-                })
+                related.append({"path": target, "content": target_path.read_text(encoding="utf-8")})
 
         return related
 
@@ -221,11 +222,13 @@ class TaskProvider:
                 for artifact_path in dep_task.artifacts:
                     full_path = self.project_path / "shared/artifacts" / artifact_path
                     if full_path.exists():
-                        artifacts.append({
-                            "task_id": dep_id,
-                            "path": artifact_path,
-                            "content": full_path.read_text(encoding='utf-8')
-                        })
+                        artifacts.append(
+                            {
+                                "task_id": dep_id,
+                                "path": artifact_path,
+                                "content": full_path.read_text(encoding="utf-8"),
+                            }
+                        )
 
         return artifacts
 
@@ -234,7 +237,7 @@ class TaskProvider:
         return {
             "backend_dir": "shared/artifacts/backend",
             "frontend_dir": "shared/artifacts/frontend",
-            "tests_dir": "shared/artifacts/tests"
+            "tests_dir": "shared/artifacts/tests",
         }
 
     def _unblock_dependent_tasks(self, completed_task_id: str) -> None:
@@ -257,7 +260,7 @@ class TaskProvider:
             self._init_progress()
             return
 
-        progress = json.loads(self.progress_file.read_text(encoding='utf-8'))
+        progress = json.loads(self.progress_file.read_text(encoding="utf-8"))
 
         # タスクの状態を復元
         for task_id, task_data in progress.get("tasks", {}).items():
@@ -267,16 +270,15 @@ class TaskProvider:
                 started_at_str = task_data.get("started_at")
                 task.started_at = datetime.fromisoformat(started_at_str) if started_at_str else None
                 completed_at_str = task_data.get("completed_at")
-                task.completed_at = datetime.fromisoformat(completed_at_str) if completed_at_str else None
+                task.completed_at = (
+                    datetime.fromisoformat(completed_at_str) if completed_at_str else None
+                )
                 task.artifacts = task_data.get("artifacts", [])
                 task.error = task_data.get("error")
 
     def _save_progress(self) -> None:
         """進捗情報を保存"""
-        progress: Dict = {
-            "updated_at": datetime.now().isoformat(),
-            "tasks": {}
-        }
+        progress: Dict = {"updated_at": datetime.now().isoformat(), "tasks": {}}
 
         for task_id, task in self.coordinator.tasks.items():
             progress["tasks"][task_id] = {
@@ -285,21 +287,17 @@ class TaskProvider:
                 "started_at": task.started_at.isoformat() if task.started_at else None,
                 "completed_at": task.completed_at.isoformat() if task.completed_at else None,
                 "artifacts": task.artifacts,
-                "error": task.error
+                "error": task.error,
             }
 
         self.progress_file.parent.mkdir(parents=True, exist_ok=True)
         self.progress_file.write_text(
-            json.dumps(progress, indent=2, ensure_ascii=False),
-            encoding='utf-8'
+            json.dumps(progress, indent=2, ensure_ascii=False), encoding="utf-8"
         )
 
     def _init_progress(self) -> None:
         """進捗情報を初期化"""
-        progress: Dict = {
-            "created_at": datetime.now().isoformat(),
-            "tasks": {}
-        }
+        progress: Dict = {"created_at": datetime.now().isoformat(), "tasks": {}}
 
         for task_id, task in self.coordinator.tasks.items():
             progress["tasks"][task_id] = {
@@ -308,11 +306,10 @@ class TaskProvider:
                 "started_at": None,
                 "completed_at": None,
                 "artifacts": [],
-                "error": None
+                "error": None,
             }
 
         self.progress_file.parent.mkdir(parents=True, exist_ok=True)
         self.progress_file.write_text(
-            json.dumps(progress, indent=2, ensure_ascii=False),
-            encoding='utf-8'
+            json.dumps(progress, indent=2, ensure_ascii=False), encoding="utf-8"
         )

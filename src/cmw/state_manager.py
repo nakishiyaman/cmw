@@ -6,6 +6,7 @@ StateManager - 状態の永続化とセッション管理
 - ロック機構による競合回避
 - セッションの継続性保証
 """
+
 from pathlib import Path
 from typing import Optional, Any, Dict, cast
 import json
@@ -60,7 +61,7 @@ class StateManager:
             return False
 
         # タイムアウトチェック
-        if time.time() - lock_data['timestamp'] > self.LOCK_TIMEOUT:
+        if time.time() - lock_data["timestamp"] > self.LOCK_TIMEOUT:
             # 古いロックは無効
             self.release_lock()
             return False
@@ -82,23 +83,20 @@ class StateManager:
 
         # ロックを作成
         lock_data = {
-            'session_id': os.getpid(),
-            'timestamp': time.time(),
-            'hostname': os.uname().nodename if hasattr(os, 'uname') else 'unknown'
+            "session_id": os.getpid(),
+            "timestamp": time.time(),
+            "hostname": os.uname().nodename if hasattr(os, "uname") else "unknown",
         }
 
         self.lock_file.parent.mkdir(parents=True, exist_ok=True)
-        self.lock_file.write_text(
-            json.dumps(lock_data, indent=2),
-            encoding='utf-8'
-        )
+        self.lock_file.write_text(json.dumps(lock_data, indent=2), encoding="utf-8")
 
         return True
 
     def _read_lock(self) -> Optional[Dict]:
         """ロックファイルを読み込み"""
         try:
-            result: Any = json.loads(self.lock_file.read_text(encoding='utf-8'))
+            result: Any = json.loads(self.lock_file.read_text(encoding="utf-8"))
             return cast(Dict, result)
         except (FileNotFoundError, json.JSONDecodeError):
             return None
@@ -121,10 +119,7 @@ class SessionContext:
 
     def __enter__(self) -> "SessionContext":
         if not self.state_manager.acquire_lock():
-            raise RuntimeError(
-                "Could not acquire lock. "
-                "Another session may be running."
-            )
+            raise RuntimeError("Could not acquire lock. Another session may be running.")
         return self
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:

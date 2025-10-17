@@ -3,6 +3,7 @@
 
 cmw コマンドの実装
 """
+
 import json
 import click
 from pathlib import Path
@@ -27,30 +28,31 @@ def cli() -> None:
 
 
 @cli.command()
-@click.option('--name', default='new-project', help='プロジェクト名')
+@click.option("--name", default="new-project", help="プロジェクト名")
 def init(name: str) -> None:
     """新しいプロジェクトを初期化"""
     project_path = Path.cwd() / name
-    
+
     if project_path.exists():
         click.echo(f"❌ エラー: ディレクトリ {name} は既に存在します", err=True)
         return
-    
+
     # ディレクトリ構造を作成
     dirs = [
         "shared/docs",
         "shared/coordination",
         "shared/artifacts/backend/core",
         "shared/artifacts/frontend",
-        "shared/artifacts/tests"
+        "shared/artifacts/tests",
     ]
-    
+
     for dir_path in dirs:
         (project_path / dir_path).mkdir(parents=True, exist_ok=True)
-    
+
     # サンプルファイルを作成
     requirements_file = project_path / "shared" / "docs" / "requirements.md"
-    requirements_file.write_text("""# プロジェクト要件書
+    requirements_file.write_text(
+        """# プロジェクト要件書
 
 ## 概要
 このプロジェクトの概要を記載してください。
@@ -62,7 +64,9 @@ def init(name: str) -> None:
 ## 非機能要件
 - パフォーマンス:
 - セキュリティ:
-""", encoding='utf-8')
+""",
+        encoding="utf-8",
+    )
 
     click.echo(f"✅ プロジェクト '{name}' を初期化しました")
     click.echo("\n次のステップ:")
@@ -72,26 +76,27 @@ def init(name: str) -> None:
     click.echo("  4. cmw status でプロジェクト状況を確認")
 
 
-@cli.group(name='task')
+@cli.group(name="task")
 def task() -> None:
     """タスク管理コマンド"""
     pass
 
 
 # 後方互換性のため tasks も残す（非推奨）
-@cli.group(name='tasks', hidden=True)
+@cli.group(name="tasks", hidden=True)
 def tasks() -> None:
     """[非推奨] 'cmw task' を使用してください"""
     pass
 
 
-@task.command('generate')
-@click.option('--requirements', '-r', default='shared/docs/requirements.md',
-              help='requirements.mdのパス')
-@click.option('--output', '-o', default='shared/coordination/tasks.json',
-              help='出力先のtasks.jsonパス')
-@click.option('--force', '-f', is_flag=True,
-              help='既存のtasks.jsonを上書き')
+@task.command("generate")
+@click.option(
+    "--requirements", "-r", default="shared/docs/requirements.md", help="requirements.mdのパス"
+)
+@click.option(
+    "--output", "-o", default="shared/coordination/tasks.json", help="出力先のtasks.jsonパス"
+)
+@click.option("--force", "-f", is_flag=True, help="既存のtasks.jsonを上書き")
 def generate_tasks(requirements: str, output: str, force: bool) -> None:
     """requirements.mdからタスクを自動生成
 
@@ -139,26 +144,28 @@ def generate_tasks(requirements: str, output: str, force: bool) -> None:
                     "dependencies": task.dependencies,
                     "target_files": task.target_files,
                     "acceptance_criteria": task.acceptance_criteria,
-                    "priority": task.priority
+                    "priority": task.priority,
                 }
                 for task in tasks
             ],
-            "workers": []
+            "workers": [],
         }
 
         # ファイルに保存
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(json.dumps(tasks_data, ensure_ascii=False, indent=2), encoding='utf-8')
+        output_path.write_text(
+            json.dumps(tasks_data, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
 
         click.echo(f"💾 {output} に保存しました")
 
         # サマリー表示
-        click.echo(f"\n{'='*80}")
+        click.echo(f"\n{'=' * 80}")
         click.echo("生成されたタスクのサマリー")
-        click.echo(f"{'='*80}\n")
+        click.echo(f"{'=' * 80}\n")
 
         # 優先度別カウント
-        priority_counts = {'high': 0, 'medium': 0, 'low': 0}
+        priority_counts = {"high": 0, "medium": 0, "low": 0}
         for task in tasks:
             priority_counts[task.priority] = priority_counts.get(task.priority, 0) + 1
 
@@ -185,12 +192,16 @@ def generate_tasks(requirements: str, output: str, force: bool) -> None:
     except Exception as e:
         click.echo(f"❌ タスク生成エラー: {str(e)}", err=True)
         import traceback
+
         traceback.print_exc()
 
 
-@task.command('list')
-@click.option('--status', type=click.Choice(['pending', 'in_progress', 'completed', 'failed', 'blocked']),
-              help='ステータスでフィルタ')
+@task.command("list")
+@click.option(
+    "--status",
+    type=click.Choice(["pending", "in_progress", "completed", "failed", "blocked"]),
+    help="ステータスでフィルタ",
+)
 def list_tasks(status: Optional[str]) -> None:
     """タスク一覧を表示"""
     project_path = Path.cwd()
@@ -199,26 +210,27 @@ def list_tasks(status: Optional[str]) -> None:
     if not coordinator.tasks:
         click.echo("タスクが見つかりません。'cmw task generate' を実行してください。")
         return
-    
+
     # フィルタリング
     from typing import Iterable
+
     tasks_to_show: Iterable = coordinator.tasks.values()
     if status:
         tasks_to_show = [t for t in tasks_to_show if t.status.value == status]
-    
-    click.echo(f"\n{'='*80}")
+
+    click.echo(f"\n{'=' * 80}")
     click.echo(f"タスク一覧 ({len(list(tasks_to_show))} 件)")
-    click.echo(f"{'='*80}\n")
-    
+    click.echo(f"{'=' * 80}\n")
+
     for task in tasks_to_show:
         status_emoji = {
             TaskStatus.PENDING: "⏳",
             TaskStatus.IN_PROGRESS: "🔄",
             TaskStatus.COMPLETED: "✅",
             TaskStatus.FAILED: "❌",
-            TaskStatus.BLOCKED: "🚫"
+            TaskStatus.BLOCKED: "🚫",
         }
-        
+
         emoji = status_emoji.get(task.status, "❓")
         click.echo(f"{emoji} {task.id}: {task.title}")
         click.echo(f"   ステータス: {task.status.value}")
@@ -228,42 +240,42 @@ def list_tasks(status: Optional[str]) -> None:
         click.echo()
 
 
-@task.command('show')
-@click.argument('task_id')
+@task.command("show")
+@click.argument("task_id")
 def show_task(task_id: str) -> None:
     """タスクの詳細を表示"""
     project_path = Path.cwd()
     coordinator = Coordinator(project_path)
-    
+
     task = coordinator.get_task(task_id)
     if not task:
         click.echo(f"❌ タスク {task_id} が見つかりません", err=True)
         return
-    
-    click.echo(f"\n{'='*80}")
+
+    click.echo(f"\n{'=' * 80}")
     click.echo(f"タスク詳細: {task.id}")
-    click.echo(f"{'='*80}\n")
-    
+    click.echo(f"{'=' * 80}\n")
+
     click.echo(f"タイトル: {task.title}")
     click.echo(f"説明: {task.description}")
     click.echo(f"ステータス: {task.status.value}")
     click.echo(f"優先度: {task.priority.value}")
     click.echo(f"担当ワーカー: {task.assigned_to}")
-    
+
     if task.dependencies:
         click.echo(f"依存タスク: {', '.join(task.dependencies)}")
-    
+
     if task.artifacts:
         click.echo("\n生成されたファイル:")
         for artifact in task.artifacts:
             click.echo(f"  - {artifact}")
-    
+
     if task.error_message:
         click.echo(f"\nエラー: {task.error_message}")
 
 
-@task.command('analyze')
-@click.option('--show-order', is_flag=True, help='推奨実行順序も表示')
+@task.command("analyze")
+@click.option("--show-order", is_flag=True, help="推奨実行順序も表示")
 def analyze_conflicts(show_order: bool) -> None:
     """タスク間のファイル競合を分析
 
@@ -287,28 +299,23 @@ def analyze_conflicts(show_order: bool) -> None:
     click.echo(report)
 
     # ファイル使用状況
-    click.echo(f"\n{'='*80}")
+    click.echo(f"\n{'=' * 80}")
     click.echo("ファイル使用状況")
-    click.echo(f"{'='*80}\n")
+    click.echo(f"{'=' * 80}\n")
 
     file_usage = detector.analyze_file_usage(tasks_list)
 
     # リスクレベル順にソート
-    risk_order = {'critical': 4, 'high': 3, 'medium': 2, 'low': 1}
+    risk_order = {"critical": 4, "high": 3, "medium": 2, "low": 1}
     sorted_files = sorted(
         file_usage.items(),
-        key=lambda x: (risk_order.get(x[1]['risk_level'], 0), len(x[1]['tasks'])),
-        reverse=True
+        key=lambda x: (risk_order.get(x[1]["risk_level"], 0), len(x[1]["tasks"])),
+        reverse=True,
     )
 
     for file, usage in sorted_files:
-        risk_icon = {
-            'critical': '🔴',
-            'high': '🟠',
-            'medium': '🟡',
-            'low': '🟢'
-        }
-        icon = risk_icon.get(usage['risk_level'], '⚪')
+        risk_icon = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}
+        icon = risk_icon.get(usage["risk_level"], "⚪")
 
         click.echo(f"{icon} {file}")
         click.echo(f"   リスクレベル: {usage['risk_level']}")
@@ -316,10 +323,11 @@ def analyze_conflicts(show_order: bool) -> None:
         click.echo()
 
 
-@task.command('validate')
-@click.option('--fix', is_flag=True, help='検出された問題を自動修正')
-@click.option('--tasks-file', default='shared/coordination/tasks.json',
-              help='検証するtasks.jsonのパス')
+@task.command("validate")
+@click.option("--fix", is_flag=True, help="検出された問題を自動修正")
+@click.option(
+    "--tasks-file", default="shared/coordination/tasks.json", help="検証するtasks.jsonのパス"
+)
 def validate_tasks(fix: bool, tasks_file: str) -> None:
     """タスクの品質を検証
 
@@ -345,20 +353,21 @@ def validate_tasks(fix: bool, tasks_file: str) -> None:
         return
 
     # タスクを読み込み
-    tasks_data = json.loads(tasks_path.read_text(encoding='utf-8'))
+    tasks_data = json.loads(tasks_path.read_text(encoding="utf-8"))
     tasks_list = []
 
-    for task_data in tasks_data.get('tasks', []):
+    for task_data in tasks_data.get("tasks", []):
         from .models import Task, Priority
+
         task = Task(
-            id=task_data['id'],
-            title=task_data['title'],
-            description=task_data.get('description', ''),
-            assigned_to=task_data.get('assigned_to', 'unknown'),
-            dependencies=task_data.get('dependencies', []),
-            target_files=task_data.get('target_files', []),
-            acceptance_criteria=task_data.get('acceptance_criteria', []),
-            priority=Priority(task_data.get('priority', 'medium'))
+            id=task_data["id"],
+            title=task_data["title"],
+            description=task_data.get("description", ""),
+            assigned_to=task_data.get("assigned_to", "unknown"),
+            dependencies=task_data.get("dependencies", []),
+            target_files=task_data.get("target_files", []),
+            acceptance_criteria=task_data.get("acceptance_criteria", []),
+            priority=Priority(task_data.get("priority", "medium")),
         )
         tasks_list.append(task)
 
@@ -366,10 +375,7 @@ def validate_tasks(fix: bool, tasks_file: str) -> None:
     validator = DependencyValidator()
     task_filter = TaskFilter()
 
-    console.print(Panel.fit(
-        "🔍 タスクの品質を検証中...",
-        border_style="blue"
-    ))
+    console.print(Panel.fit("🔍 タスクの品質を検証中...", border_style="blue"))
 
     # 1. 循環依存チェック
     console.print("\n[bold cyan]1. 循環依存チェック[/bold cyan]")
@@ -389,10 +395,12 @@ def validate_tasks(fix: bool, tasks_file: str) -> None:
             # 修正提案を表示
             for suggestion in suggestions:
                 console.print(f"\n循環: {' ↔ '.join(suggestion['cycle'])}")
-                for fix_suggestion in suggestion['suggestions'][:1]:  # 最も信頼度の高い提案のみ
-                    console.print(f"  ✓ {fix_suggestion['from_task']} → {fix_suggestion['to_task']} を削除")
+                for fix_suggestion in suggestion["suggestions"][:1]:  # 最も信頼度の高い提案のみ
+                    console.print(
+                        f"  ✓ {fix_suggestion['from_task']} → {fix_suggestion['to_task']} を削除"
+                    )
                     console.print(f"    理由: {fix_suggestion['reason']}")
-                    console.print(f"    信頼度: {fix_suggestion['confidence']*100:.0f}%")
+                    console.print(f"    信頼度: {fix_suggestion['confidence'] * 100:.0f}%")
 
             # 自動修正を適用
             tasks_list = validator.auto_fix_cycles(tasks_list, cycles, auto_apply=True)
@@ -400,25 +408,29 @@ def validate_tasks(fix: bool, tasks_file: str) -> None:
             # 残りの循環をチェック
             remaining_cycles = validator.detect_cycles(tasks_list)
             if remaining_cycles:
-                console.print(f"\n[yellow]⚠️  {len(remaining_cycles)}件の循環依存が残っています[/yellow]")
+                console.print(
+                    f"\n[yellow]⚠️  {len(remaining_cycles)}件の循環依存が残っています[/yellow]"
+                )
             else:
                 console.print("\n[green]✅ 全ての循環依存を解決しました[/green]")
 
                 # tasks.jsonを更新
-                tasks_data['tasks'] = [
+                tasks_data["tasks"] = [
                     {
-                        'id': task.id,
-                        'title': task.title,
-                        'description': task.description,
-                        'assigned_to': task.assigned_to,
-                        'dependencies': task.dependencies,
-                        'target_files': task.target_files,
-                        'acceptance_criteria': task.acceptance_criteria,
-                        'priority': task.priority
+                        "id": task.id,
+                        "title": task.title,
+                        "description": task.description,
+                        "assigned_to": task.assigned_to,
+                        "dependencies": task.dependencies,
+                        "target_files": task.target_files,
+                        "acceptance_criteria": task.acceptance_criteria,
+                        "priority": task.priority,
                     }
                     for task in tasks_list
                 ]
-                tasks_path.write_text(json.dumps(tasks_data, ensure_ascii=False, indent=2), encoding='utf-8')
+                tasks_path.write_text(
+                    json.dumps(tasks_data, ensure_ascii=False, indent=2), encoding="utf-8"
+                )
                 console.print(f"[green]💾 {tasks_file} を更新しました[/green]")
         else:
             console.print("\n[dim]ヒント: --fix オプションで自動修正できます[/dim]")
@@ -442,20 +454,22 @@ def validate_tasks(fix: bool, tasks_file: str) -> None:
             tasks_list = implementation_tasks
 
             # tasks.jsonを更新
-            tasks_data['tasks'] = [
+            tasks_data["tasks"] = [
                 {
-                    'id': task.id,
-                    'title': task.title,
-                    'description': task.description,
-                    'assigned_to': task.assigned_to,
-                    'dependencies': task.dependencies,
-                    'target_files': task.target_files,
-                    'acceptance_criteria': task.acceptance_criteria,
-                    'priority': task.priority
+                    "id": task.id,
+                    "title": task.title,
+                    "description": task.description,
+                    "assigned_to": task.assigned_to,
+                    "dependencies": task.dependencies,
+                    "target_files": task.target_files,
+                    "acceptance_criteria": task.acceptance_criteria,
+                    "priority": task.priority,
                 }
                 for task in tasks_list
             ]
-            tasks_path.write_text(json.dumps(tasks_data, ensure_ascii=False, indent=2), encoding='utf-8')
+            tasks_path.write_text(
+                json.dumps(tasks_data, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
             console.print(f"[green]✅ {len(non_tasks)}件の非タスク項目を除外しました[/green]")
             console.print(f"[green]💾 {tasks_file} を更新しました[/green]")
         else:
@@ -469,23 +483,23 @@ def validate_tasks(fix: bool, tasks_file: str) -> None:
 
     issues_found = False
 
-    if validation_result['missing_dependencies']:
+    if validation_result["missing_dependencies"]:
         issues_found = True
         console.print("[red]❌ 存在しない依存先が見つかりました:[/red]\n")
-        for issue in validation_result['missing_dependencies']:
+        for issue in validation_result["missing_dependencies"]:
             console.print(f"  • {issue}")
 
-    if validation_result['invalid_dependencies']:
+    if validation_result["invalid_dependencies"]:
         issues_found = True
         console.print("[red]❌ 不正な依存関係が見つかりました:[/red]\n")
-        for issue in validation_result['invalid_dependencies']:
+        for issue in validation_result["invalid_dependencies"]:
             console.print(f"  • {issue}")
 
     if not issues_found:
         console.print("[green]✅ 全ての依存関係が正しく設定されています[/green]")
 
     # サマリー
-    console.print("\n" + "="*80)
+    console.print("\n" + "=" * 80)
 
     summary_table = Table(show_header=True, header_style="bold magenta")
     summary_table.add_column("検証項目", style="cyan")
@@ -494,7 +508,11 @@ def validate_tasks(fix: bool, tasks_file: str) -> None:
 
     # 循環依存
     cycle_status = "✅ PASS" if not cycles else f"⚠️  {len(cycles)}件"
-    cycle_detail = "循環依存なし" if not cycles else ("修正済み" if fix and not validator.detect_cycles(tasks_list) else "要修正")
+    cycle_detail = (
+        "循環依存なし"
+        if not cycles
+        else ("修正済み" if fix and not validator.detect_cycles(tasks_list) else "要修正")
+    )
     summary_table.add_row("循環依存", cycle_status, cycle_detail)
 
     # 非タスク項目
@@ -508,22 +526,28 @@ def validate_tasks(fix: bool, tasks_file: str) -> None:
     summary_table.add_row("依存関係の妥当性", dep_status, dep_detail)
 
     console.print(summary_table)
-    console.print("="*80 + "\n")
+    console.print("=" * 80 + "\n")
 
     # 最終メッセージ
     if cycles or non_tasks or issues_found:
         if fix:
             console.print("[green]✅ 自動修正を完了しました[/green]")
         else:
-            console.print("[yellow]💡 問題を検出しました。--fix オプションで自動修正できます[/yellow]")
+            console.print(
+                "[yellow]💡 問題を検出しました。--fix オプションで自動修正できます[/yellow]"
+            )
     else:
         console.print("[green]🎉 全ての検証項目をパスしました！[/green]")
 
 
-@task.command('graph')
-@click.option('--format', type=click.Choice(['ascii', 'mermaid']), default='ascii',
-              help='出力形式（ascii, mermaid）')
-@click.option('--stats', is_flag=True, help='統計情報を表示')
+@task.command("graph")
+@click.option(
+    "--format",
+    type=click.Choice(["ascii", "mermaid"]),
+    default="ascii",
+    help="出力形式（ascii, mermaid）",
+)
+@click.option("--stats", is_flag=True, help="統計情報を表示")
 def show_graph(format: str, stats: bool) -> None:
     """タスクの依存関係グラフを表示
 
@@ -542,34 +566,29 @@ def show_graph(format: str, stats: bool) -> None:
     coordinator = Coordinator(project_path)
 
     if not coordinator.tasks:
-        console.print("[yellow]タスクが見つかりません。'cmw task generate' を実行してください。[/yellow]")
+        console.print(
+            "[yellow]タスクが見つかりません。'cmw task generate' を実行してください。[/yellow]"
+        )
         return
 
     tasks_list = list(coordinator.tasks.values())
     visualizer = GraphVisualizer(tasks_list)
 
     # グラフを表示
-    if format == 'ascii':
-        console.print(Panel.fit(
-            "📊 タスク依存関係グラフ (ASCII)",
-            border_style="blue"
-        ))
+    if format == "ascii":
+        console.print(Panel.fit("📊 タスク依存関係グラフ (ASCII)", border_style="blue"))
         console.print(visualizer.render_ascii())
-    elif format == 'mermaid':
-        console.print(Panel.fit(
-            "📊 タスク依存関係グラフ (Mermaid)",
-            border_style="blue"
-        ))
-        console.print("\n[cyan]以下のMermaid定義をコピーして、Mermaidビューアーで表示できます:[/cyan]\n")
+    elif format == "mermaid":
+        console.print(Panel.fit("📊 タスク依存関係グラフ (Mermaid)", border_style="blue"))
+        console.print(
+            "\n[cyan]以下のMermaid定義をコピーして、Mermaidビューアーで表示できます:[/cyan]\n"
+        )
         console.print(visualizer.render_mermaid())
 
     # 統計情報を表示
     if stats:
         console.print("\n")
-        console.print(Panel.fit(
-            "📈 グラフ統計情報",
-            border_style="green"
-        ))
+        console.print(Panel.fit("📈 グラフ統計情報", border_style="green"))
 
         graph_stats = visualizer.get_statistics()
 
@@ -577,24 +596,24 @@ def show_graph(format: str, stats: bool) -> None:
         table.add_column("項目", style="cyan")
         table.add_column("値", justify="right")
 
-        table.add_row("総タスク数", str(graph_stats['total_tasks']))
-        table.add_row("総依存関係数", str(graph_stats['total_dependencies']))
-        table.add_row("ルートタスク数", str(graph_stats['root_tasks']))
-        table.add_row("リーフタスク数", str(graph_stats['leaf_tasks']))
+        table.add_row("総タスク数", str(graph_stats["total_tasks"]))
+        table.add_row("総依存関係数", str(graph_stats["total_dependencies"]))
+        table.add_row("ルートタスク数", str(graph_stats["root_tasks"]))
+        table.add_row("リーフタスク数", str(graph_stats["leaf_tasks"]))
         table.add_row("平均依存数", f"{graph_stats['average_dependencies']:.2f}")
-        table.add_row("DAG（非循環グラフ）", "✅ はい" if graph_stats['is_dag'] else "❌ いいえ")
+        table.add_row("DAG（非循環グラフ）", "✅ はい" if graph_stats["is_dag"] else "❌ いいえ")
 
-        if graph_stats['is_dag']:
-            table.add_row("クリティカルパス長", str(graph_stats['critical_path_length']))
-            table.add_row("最大並列度", str(graph_stats['max_parallelism']))
-            table.add_row("並列レベル数", str(graph_stats['parallel_levels']))
+        if graph_stats["is_dag"]:
+            table.add_row("クリティカルパス長", str(graph_stats["critical_path_length"]))
+            table.add_row("最大並列度", str(graph_stats["max_parallelism"]))
+            table.add_row("並列レベル数", str(graph_stats["parallel_levels"]))
 
         console.print(table)
 
         # クリティカルパスを表示
-        if graph_stats['is_dag'] and graph_stats['critical_path']:
+        if graph_stats["is_dag"] and graph_stats["critical_path"]:
             console.print("\n[bold cyan]🎯 クリティカルパス:[/bold cyan]")
-            path_str = " → ".join(graph_stats['critical_path'])
+            path_str = " → ".join(graph_stats["critical_path"])
             console.print(f"  {path_str}")
 
         # 並列実行グループを表示
@@ -608,10 +627,10 @@ def show_graph(format: str, stats: bool) -> None:
                     console.print(f"  レベル {i}: {', '.join(group)} ({len(group)}個並列)")
 
 
-@task.command('prompt')
-@click.argument('task_id')
-@click.option('--output', '-o', type=click.Path(), help='プロンプトをファイルに保存')
-@click.option('--review', is_flag=True, help='レビュー用プロンプトを生成')
+@task.command("prompt")
+@click.argument("task_id")
+@click.option("--output", "-o", type=click.Path(), help="プロンプトをファイルに保存")
+@click.option("--review", is_flag=True, help="レビュー用プロンプトを生成")
 def generate_prompt(task_id: str, output: Optional[str], review: bool) -> None:
     """タスク実行用のプロンプトを生成
 
@@ -630,7 +649,9 @@ def generate_prompt(task_id: str, output: Optional[str], review: bool) -> None:
     coordinator = Coordinator(project_path)
 
     if not coordinator.tasks:
-        console.print("[yellow]タスクが見つかりません。'cmw task generate' を実行してください。[/yellow]")
+        console.print(
+            "[yellow]タスクが見つかりません。'cmw task generate' を実行してください。[/yellow]"
+        )
         return
 
     # タスクを取得
@@ -656,16 +677,13 @@ def generate_prompt(task_id: str, output: Optional[str], review: bool) -> None:
         title = f"🔍 レビュープロンプト: {task_id}"
     else:
         # 実行用プロンプト
-        prompt_text = template.generate_task_prompt(
-            task,
-            context_tasks=context_tasks
-        )
+        prompt_text = template.generate_task_prompt(task, context_tasks=context_tasks)
         title = f"📝 タスク実行プロンプト: {task_id}"
 
     # ファイルに保存
     if output:
         output_path = Path(output)
-        output_path.write_text(prompt_text, encoding='utf-8')
+        output_path.write_text(prompt_text, encoding="utf-8")
         console.print(f"[green]✅ プロンプトを {output} に保存しました[/green]")
         return
 
@@ -678,10 +696,10 @@ def generate_prompt(task_id: str, output: Optional[str], review: bool) -> None:
     console.print(md)
 
 
-@task.command('complete')
-@click.argument('task_id')
-@click.option('--artifacts', '-a', help='生成されたファイル（JSON配列形式）')
-@click.option('--message', '-m', help='完了メッセージ')
+@task.command("complete")
+@click.argument("task_id")
+@click.option("--artifacts", "-a", help="生成されたファイル（JSON配列形式）")
+@click.option("--message", "-m", help="完了メッセージ")
 def complete_task(task_id: str, artifacts: Optional[str], message: Optional[str]) -> None:
     """タスクを完了としてマーク
 
@@ -722,7 +740,7 @@ def complete_task(task_id: str, artifacts: Optional[str], message: Optional[str]
         coordinator.update_task_status(
             task_id=task_id,
             status=TaskStatus.COMPLETED,
-            artifacts=artifacts_list if artifacts_list else None
+            artifacts=artifacts_list if artifacts_list else None,
         )
 
         console.print(f"[green]✅ タスク {task_id} を完了としてマークしました[/green]")
@@ -741,7 +759,7 @@ def complete_task(task_id: str, artifacts: Optional[str], message: Optional[str]
 
 
 @cli.command()
-@click.option('--compact', is_flag=True, help='コンパクト表示')
+@click.option("--compact", is_flag=True, help="コンパクト表示")
 def status(compact: bool) -> None:
     """プロジェクトの進捗状況を表示"""
     project_path = Path.cwd()
@@ -764,10 +782,14 @@ def status(compact: bool) -> None:
 
 
 @cli.command()
-@click.option('--from-git', is_flag=True, help='Gitコミットメッセージから進捗を同期')
-@click.option('--since', default='1.week.ago', help='コミット検索の開始時点（例: 1.day.ago, 2.weeks.ago, 2025-01-01）')
-@click.option('--branch', default='HEAD', help='対象ブランチ（デフォルト: HEAD）')
-@click.option('--dry-run', is_flag=True, help='実際には更新せず、検出結果のみ表示')
+@click.option("--from-git", is_flag=True, help="Gitコミットメッセージから進捗を同期")
+@click.option(
+    "--since",
+    default="1.week.ago",
+    help="コミット検索の開始時点（例: 1.day.ago, 2.weeks.ago, 2025-01-01）",
+)
+@click.option("--branch", default="HEAD", help="対象ブランチ（デフォルト: HEAD）")
+@click.option("--dry-run", is_flag=True, help="実際には更新せず、検出結果のみ表示")
 def sync(from_git: bool, since: str, branch: str, dry_run: bool) -> None:
     """進捗を同期
 
@@ -792,10 +814,12 @@ def sync(from_git: bool, since: str, branch: str, dry_run: bool) -> None:
     try:
         git = GitIntegration()
 
-        console.print(Panel.fit(
-            f"🔄 Git履歴から進捗を同期中... (since: {since}, branch: {branch})",
-            border_style="blue"
-        ))
+        console.print(
+            Panel.fit(
+                f"🔄 Git履歴から進捗を同期中... (since: {since}, branch: {branch})",
+                border_style="blue",
+            )
+        )
 
         if dry_run:
             # Dry-runモード: 検出のみ
@@ -807,7 +831,9 @@ def sync(from_git: bool, since: str, branch: str, dry_run: bool) -> None:
                 console.print(f"  • {task_id}")
 
             console.print(f"\n[cyan]📊 分析したコミット数:[/cyan] {len(commits)}")
-            console.print("\n[dim]ヒント: --dry-run なしで実行すると、これらのタスクが完了にマークされます[/dim]")
+            console.print(
+                "\n[dim]ヒント: --dry-run なしで実行すると、これらのタスクが完了にマークされます[/dim]"
+            )
             return
 
         # 実際に同期
@@ -820,17 +846,17 @@ def sync(from_git: bool, since: str, branch: str, dry_run: bool) -> None:
         table.add_column("項目", style="cyan")
         table.add_column("値", justify="right")
 
-        table.add_row("分析したコミット数", str(result['commits_analyzed']))
-        table.add_row("検出したタスク数", str(len(result['completed_tasks'])))
-        table.add_row("更新したタスク数", str(result['updated_count']))
-        table.add_row("スキップしたタスク数", str(result['skipped_count']))
+        table.add_row("分析したコミット数", str(result["commits_analyzed"]))
+        table.add_row("検出したタスク数", str(len(result["completed_tasks"])))
+        table.add_row("更新したタスク数", str(result["updated_count"]))
+        table.add_row("スキップしたタスク数", str(result["skipped_count"]))
 
         console.print(table)
 
-        if result['updated_count'] > 0:
+        if result["updated_count"] > 0:
             console.print("\n[green]完了にマークしたタスク:[/green]")
             coordinator = Coordinator(project_path)
-            for task_id in result['completed_tasks']:
+            for task_id in result["completed_tasks"]:
                 if task_id in coordinator.tasks:
                     task = coordinator.tasks[task_id]
                     if task.status == TaskStatus.COMPLETED:
@@ -840,13 +866,15 @@ def sync(from_git: bool, since: str, branch: str, dry_run: bool) -> None:
         console.print("\n[cyan]🔍 タスク参照を検証中...[/cyan]")
         validation = git.validate_task_references(project_path)
 
-        if validation['invalid']:
-            console.print(f"\n[yellow]⚠️  {len(validation['invalid'])}件の不正なタスク参照を検出:[/yellow]")
-            for task_id in validation['invalid']:
+        if validation["invalid"]:
+            console.print(
+                f"\n[yellow]⚠️  {len(validation['invalid'])}件の不正なタスク参照を検出:[/yellow]"
+            )
+            for task_id in validation["invalid"]:
                 console.print(f"  • {task_id} (存在しないタスク)")
 
             console.print("\n[dim]該当するコミット:[/dim]")
-            for commit in validation['invalid_commits'][:5]:  # 最大5件表示
+            for commit in validation["invalid_commits"][:5]:  # 最大5件表示
                 console.print(f"  {commit['hash']}: {commit['message'][:60]}")
         else:
             console.print("[green]✅ 全てのタスク参照が正しいです[/green]")
@@ -858,22 +886,20 @@ def sync(from_git: bool, since: str, branch: str, dry_run: bool) -> None:
     except Exception as e:
         console.print(f"[red]❌ 予期しないエラー: {str(e)}[/red]")
         import traceback
+
         traceback.print_exc()
 
 
-@cli.group(name='requirements')
+@cli.group(name="requirements")
 def requirements() -> None:
     """Requirements.md管理コマンド"""
     pass
 
 
-@requirements.command('generate')
-@click.option('--output', '-o', default='shared/docs/requirements.md',
-              help='出力先パス')
-@click.option('--with-claude', is_flag=True,
-              help='Claude Codeと統合して自動生成')
-@click.option('--prompt', '-p',
-              help='Claude Codeに渡すプロンプト（--with-claude使用時）')
+@requirements.command("generate")
+@click.option("--output", "-o", default="shared/docs/requirements.md", help="出力先パス")
+@click.option("--with-claude", is_flag=True, help="Claude Codeと統合して自動生成")
+@click.option("--prompt", "-p", help="Claude Codeに渡すプロンプト（--with-claude使用時）")
 def generate_requirements(output: str, with_claude: bool, prompt: Optional[str]) -> None:
     """対話形式でrequirements.mdを生成
 
@@ -894,32 +920,41 @@ def generate_requirements(output: str, with_claude: bool, prompt: Optional[str])
     if with_claude:
         # Claude Code統合モード
         if not prompt:
-            click.echo("❌ エラー: --with-claude を使用する場合は --prompt でプロンプトを指定してください", err=True)
+            click.echo(
+                "❌ エラー: --with-claude を使用する場合は --prompt でプロンプトを指定してください",
+                err=True,
+            )
             click.echo("\n例:")
-            click.echo('  cmw requirements generate --with-claude --prompt "ホテル予約管理APIを作成"')
+            click.echo(
+                '  cmw requirements generate --with-claude --prompt "ホテル予約管理APIを作成"'
+            )
             return
 
         # プロンプトテンプレートを読み込み
-        template_path = Path(__file__).parent.parent.parent / "prompts" / "requirements_generator.md"
+        template_path = (
+            Path(__file__).parent.parent.parent / "prompts" / "requirements_generator.md"
+        )
 
         if not template_path.exists():
-            click.echo(f"❌ エラー: プロンプトテンプレートが見つかりません: {template_path}", err=True)
+            click.echo(
+                f"❌ エラー: プロンプトテンプレートが見つかりません: {template_path}", err=True
+            )
             return
 
-        template_content = template_path.read_text(encoding='utf-8')
-        final_prompt = template_content.replace('{USER_PROMPT}', prompt)
+        template_content = template_path.read_text(encoding="utf-8")
+        final_prompt = template_content.replace("{USER_PROMPT}", prompt)
 
         # プロンプトを一時ファイルに保存
         prompt_file = project_path / ".cmw_prompt.md"
-        prompt_file.write_text(final_prompt, encoding='utf-8')
+        prompt_file.write_text(final_prompt, encoding="utf-8")
 
-        click.echo("\n" + "="*80)
+        click.echo("\n" + "=" * 80)
         click.echo("🤖 Claude Code統合モード")
-        click.echo("="*80)
+        click.echo("=" * 80)
         click.echo(f"\nユーザーの指示: {prompt}")
         click.echo(f"\nプロンプトファイル: {prompt_file}")
         click.echo(f"出力先: {output_path}")
-        click.echo("\n" + "-"*80)
+        click.echo("\n" + "-" * 80)
         click.echo("次のステップ:")
         click.echo("  1. Claude Codeを開いてください")
         click.echo("  2. 以下のプロンプトを Claude Code に送信してください:")
@@ -927,7 +962,7 @@ def generate_requirements(output: str, with_claude: bool, prompt: Optional[str])
         click.echo(f"      {output_path} に保存してください」")
         click.echo("\n  3. Claude Codeが生成完了したら:")
         click.echo("     cmw task generate でタスク自動生成")
-        click.echo("-"*80)
+        click.echo("-" * 80)
         return
 
     # 対話型生成（従来のモード）
@@ -953,5 +988,5 @@ def main() -> None:
     cli()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli()

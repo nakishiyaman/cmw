@@ -3,6 +3,7 @@ Claude Code用プロンプトテンプレート
 
 タスク実行のための最適化されたプロンプトを生成します。
 """
+
 from typing import List, Optional
 from pathlib import Path
 
@@ -23,7 +24,7 @@ class PromptTemplate:
         self,
         task: Task,
         context_tasks: Optional[List[Task]] = None,
-        include_instructions: bool = True
+        include_instructions: bool = True,
     ) -> str:
         """タスク実行用のプロンプトを生成
 
@@ -68,11 +69,7 @@ class PromptTemplate:
 
     def _build_task_overview(self, task: Task) -> str:
         """タスク概要セクションを構築"""
-        priority_emoji = {
-            Priority.HIGH: "🔴",
-            Priority.MEDIUM: "🟡",
-            Priority.LOW: "🟢"
-        }
+        priority_emoji = {Priority.HIGH: "🔴", Priority.MEDIUM: "🟡", Priority.LOW: "🟢"}
         emoji = priority_emoji.get(task.priority, "⚪")
 
         lines = [
@@ -126,7 +123,9 @@ class PromptTemplate:
                 dep_task = dep_tasks[dep_id]
                 lines.append(f"- **{dep_id}**: {dep_task.title}")
                 if dep_task.target_files:
-                    lines.append(f"  - 生成ファイル: {', '.join(f'`{f}`' for f in dep_task.target_files[:3])}")
+                    lines.append(
+                        f"  - 生成ファイル: {', '.join(f'`{f}`' for f in dep_task.target_files[:3])}"
+                    )
             else:
                 lines.append(f"- **{dep_id}** (詳細不明)")
 
@@ -158,8 +157,9 @@ class PromptTemplate:
 
         # 関連する完了済みタスク
         completed_related = [
-            t for t in context_tasks
-            if t.id in task.dependencies and hasattr(t, 'status') and t.status.value == 'completed'
+            t
+            for t in context_tasks
+            if t.id in task.dependencies and hasattr(t, "status") and t.status.value == "completed"
         ]
 
         if completed_related:
@@ -181,7 +181,7 @@ class PromptTemplate:
             dirs = set()
             for file_path in task.target_files:
                 parent_dir = str(Path(file_path).parent)
-                if parent_dir != '.':
+                if parent_dir != ".":
                     dirs.add(parent_dir)
 
             if dirs:
@@ -221,12 +221,12 @@ class PromptTemplate:
             step_num += 1
 
         # ステップ3: テスト
-        if any('test' in f.lower() for f in task.target_files):
+        if any("test" in f.lower() for f in task.target_files):
             steps.append(f"{step_num}. **テストの実行**")
             steps.append("   - 作成したテストを実行し、全て通過することを確認")
             steps.append("")
             step_num += 1
-        elif task.assigned_to != 'testing':
+        elif task.assigned_to != "testing":
             steps.append(f"{step_num}. **動作確認**")
             steps.append("   - 実装した機能が正しく動作することを確認")
             steps.append("")
@@ -249,9 +249,7 @@ class PromptTemplate:
         return "\n".join(lines)
 
     def generate_batch_prompt(
-        self,
-        tasks: List[Task],
-        context_tasks: Optional[List[Task]] = None
+        self, tasks: List[Task], context_tasks: Optional[List[Task]] = None
     ) -> str:
         """複数タスクを一括実行するプロンプトを生成
 
@@ -270,18 +268,16 @@ class PromptTemplate:
         ]
 
         for i, task in enumerate(tasks, 1):
-            priority_emoji = {
-                Priority.HIGH: "🔴",
-                Priority.MEDIUM: "🟡",
-                Priority.LOW: "🟢"
-            }.get(task.priority, "⚪")
+            priority_emoji = {Priority.HIGH: "🔴", Priority.MEDIUM: "🟡", Priority.LOW: "🟢"}.get(
+                task.priority, "⚪"
+            )
 
             lines.append(f"## {i}. {priority_emoji} {task.id}: {task.title}")
             lines.append("")
 
             if task.description:
                 # 説明を短く
-                desc_lines = task.description.split('\n')
+                desc_lines = task.description.split("\n")
                 short_desc = desc_lines[0][:100]
                 if len(desc_lines[0]) > 100:
                     short_desc += "..."
@@ -289,7 +285,9 @@ class PromptTemplate:
                 lines.append("")
 
             if task.target_files:
-                lines.append(f"**対象ファイル:** {', '.join(f'`{f}`' for f in task.target_files[:2])}")
+                lines.append(
+                    f"**対象ファイル:** {', '.join(f'`{f}`' for f in task.target_files[:2])}"
+                )
                 if len(task.target_files) > 2:
                     lines.append(f"  他 {len(task.target_files) - 2} ファイル")
                 lines.append("")
@@ -341,32 +339,36 @@ class PromptTemplate:
         else:
             lines.append("- 受入基準が定義されていません")
 
-        lines.extend([
-            "",
-            "### 2. コード品質",
-            "- [ ] コードは読みやすく、理解しやすい",
-            "- [ ] 適切なエラーハンドリングが実装されている",
-            "- [ ] 必要なコメント・ドキュメントが記載されている",
-            "",
-            "### 3. テスト",
-            "- [ ] 必要なテストが実装されている",
-            "- [ ] テストが全て通過している",
-            "",
-            "### 4. 依存関係",
-        ])
+        lines.extend(
+            [
+                "",
+                "### 2. コード品質",
+                "- [ ] コードは読みやすく、理解しやすい",
+                "- [ ] 適切なエラーハンドリングが実装されている",
+                "- [ ] 必要なコメント・ドキュメントが記載されている",
+                "",
+                "### 3. テスト",
+                "- [ ] 必要なテストが実装されている",
+                "- [ ] テストが全て通過している",
+                "",
+                "### 4. 依存関係",
+            ]
+        )
 
         if task.dependencies:
             lines.append("- [ ] 依存タスクの成果物を正しく利用している")
         else:
             lines.append("- 依存タスクはありません")
 
-        lines.extend([
-            "",
-            "## 判定",
-            "",
-            "- [ ] **承認** - 全ての基準を満たしている",
-            "- [ ] **条件付き承認** - 軽微な修正が必要",
-            "- [ ] **却下** - 大幅な修正が必要",
-        ])
+        lines.extend(
+            [
+                "",
+                "## 判定",
+                "",
+                "- [ ] **承認** - 全ての基準を満たしている",
+                "- [ ] **条件付き承認** - 軽微な修正が必要",
+                "- [ ] **却下** - 大幅な修正が必要",
+            ]
+        )
 
         return "\n".join(lines)

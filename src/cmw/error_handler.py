@@ -6,6 +6,7 @@ ErrorHandler - タスク失敗時の処理
 - 部分的な成果物のロールバック
 - 復旧方法の提案
 """
+
 from pathlib import Path
 from typing import List
 from enum import Enum
@@ -16,6 +17,7 @@ from .models import Task
 
 class TaskFailureAction(Enum):
     """タスク失敗時のアクション"""
+
     RETRY = "retry"  # リトライ
     SKIP = "skip"  # スキップ
     BLOCK = "block"  # 依存タスクをブロック
@@ -34,11 +36,7 @@ class ErrorHandler:
         self.artifacts_dir = project_path / "shared/artifacts"
 
     def handle_task_failure(
-        self,
-        task: Task,
-        error: Exception,
-        retry_count: int = 0,
-        max_retries: int = 3
+        self, task: Task, error: Exception, retry_count: int = 0, max_retries: int = 3
     ) -> TaskFailureAction:
         """
         タスク失敗時の対応を決定
@@ -107,11 +105,7 @@ class ErrorHandler:
 
         return success
 
-    def suggest_recovery(
-        self,
-        task: Task,
-        error: Exception
-    ) -> str:
+    def suggest_recovery(self, task: Task, error: Exception) -> str:
         """
         復旧方法を提案
 
@@ -142,7 +136,9 @@ class ErrorHandler:
 
         elif "ModuleNotFoundError" in error_type:
             suggestions.append("- requirements.txt に必要なパッケージを追加してください")
-            suggestions.append(f"- `pip install {self._extract_module_name(error_msg)}` を実行してください")
+            suggestions.append(
+                f"- `pip install {self._extract_module_name(error_msg)}` を実行してください"
+            )
 
         elif "JSONDecodeError" in error_type:
             suggestions.append("- 設定ファイルのJSON形式を確認してください")
@@ -150,7 +146,9 @@ class ErrorHandler:
 
         elif "ValidationError" in error_type:
             suggestions.append("- タスク定義のフィールドを確認してください")
-            suggestions.append("- acceptance_criteria や target_files が正しく設定されているか確認してください")
+            suggestions.append(
+                "- acceptance_criteria や target_files が正しく設定されているか確認してください"
+            )
 
         else:
             suggestions.append("- エラーメッセージを確認してください")
@@ -158,7 +156,9 @@ class ErrorHandler:
 
         # タスク固有の提案
         if task.dependencies:
-            suggestions.append(f"- 依存タスク {', '.join(task.dependencies)} が完了しているか確認してください")
+            suggestions.append(
+                f"- 依存タスク {', '.join(task.dependencies)} が完了しているか確認してください"
+            )
 
         if not suggestions:
             suggestions.append("- タスクを手動で確認し、修正してください")

@@ -3,6 +3,7 @@ Interactive Fixer - 対話的な問題修正UI
 
 Rich UIを使用して、タスクの問題を対話的に修正する機能を提供します。
 """
+
 from typing import List
 from rich.console import Console
 from rich.prompt import Prompt, Confirm
@@ -21,11 +22,7 @@ class InteractiveFixer:
         self.console = Console()
         self.validator = DependencyValidator()
 
-    def fix_cycles_interactively(
-        self,
-        tasks: List[Task],
-        cycles: List[List[str]]
-    ) -> List[Task]:
+    def fix_cycles_interactively(self, tasks: List[Task], cycles: List[List[str]]) -> List[Task]:
         """
         循環依存を対話的に修正
 
@@ -47,11 +44,11 @@ class InteractiveFixer:
             # 修正提案を取得
             suggestions = self.validator.suggest_fixes([cycle], tasks)
 
-            if not suggestions or not suggestions[0].get('suggestions'):
+            if not suggestions or not suggestions[0].get("suggestions"):
                 self.console.print("[red]  自動修正案が見つかりません[/red]")
                 continue
 
-            fix_suggestions = suggestions[0]['suggestions']
+            fix_suggestions = suggestions[0]["suggestions"]
 
             # 修正案を表示
             table = Table(title="修正案")
@@ -64,8 +61,8 @@ class InteractiveFixer:
                 table.add_row(
                     str(j),
                     f"{suggestion['from_task']} → {suggestion['to_task']}",
-                    suggestion['reason'],
-                    f"{suggestion['confidence']:.0%}"
+                    suggestion["reason"],
+                    f"{suggestion['confidence']:.0%}",
                 )
 
             self.console.print(table)
@@ -75,7 +72,7 @@ class InteractiveFixer:
             choice = Prompt.ask(
                 "どの修正案を適用しますか？ ([cyan]番号[/cyan]/[yellow]s[/yellow]=スキップ/[red]c[/red]=キャンセル)",
                 choices=choices,
-                default="1"
+                default="1",
             )
 
             if choice == "s":
@@ -106,8 +103,8 @@ class InteractiveFixer:
             修正後のタスクリスト
         """
         task_map = {t.id: t for t in tasks}
-        from_task = task_map.get(fix['from_task'])
-        to_task_id = fix['to_task']
+        from_task = task_map.get(fix["from_task"])
+        to_task_id = fix["to_task"]
 
         if from_task and to_task_id in from_task.dependencies:
             from_task.dependencies.remove(to_task_id)
@@ -115,9 +112,7 @@ class InteractiveFixer:
         return tasks
 
     def select_tasks_interactively(
-        self,
-        tasks: List[Task],
-        prompt_text: str = "タスクを選択してください"
+        self, tasks: List[Task], prompt_text: str = "タスクを選択してください"
     ) -> List[Task]:
         """
         タスクを対話的に選択
@@ -142,32 +137,31 @@ class InteractiveFixer:
 
         for i, task in enumerate(tasks, 1):
             status_icon = {
-                'pending': '⏳',
-                'in_progress': '🔄',
-                'completed': '✅',
-                'failed': '❌'
-            }.get(task.status.value, '?')
+                "pending": "⏳",
+                "in_progress": "🔄",
+                "completed": "✅",
+                "failed": "❌",
+            }.get(task.status.value, "?")
 
             table.add_row(
                 str(i),
                 task.id,
                 task.title,
                 task.priority.value,
-                f"{status_icon} {task.status.value}"
+                f"{status_icon} {task.status.value}",
             )
 
         self.console.print(table)
 
         choices_text = Prompt.ask(
-            f"{prompt_text} (カンマ区切りで複数選択可、[cyan]all[/cyan]で全て選択)",
-            default="all"
+            f"{prompt_text} (カンマ区切りで複数選択可、[cyan]all[/cyan]で全て選択)", default="all"
         )
 
         if choices_text == "all":
             return tasks
 
         try:
-            selected_indices = [int(c.strip()) - 1 for c in choices_text.split(',')]
+            selected_indices = [int(c.strip()) - 1 for c in choices_text.split(",")]
             selected = [tasks[i] for i in selected_indices if 0 <= i < len(tasks)]
             return selected
         except (ValueError, IndexError):
@@ -188,9 +182,7 @@ class InteractiveFixer:
         return Confirm.ask(f"{action}を実行しますか？", default=default)
 
     def fix_missing_dependencies_interactively(
-        self,
-        tasks: List[Task],
-        missing_deps: List[dict]
+        self, tasks: List[Task], missing_deps: List[dict]
     ) -> List[Task]:
         """
         不足している依存関係を対話的に修正
@@ -212,8 +204,8 @@ class InteractiveFixer:
         task_map = {t.id: t for t in tasks}
 
         for i, missing in enumerate(missing_deps, 1):
-            task_id = missing['task_id']
-            missing_dep_id = missing['missing_dependency']
+            task_id = missing["task_id"]
+            missing_dep_id = missing["missing_dependency"]
 
             self.console.print(f"\n[bold]不足依存 {i}/{len(missing_deps)}:[/bold]")
             self.console.print(
@@ -225,7 +217,7 @@ class InteractiveFixer:
             # 削除するか確認
             if Confirm.ask(
                 f"[red]{task_id}[/red] から [red]{missing_dep_id}[/red] への依存を削除しますか？",
-                default=True
+                default=True,
             ):
                 task = task_map.get(task_id)
                 if task and missing_dep_id in task.dependencies:
@@ -237,10 +229,7 @@ class InteractiveFixer:
         return tasks
 
     def show_validation_report(
-        self,
-        cycles: List[List[str]],
-        missing_deps: List[dict],
-        self_deps: List[str]
+        self, cycles: List[List[str]], missing_deps: List[dict], self_deps: List[str]
     ) -> None:
         """
         検証レポートを表示
@@ -256,16 +245,13 @@ class InteractiveFixer:
             panel = Panel(
                 "[green]✅ 問題は見つかりませんでした[/green]",
                 title="検証結果",
-                border_style="green"
+                border_style="green",
             )
             self.console.print(panel)
             return
 
         # 問題のサマリー
-        summary_lines = [
-            f"[bold]検出された問題: {total_issues}件[/bold]",
-            ""
-        ]
+        summary_lines = [f"[bold]検出された問題: {total_issues}件[/bold]", ""]
 
         if cycles:
             summary_lines.append(f"🔄 循環依存: {len(cycles)}件")
@@ -274,11 +260,7 @@ class InteractiveFixer:
         if self_deps:
             summary_lines.append(f"⚠️  自己依存: {len(self_deps)}件")
 
-        panel = Panel(
-            "\n".join(summary_lines),
-            title="検証結果",
-            border_style="yellow"
-        )
+        panel = Panel("\n".join(summary_lines), title="検証結果", border_style="yellow")
         self.console.print(panel)
 
     def confirm_save(self, file_path: str) -> bool:
@@ -291,7 +273,4 @@ class InteractiveFixer:
         Returns:
             保存するかどうか
         """
-        return Confirm.ask(
-            f"修正内容を [cyan]{file_path}[/cyan] に保存しますか？",
-            default=True
-        )
+        return Confirm.ask(f"修正内容を [cyan]{file_path}[/cyan] に保存しますか？", default=True)

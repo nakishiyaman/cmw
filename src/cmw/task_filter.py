@@ -4,6 +4,7 @@ Task Filter - タスクと非タスクを判別
 実装タスクと非タスク項目（ガイドライン、要件定義など）を判別し、
 適切にフィルタリングするモジュール
 """
+
 from datetime import datetime
 from pathlib import Path
 from typing import List, Tuple, Dict
@@ -73,9 +74,7 @@ class TaskFilter:
                 return False
 
         # 2. タスク動詞チェック
-        has_task_verb = any(
-            verb in title or verb in description for verb in self.TASK_VERBS
-        )
+        has_task_verb = any(verb in title or verb in description for verb in self.TASK_VERBS)
         if not has_task_verb:
             # 受入基準がある場合は動詞がなくても実装タスクの可能性
             if not task.acceptance_criteria:
@@ -112,9 +111,7 @@ class TaskFilter:
 
         for criterion in criteria:
             # 抽象的なキーワードが多い場合
-            abstract_count = sum(
-                1 for kw in abstract_keywords if kw in criterion
-            )
+            abstract_count = sum(1 for kw in abstract_keywords if kw in criterion)
             if abstract_count > 1:
                 return False
 
@@ -134,14 +131,10 @@ class TaskFilter:
         ]
 
         has_technical = any(
-            any(term in criterion for term in technical_terms)
-            for criterion in criteria
+            any(term in criterion for term in technical_terms) for criterion in criteria
         )
 
-        has_verb = any(
-            any(verb in criterion for verb in self.TASK_VERBS)
-            for criterion in criteria
-        )
+        has_verb = any(any(verb in criterion for verb in self.TASK_VERBS) for criterion in criteria)
 
         return has_technical or has_verb
 
@@ -171,10 +164,7 @@ class TaskFilter:
                 return True
 
             # 具体的な拡張子を持つ
-            if any(
-                file_path.endswith(ext)
-                for ext in [".py", ".js", ".ts", ".tsx", ".vue", ".md"]
-            ):
+            if any(file_path.endswith(ext) for ext in [".py", ".js", ".ts", ".tsx", ".vue", ".md"]):
                 return True
 
         return False
@@ -202,9 +192,7 @@ class TaskFilter:
         title_lower = title.lower()
         return any(pattern.lower() in title_lower for pattern in abstract_patterns)
 
-    def filter_tasks(
-        self, tasks: List[Task]
-    ) -> Tuple[List[Task], List[Task]]:
+    def filter_tasks(self, tasks: List[Task]) -> Tuple[List[Task], List[Task]]:
         """
         タスクをフィルタリング
 
@@ -258,9 +246,7 @@ class TaskFilter:
 
         return references
 
-    def save_references(
-        self, references: List[Dict], references_path: Path
-    ) -> None:
+    def save_references(self, references: List[Dict], references_path: Path) -> None:
         """
         参照情報をJSONファイルに保存
 

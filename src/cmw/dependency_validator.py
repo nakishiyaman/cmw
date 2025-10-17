@@ -3,6 +3,7 @@ Dependency Validator - 依存関係の検証と修正
 
 循環依存の検出、分析、修正提案を行うモジュール
 """
+
 from typing import List, Optional, Dict, Any
 import networkx as nx
 import re
@@ -53,9 +54,7 @@ class DependencyValidator:
 
         return G
 
-    def suggest_fixes(
-        self, cycles: List[List[str]], tasks: List[Task]
-    ) -> List[Dict]:
+    def suggest_fixes(self, cycles: List[List[str]], tasks: List[Task]) -> List[Dict]:
         """
         循環依存の修正案を提案
 
@@ -88,9 +87,7 @@ class DependencyValidator:
 
         return suggestions
 
-    def _analyze_cycle(
-        self, cycle: List[str], tasks: List[Task]
-    ) -> List[Dict]:
+    def _analyze_cycle(self, cycle: List[str], tasks: List[Task]) -> List[Dict]:
         """
         循環依存を分析して修正案を生成
 
@@ -135,9 +132,7 @@ class DependencyValidator:
 
         return suggestions
 
-    def _should_remove_edge(
-        self, from_task: Task, to_task: Task
-    ) -> Optional[str]:
+    def _should_remove_edge(self, from_task: Task, to_task: Task) -> Optional[str]:
         """
         エッジを削除すべきかセマンティック分析で判定
 
@@ -149,38 +144,29 @@ class DependencyValidator:
             削除すべき理由（削除不要ならNone）
         """
         # パターン1: 定義 → 初期化 の逆依存
-        if any(
-            kw in from_task.title for kw in ["定義", "モデル", "スキーマ"]
-        ) and any(
+        if any(kw in from_task.title for kw in ["定義", "モデル", "スキーマ"]) and any(
             kw in to_task.title for kw in ["初期化", "セットアップ", "設定"]
         ):
             return f"{from_task.title}は{to_task.title}の前に必要"
 
         # パターン2: 実装 → 実装ガイドライン の依存
-        if any(
-            kw in to_task.title
-            for kw in ["技術スタック", "推奨", "非機能要件", "制約"]
-        ):
+        if any(kw in to_task.title for kw in ["技術スタック", "推奨", "非機能要件", "制約"]):
             return f"{to_task.title}は実装タスクではなくガイドライン"
 
         # パターン3: 番号が小さい方が先行すべき
         from_num = self._extract_section_number(from_task.title)
         to_num = self._extract_section_number(to_task.title)
 
-        if (
-            from_num is not None
-            and to_num is not None
-            and from_num < to_num
-        ):
+        if from_num is not None and to_num is not None and from_num < to_num:
             return f"セクション順序: {from_num} は {to_num} より前"
 
         # パターン4: 基盤 → アプリケーション の逆依存
         foundation_keywords = ["データベース", "認証", "設定", "基盤"]
         app_keywords = ["エンドポイント", "API", "画面", "機能"]
 
-        if any(
-            kw in from_task.title for kw in foundation_keywords
-        ) and any(kw in to_task.title for kw in app_keywords):
+        if any(kw in from_task.title for kw in foundation_keywords) and any(
+            kw in to_task.title for kw in app_keywords
+        ):
             return f"基盤({from_task.title})はアプリケーション層の前に必要"
 
         return None
@@ -200,9 +186,7 @@ class DependencyValidator:
             return float(f"{match.group(1)}.{match.group(2)}")
         return None
 
-    def _calculate_confidence(
-        self, from_task: Task, to_task: Task
-    ) -> float:
+    def _calculate_confidence(self, from_task: Task, to_task: Task) -> float:
         """
         修正提案の信頼度を計算
 
@@ -218,20 +202,13 @@ class DependencyValidator:
         # セマンティックマッチがある場合は高信頼度
         reason = self._should_remove_edge(from_task, to_task)
         if reason:
-            if any(
-                kw in reason
-                for kw in ["定義", "初期化", "基盤", "ガイドライン"]
-            ):
+            if any(kw in reason for kw in ["定義", "初期化", "基盤", "ガイドライン"]):
                 confidence += 0.3  # 明確なパターン
 
         # セクション番号の整合性
         from_num = self._extract_section_number(from_task.title)
         to_num = self._extract_section_number(to_task.title)
-        if (
-            from_num is not None
-            and to_num is not None
-            and from_num < to_num
-        ):
+        if from_num is not None and to_num is not None and from_num < to_num:
             confidence += 0.2  # 番号順序の確信
 
         return min(confidence, 1.0)
@@ -289,10 +266,7 @@ class DependencyValidator:
         if modifications:
             print("\n✅ 以下の依存関係を削除しました:")
             for mod in modifications:
-                print(
-                    f"  - {mod['from']} → {mod['to']} "
-                    f"(信頼度: {mod['confidence']:.0%})"
-                )
+                print(f"  - {mod['from']} → {mod['to']} (信頼度: {mod['confidence']:.0%})")
                 print(f"    理由: {mod['reason']}")
 
         return list(task_map.values())
@@ -338,8 +312,6 @@ class DependencyValidator:
         # 自己依存チェック
         for task in tasks:
             if task.id in task.dependencies:
-                result["invalid_dependencies"].append(
-                    f"{task.id} → {task.id} (自己依存)"
-                )
+                result["invalid_dependencies"].append(f"{task.id} → {task.id} (自己依存)")
 
         return result

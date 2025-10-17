@@ -3,6 +3,7 @@
 
 タスクの依存関係をグラフとして可視化します。
 """
+
 from typing import List, Dict, Set, Any
 from pathlib import Path
 import networkx as nx
@@ -53,8 +54,7 @@ class GraphVisualizer:
 
         # ルートタスク（依存関係のないタスク）を取得
         root_tasks = [
-            task_id for task_id in self.tasks.keys()
-            if not self.tasks[task_id].dependencies
+            task_id for task_id in self.tasks.keys() if not self.tasks[task_id].dependencies
         ]
 
         if not root_tasks:
@@ -80,7 +80,7 @@ class GraphVisualizer:
                 TaskStatus.IN_PROGRESS: "🔄",
                 TaskStatus.COMPLETED: "✅",
                 TaskStatus.FAILED: "❌",
-                TaskStatus.BLOCKED: "🚫"
+                TaskStatus.BLOCKED: "🚫",
             }.get(task.status, "❓")
 
             # ラベル作成
@@ -93,10 +93,7 @@ class GraphVisualizer:
             task_node = parent_tree.add(label)
 
             # 依存先のタスク（このタスクに依存するタスク）を追加
-            dependents = [
-                t_id for t_id, t in self.tasks.items()
-                if task_id in t.dependencies
-            ]
+            dependents = [t_id for t_id, t in self.tasks.items() if task_id in t.dependencies]
 
             for dep_id in dependents:
                 add_task_to_tree(dep_id, task_node)
@@ -107,6 +104,7 @@ class GraphVisualizer:
 
         # Rich Treeをテキストに変換
         from io import StringIO
+
         string_io = StringIO()
         temp_console = Console(file=string_io, force_terminal=True, width=120)
         temp_console.print(tree)
@@ -128,7 +126,7 @@ class GraphVisualizer:
                 TaskStatus.IN_PROGRESS: ":::in_progress",
                 TaskStatus.FAILED: ":::failed",
                 TaskStatus.BLOCKED: ":::blocked",
-                TaskStatus.PENDING: ""
+                TaskStatus.PENDING: "",
             }.get(task.status, "")
 
             # タイトルをエスケープ
@@ -142,13 +140,15 @@ class GraphVisualizer:
                     lines.append(f"    {dep_id} --> {task_id}")
 
         # スタイル定義
-        lines.extend([
-            "",
-            "    classDef completed fill:#90EE90,stroke:#2E8B57,stroke-width:2px",
-            "    classDef in_progress fill:#FFD700,stroke:#DAA520,stroke-width:2px",
-            "    classDef failed fill:#FFB6C1,stroke:#DC143C,stroke-width:2px",
-            "    classDef blocked fill:#D3D3D3,stroke:#808080,stroke-width:2px"
-        ])
+        lines.extend(
+            [
+                "",
+                "    classDef completed fill:#90EE90,stroke:#2E8B57,stroke-width:2px",
+                "    classDef in_progress fill:#FFD700,stroke:#DAA520,stroke-width:2px",
+                "    classDef failed fill:#FFB6C1,stroke:#DC143C,stroke-width:2px",
+                "    classDef blocked fill:#D3D3D3,stroke:#808080,stroke-width:2px",
+            ]
+        )
 
         return "\n".join(lines)
 
@@ -162,31 +162,30 @@ class GraphVisualizer:
             import pygraphviz  # noqa: F401  # type: ignore[import-not-found]
         except ImportError:
             raise ImportError(
-                "pygraphviz is not installed. "
-                "Install it with: pip install pygraphviz"
+                "pygraphviz is not installed. Install it with: pip install pygraphviz"
             )
 
         # NetworkXグラフをGraphviz形式に変換
         A = nx.nx_agraph.to_agraph(self.graph)
 
         # スタイル設定
-        A.node_attr['shape'] = 'box'
-        A.node_attr['style'] = 'rounded,filled'
+        A.node_attr["shape"] = "box"
+        A.node_attr["style"] = "rounded,filled"
 
         # ステータスに応じた色設定
         for node in A.nodes():
             task = self.tasks.get(str(node))
             if task:
                 if task.status == TaskStatus.COMPLETED:
-                    A.get_node(node).attr['fillcolor'] = '#90EE90'
+                    A.get_node(node).attr["fillcolor"] = "#90EE90"
                 elif task.status == TaskStatus.IN_PROGRESS:
-                    A.get_node(node).attr['fillcolor'] = '#FFD700'
+                    A.get_node(node).attr["fillcolor"] = "#FFD700"
                 elif task.status == TaskStatus.FAILED:
-                    A.get_node(node).attr['fillcolor'] = '#FFB6C1'
+                    A.get_node(node).attr["fillcolor"] = "#FFB6C1"
                 elif task.status == TaskStatus.BLOCKED:
-                    A.get_node(node).attr['fillcolor'] = '#D3D3D3'
+                    A.get_node(node).attr["fillcolor"] = "#D3D3D3"
                 else:
-                    A.get_node(node).attr['fillcolor'] = 'white'
+                    A.get_node(node).attr["fillcolor"] = "white"
 
         # ファイルに保存
         A.write(str(output_path))
@@ -274,41 +273,38 @@ class GraphVisualizer:
             統計情報の辞書
         """
         stats: Dict[str, Any] = {
-            'total_tasks': len(self.tasks),
-            'total_dependencies': self.graph.number_of_edges(),
-            'root_tasks': len([
-                t for t in self.tasks.values()
-                if not t.dependencies
-            ]),
-            'leaf_tasks': len([
-                t_id for t_id in self.tasks.keys()
-                if not list(self.graph.successors(t_id))
-            ]),
-            'average_dependencies': (
-                sum(len(t.dependencies) for t in self.tasks.values()) / len(self.tasks)
-                if self.tasks else 0
+            "total_tasks": len(self.tasks),
+            "total_dependencies": self.graph.number_of_edges(),
+            "root_tasks": len([t for t in self.tasks.values() if not t.dependencies]),
+            "leaf_tasks": len(
+                [t_id for t_id in self.tasks.keys() if not list(self.graph.successors(t_id))]
             ),
-            'is_dag': nx.is_directed_acyclic_graph(self.graph),
-            'has_cycles': not nx.is_directed_acyclic_graph(self.graph),
+            "average_dependencies": (
+                sum(len(t.dependencies) for t in self.tasks.values()) / len(self.tasks)
+                if self.tasks
+                else 0
+            ),
+            "is_dag": nx.is_directed_acyclic_graph(self.graph),
+            "has_cycles": not nx.is_directed_acyclic_graph(self.graph),
         }
 
         # クリティカルパス長
-        if stats['is_dag']:
+        if stats["is_dag"]:
             critical_path = self.get_critical_path()
-            stats['critical_path_length'] = len(critical_path)
-            stats['critical_path'] = critical_path
+            stats["critical_path_length"] = len(critical_path)
+            stats["critical_path"] = critical_path
         else:
-            stats['critical_path_length'] = None
-            stats['critical_path'] = None
+            stats["critical_path_length"] = None
+            stats["critical_path"] = None
 
         # 並列度（最大同時実行可能タスク数）
         parallel_groups = self.get_parallel_groups()
         if parallel_groups:
-            stats['max_parallelism'] = max(len(group) for group in parallel_groups)
-            stats['parallel_levels'] = len(parallel_groups)
+            stats["max_parallelism"] = max(len(group) for group in parallel_groups)
+            stats["parallel_levels"] = len(parallel_groups)
         else:
-            stats['max_parallelism'] = 0
-            stats['parallel_levels'] = 0
+            stats["max_parallelism"] = 0
+            stats["parallel_levels"] = 0
 
         return stats
 
