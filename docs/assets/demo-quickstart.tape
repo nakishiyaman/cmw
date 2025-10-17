@@ -9,6 +9,11 @@ Set Shell bash
 Set FontFamily "monospace"
 
 # Demo: クイックスタート
+Hide
+Type "export PS1='$ '"
+Enter
+Sleep 100ms
+Show
 Type "# cmw クイックスタートデモ"
 Enter
 Sleep 1s

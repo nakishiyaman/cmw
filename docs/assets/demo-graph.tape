@@ -9,6 +9,11 @@ Set Shell bash
 Set FontFamily "monospace"
 
 # Demo: 依存関係グラフ（10秒）
+Hide
+Type "export PS1='$ '"
+Enter
+Sleep 100ms
+Show
 Type "# 依存関係グラフの可視化"
 Enter
 Sleep 1s
