@@ -2,32 +2,45 @@
 
 # Settings
 Output demo-quickstart.gif
-Set FontSize 16
-Set Width 1000
+Set FontSize 18
+Set Width 1200
 Set Height 600
 Set Shell bash
+Set FontFamily "monospace"
 
-# Demo: クイックスタート
-Type "# cmwデモ: requirements.mdから自動タスク生成"
+# Demo: クイックスタート（15秒）
+Type "# cmw クイックスタートデモ"
 Enter
 Sleep 1s
 
-Type "/home/kishiyama-n/workspace/claude-multi-worker-framework/venv/bin/cmw init demo-todo"
+Type "cd /home/kishiyama-n/workspace/claude-multi-worker-framework"
+Enter
+Sleep 500ms
+
+Type "source venv/bin/activate"
+Enter
+Sleep 1s
+
+Type "cd /tmp && cmw init todo-api"
 Enter
 Sleep 2s
 
-Type "cd demo-todo && cat shared/docs/requirements.md"
+Type "cd todo-api"
+Enter
+Sleep 500ms
+
+Type "cat shared/docs/requirements.md | head -20"
+Enter
+Sleep 2s
+
+Type "cmw tasks generate"
 Enter
 Sleep 3s
 
-Type "/home/kishiyama-n/workspace/claude-multi-worker-framework/venv/bin/cmw tasks generate"
+Type "cmw tasks list | head -25"
 Enter
 Sleep 3s
 
-Type "/home/kishiyama-n/workspace/claude-multi-worker-framework/venv/bin/cmw tasks list"
-Enter
-Sleep 3s
-
-Type "# タスクが自動生成されました！"
+Type "# 17タスクが自動生成されました！"
 Enter
 Sleep 2s

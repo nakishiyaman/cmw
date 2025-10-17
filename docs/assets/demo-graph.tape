@@ -2,24 +2,33 @@
 
 # Settings
 Output demo-graph.gif
-Set FontSize 16
-Set Width 1000
+Set FontSize 18
+Set Width 1200
 Set Height 600
 Set Shell bash
+Set FontFamily "monospace"
 
-# Demo: 依存関係グラフ
-Type "# cmwデモ: 依存関係グラフの可視化"
+# Demo: 依存関係グラフ（10秒）
+Type "# 依存関係グラフの可視化"
+Enter
+Sleep 1s
+
+Type "cd /home/kishiyama-n/workspace/claude-multi-worker-framework"
+Enter
+Sleep 500ms
+
+Type "source venv/bin/activate"
 Enter
 Sleep 1s
 
 Type "cd /home/kishiyama-n/workspace/projects/todo-api"
 Enter
-Sleep 1s
+Sleep 500ms
 
-Type "/home/kishiyama-n/workspace/claude-multi-worker-framework/venv/bin/cmw task graph"
+Type "cmw task graph | head -30"
 Enter
-Sleep 5s
+Sleep 4s
 
-Type "/home/kishiyama-n/workspace/claude-multi-worker-framework/venv/bin/cmw task graph --stats"
+Type "cmw task graph --stats"
 Enter
-Sleep 3s
+Sleep 4s

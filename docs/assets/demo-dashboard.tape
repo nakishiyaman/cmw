@@ -2,20 +2,29 @@
 
 # Settings
 Output demo-dashboard.gif
-Set FontSize 16
-Set Width 1000
-Set Height 700
+Set FontSize 18
+Set Width 1200
+Set Height 800
 Set Shell bash
+Set FontFamily "monospace"
 
-# Demo: 進捗ダッシュボード
-Type "# cmwデモ: リアルタイム進捗ダッシュボード"
+# Demo: 進捗ダッシュボード（5秒）
+Type "# 進捗ダッシュボード"
+Enter
+Sleep 1s
+
+Type "cd /home/kishiyama-n/workspace/claude-multi-worker-framework"
+Enter
+Sleep 500ms
+
+Type "source venv/bin/activate"
 Enter
 Sleep 1s
 
 Type "cd /home/kishiyama-n/workspace/projects/todo-api"
 Enter
-Sleep 1s
+Sleep 500ms
 
-Type "/home/kishiyama-n/workspace/claude-multi-worker-framework/venv/bin/cmw status"
+Type "cmw status"
 Enter
 Sleep 5s
