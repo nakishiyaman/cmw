@@ -13,15 +13,7 @@ Type "# cmw クイックスタートデモ"
 Enter
 Sleep 1s
 
-Type "cd /home/kishiyama-n/workspace/claude-multi-worker-framework"
-Enter
-Sleep 500ms
-
-Type "source venv/bin/activate"
-Enter
-Sleep 1s
-
-Type "cd /tmp && cmw init todo-api"
+Type "cmw init todo-api"
 Enter
 Sleep 2s
 

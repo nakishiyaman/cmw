@@ -13,18 +13,6 @@ Type "# 依存関係グラフの可視化"
 Enter
 Sleep 1s
 
-Type "cd /home/kishiyama-n/workspace/claude-multi-worker-framework"
-Enter
-Sleep 500ms
-
-Type "source venv/bin/activate"
-Enter
-Sleep 1s
-
-Type "cd /home/kishiyama-n/workspace/projects/todo-api"
-Enter
-Sleep 500ms
-
 Type "cmw task graph | head -30"
 Enter
 Sleep 4s
