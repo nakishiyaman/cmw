@@ -42,7 +42,7 @@ class StateManager:
 
         return False
 
-    def release_lock(self):
+    def release_lock(self) -> None:
         """ロックを解放"""
         if self.lock_file.exists():
             try:

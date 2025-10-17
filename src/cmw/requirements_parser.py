@@ -17,7 +17,7 @@ from .task_filter import TaskFilter
 class RequirementsParser:
     """requirements.mdを解析してタスクを自動生成"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.task_counter = 0
         self.validator = DependencyValidator()
         self.task_filter = TaskFilter()

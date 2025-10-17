@@ -55,7 +55,7 @@ class Conflict:
 class ConflictDetector:
     """ファイル競合の検出と解決提案"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     def detect_conflicts(self, tasks: List[Task]) -> List[Conflict]:

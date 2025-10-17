@@ -28,7 +28,7 @@ class Coordinator:
         # タスクとワーカーを読み込む
         self._load_tasks()
     
-    def _load_tasks(self):
+    def _load_tasks(self) -> None:
         """tasks.json からタスクを読み込み、progress.json で進捗状況をマージ"""
         if not self.tasks_file.exists():
             return
@@ -126,7 +126,7 @@ class Coordinator:
         # progress.json を更新
         self._save_progress()
     
-    def _save_progress(self):
+    def _save_progress(self) -> None:
         """進捗状況を保存"""
         progress_data = {
             "tasks": [task.to_dict() for task in self.tasks.values()]
