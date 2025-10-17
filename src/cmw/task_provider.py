@@ -84,7 +84,7 @@ class TaskProvider:
             "project_structure": self._get_project_structure()
         }
 
-    def mark_started(self, task_id: str):
+    def mark_started(self, task_id: str) -> None:
         """
         タスク開始を記録
 
@@ -96,11 +96,11 @@ class TaskProvider:
             raise ValueError(f"Task {task_id} not found")
 
         task.status = TaskStatus.IN_PROGRESS
-        task.started_at = datetime.now().isoformat()
+        task.started_at = datetime.now()
 
         self._save_progress()
 
-    def mark_completed(self, task_id: str, artifacts: List[str]):
+    def mark_completed(self, task_id: str, artifacts: List[str]) -> None:
         """
         タスク完了を記録
 
@@ -113,7 +113,7 @@ class TaskProvider:
             raise ValueError(f"Task {task_id} not found")
 
         task.status = TaskStatus.COMPLETED
-        task.completed_at = datetime.now().isoformat()
+        task.completed_at = datetime.now()
         task.artifacts = artifacts
 
         self._save_progress()
@@ -121,7 +121,7 @@ class TaskProvider:
         # 依存タスクのブロックを解除
         self._unblock_dependent_tasks(task_id)
 
-    def mark_failed(self, task_id: str, error: str):
+    def mark_failed(self, task_id: str, error: str) -> None:
         """
         タスク失敗を記録
 
@@ -135,7 +135,7 @@ class TaskProvider:
 
         task.status = TaskStatus.FAILED
         task.error = error
-        task.failed_at = datetime.now().isoformat()
+        task.failed_at = datetime.now()
 
         self._save_progress()
 
@@ -237,7 +237,7 @@ class TaskProvider:
             "tests_dir": "shared/artifacts/tests"
         }
 
-    def _unblock_dependent_tasks(self, completed_task_id: str):
+    def _unblock_dependent_tasks(self, completed_task_id: str) -> None:
         """依存タスクのブロックを解除"""
         for task in self.coordinator.tasks.values():
             if completed_task_id in task.dependencies:
@@ -245,13 +245,13 @@ class TaskProvider:
                     if task.status == TaskStatus.BLOCKED:
                         task.status = TaskStatus.PENDING
 
-    def _block_dependent_tasks(self, failed_task_id: str):
+    def _block_dependent_tasks(self, failed_task_id: str) -> None:
         """依存タスクをブロック状態に"""
         for task in self.coordinator.tasks.values():
             if failed_task_id in task.dependencies:
                 task.status = TaskStatus.BLOCKED
 
-    def _load_progress(self):
+    def _load_progress(self) -> None:
         """進捗情報を読み込み"""
         if not self.progress_file.exists():
             self._init_progress()
@@ -264,12 +264,14 @@ class TaskProvider:
             task = self.coordinator.get_task(task_id)
             if task:
                 task.status = TaskStatus(task_data.get("status", "pending"))
-                task.started_at = task_data.get("started_at")
-                task.completed_at = task_data.get("completed_at")
+                started_at_str = task_data.get("started_at")
+                task.started_at = datetime.fromisoformat(started_at_str) if started_at_str else None
+                completed_at_str = task_data.get("completed_at")
+                task.completed_at = datetime.fromisoformat(completed_at_str) if completed_at_str else None
                 task.artifacts = task_data.get("artifacts", [])
                 task.error = task_data.get("error")
 
-    def _save_progress(self):
+    def _save_progress(self) -> None:
         """進捗情報を保存"""
         progress = {
             "updated_at": datetime.now().isoformat(),
@@ -280,8 +282,8 @@ class TaskProvider:
             progress["tasks"][task_id] = {
                 "id": task.id,
                 "status": task.status.value,
-                "started_at": task.started_at,
-                "completed_at": task.completed_at,
+                "started_at": task.started_at.isoformat() if task.started_at else None,
+                "completed_at": task.completed_at.isoformat() if task.completed_at else None,
                 "artifacts": task.artifacts,
                 "error": task.error
             }
@@ -292,7 +294,7 @@ class TaskProvider:
             encoding='utf-8'
         )
 
-    def _init_progress(self):
+    def _init_progress(self) -> None:
         """進捗情報を初期化"""
         progress = {
             "created_at": datetime.now().isoformat(),
