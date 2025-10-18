@@ -4,7 +4,7 @@ Dashboard のユニットテスト
 
 import pytest
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from src.cmw.dashboard import Dashboard
 from src.cmw.models import Task, TaskStatus, Priority
 from src.cmw.progress_tracker import ProgressTracker

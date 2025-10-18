@@ -4,7 +4,7 @@ Requirements Generator のユニットテスト
 
 import pytest
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from src.cmw.requirements_generator import RequirementsGenerator
 
 
