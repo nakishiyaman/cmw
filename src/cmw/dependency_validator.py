@@ -75,12 +75,14 @@ class DependencyValidator:
 
         return G
 
-    def suggest_fixes(self, cycles: List[List[str]], tasks: List[Task]) -> List[Dict]:
+    def suggest_fixes(
+        self, cycles: List[List[Tuple[str, str]]], tasks: List[Task]
+    ) -> List[Dict]:
         """
         循環依存の修正案を提案
 
         Args:
-            cycles: 検出された循環依存
+            cycles: 検出された循環依存（エッジのリスト）
             tasks: タスクリスト
 
         Returns:
@@ -234,7 +236,7 @@ class DependencyValidator:
     def auto_fix_cycles(
         self,
         tasks: List[Task],
-        cycles: List[List[str]],
+        cycles: List[List[Tuple[str, str]]],
         auto_apply: bool = True,
         max_iterations: int = 10,
         _iteration: int = 0,
