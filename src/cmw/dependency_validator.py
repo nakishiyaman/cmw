@@ -28,8 +28,27 @@ class DependencyValidator:
         G = self._build_dependency_graph(tasks)
 
         try:
-            # NetworkXのsimple_cyclesでサイクル検出
-            cycles = list(nx.simple_cycles(G))
+            # simple_cyclesは大規模グラフでハングする可能性があるため、
+            # find_cycleを繰り返し実行して循環を検出（最大10個まで）
+            cycles = []
+            temp_graph = G.copy()
+            max_cycles = 10
+
+            for _ in range(max_cycles):
+                try:
+                    # find_cycleは最初の循環を見つける（高速）
+                    cycle = nx.find_cycle(temp_graph, orientation='original')
+                    # cycleは[(from, to, key), ...]の形式なので、ノードのみ抽出
+                    cycle_nodes = [edge[0] for edge in cycle]
+                    cycles.append(cycle_nodes)
+
+                    # 見つけた循環の最初のエッジを削除して次の循環を探す
+                    if cycle:
+                        temp_graph.remove_edge(cycle[0][0], cycle[0][1])
+                except nx.NetworkXNoCycle:
+                    # これ以上循環がない
+                    break
+
             return cycles
         except Exception:
             return []
