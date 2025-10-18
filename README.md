@@ -1,4 +1,4 @@
-# Claude Multi-Worker Framework (cmw) v0.6.0
+# Claude Multi-Worker Framework (cmw) v0.6.1
 
 [![Tests](https://github.com/nakishiyaman/cmw/workflows/Tests/badge.svg)](https://github.com/nakishiyaman/cmw/actions)
 [![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
@@ -284,9 +284,13 @@ pip install -e .
 ### 1. プロジェクト初期化
 
 ```bash
-# 新しいプロジェクトを作成
+# 方法A: 新しいディレクトリを作成して初期化
 cmw init my-project
 cd my-project
+
+# 方法B: カレントディレクトリで初期化
+mkdir my-project && cd my-project
+cmw init
 ```
 
 ### 2. requirements.mdを作成
@@ -406,8 +410,11 @@ my-project/
 ### プロジェクト管理
 
 ```bash
-# プロジェクト初期化
+# プロジェクト初期化（サブディレクトリを作成）
 cmw init <project-name>
+
+# プロジェクト初期化（カレントディレクトリで）
+cmw init
 
 # プロジェクト状態表示（フルダッシュボード）
 cmw status

@@ -29,14 +29,37 @@ def cli() -> None:
 
 
 @cli.command()
-@click.option("--name", default="new-project", help="プロジェクト名")
-def init(name: str) -> None:
-    """新しいプロジェクトを初期化"""
-    project_path = Path.cwd() / name
+@click.argument("name", required=False)
+def init(name: Optional[str]) -> None:
+    """新しいプロジェクトを初期化
 
-    if project_path.exists():
-        click.echo(f"❌ エラー: ディレクトリ {name} は既に存在します", err=True)
-        return
+    NAME: プロジェクト名（省略時はカレントディレクトリ名を使用）
+
+    例:
+      cmw init my-project  # my-project/ディレクトリを作成して初期化
+      cmw init             # カレントディレクトリで初期化
+    """
+    # nameが指定されていない場合、カレントディレクトリを使用
+    if name is None:
+        project_path = Path.cwd()
+        name = project_path.name
+
+        # カレントディレクトリが既にcmwプロジェクトか確認
+        if (project_path / "shared" / "coordination").exists():
+            click.echo("❌ エラー: このディレクトリは既にcmwプロジェクトです", err=True)
+            return
+
+        # カレントディレクトリが空でない場合は警告
+        if list(project_path.iterdir()):
+            if not click.confirm("⚠️  カレントディレクトリは空ではありません。続けますか？"):
+                return
+    else:
+        # nameが指定された場合、サブディレクトリを作成
+        project_path = Path.cwd() / name
+
+        if project_path.exists():
+            click.echo(f"❌ エラー: ディレクトリ {name} は既に存在します", err=True)
+            return
 
     # ディレクトリ構造を作成
     dirs = [
@@ -71,8 +94,11 @@ def init(name: str) -> None:
 
     click.echo(f"✅ プロジェクト '{name}' を初期化しました")
     click.echo("\n次のステップ:")
-    click.echo(f"  1. cd {name}")
-    click.echo("  2. shared/docs/requirements.md を編集")
+    if name != project_path.name:
+        click.echo(f"  1. cd {name}")
+        click.echo("  2. shared/docs/requirements.md を編集")
+    else:
+        click.echo("  1. shared/docs/requirements.md を編集")
     click.echo("  3. cmw task generate でタスク自動生成")
     click.echo("  4. cmw status でプロジェクト状況を確認")
 

@@ -5,6 +5,19 @@ All notable changes to Claude Multi-Worker Framework will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.1] - 2025-10-18
+
+### Fixed
+- **`cmw init`コマンドの動作改善**
+  - 引数なしで実行した場合、カレントディレクトリで初期化するように修正（以前は常に`new-project`サブディレクトリを作成していた）
+  - `cmw init`: カレントディレクトリで初期化（空でない場合は確認プロンプト表示）
+  - `cmw init project-name`: 指定したサブディレクトリを作成して初期化
+  - 既存のcmwプロジェクトでの初期化を防止
+
+### Changed
+- initコマンドの引数を`--name`オプションから位置引数に変更（より直感的な使い方）
+- Python 3.9互換性のため型アノテーションを修正（`str | None` → `Optional[str]`）
+
 ## [0.6.0] - 2025-10-18
 
 ### Added
