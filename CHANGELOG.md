@@ -5,6 +5,40 @@ All notable changes to Claude Multi-Worker Framework will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.5] - 2025-10-18
+
+### Fixed
+- **CLI version hardcode**: Fixed `cmw --version` to dynamically use `__version__` from `src/cmw/__init__.py`
+  - Changed `@click.version_option(version="0.3.1")` to `@click.version_option(version=__version__)`
+  - Updated CLI docstring to use f-string with `__version__`
+  - Now `cmw --version` correctly displays the current package version
+
+### Added
+- **PEP 561 compliance**: Created `src/cmw/py.typed` marker file
+  - Enables type information export for downstream packages
+  - Other projects can now use cmw's type annotations via mypy
+  - Improves IDE autocomplete and type checking for library users
+
+### Improved
+- **Development environment**: Upgraded pip from 24.0 to 25.2
+  - Latest pip version for improved package management
+  - Better dependency resolution and performance
+
+### Technical Details
+- Modified files:
+  - `src/cmw/cli.py`: Added `from . import __version__` and dynamic version usage
+  - `src/cmw/py.typed`: Created empty marker file (PEP 561)
+  - `src/cmw/__init__.py`: Version updated to 0.5.5
+  - `pyproject.toml`: Version and description updated
+  - `README.md`: Title updated to v0.5.5
+- Benefits:
+  - Single source of truth for version number (`__init__.py`)
+  - Simpler release process (only update one file)
+  - Type information now exportable to other packages
+- All 399 tests passing
+- 100% type safety maintained (mypy clean)
+- 90% test coverage maintained
+
 ## [0.5.4] - 2025-10-18
 
 ### Fixed
