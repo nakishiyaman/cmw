@@ -5,6 +5,21 @@ All notable changes to Claude Multi-Worker Framework will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **グラフ可視化の循環依存検出を改善**
+  - `cmw task graph` コマンドで循環依存を正確に検出・報告するように修正
+  - 循環依存がある場合、明確なエラーメッセージと修正方法を表示
+  - Mermaid形式でも循環依存を警告として表示
+  - 誤解を招く「No tasks or circular dependencies detected」メッセージを削除
+
+### Changed
+- README.mdの開発者向けドキュメントセクションを更新
+  - 古い計画ドキュメント（Phase 1実装ガイド、アーキテクチャ設計v3.0）を削除
+  - 現在メンテナンスされているドキュメントのみを記載
+  - ユーザー向けと開発者向けを明確に分離
+
 ## [0.6.2] - 2025-10-18
 
 ### Fixed

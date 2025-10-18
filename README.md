@@ -608,15 +608,14 @@ cmw task validate          # タスク品質検証
 
 ### ユーザー向けドキュメント
 - **[全機能詳細 (FEATURES.md)](docs/FEATURES.md)** - 全機能の詳細説明と使用例
-- **[開発ロードマップ (ROADMAP.md)](docs/ROADMAP.md)** - Phase別の実装履歴とバージョン詳細
-- **[テスト戦略 (TESTING.md)](docs/TESTING.md)** - テストカバレッジ、実行方法、追加ガイドライン
-- **[Claude Code統合ガイド](docs/CLAUDE_CODE_INTEGRATION.md)** - Claude Codeからの使用方法
+- **[Claude Code統合ガイド (CLAUDE_CODE_INTEGRATION.md)](docs/CLAUDE_CODE_INTEGRATION.md)** - Claude Codeからの使用方法
+- **[WHY CMW (WHY_CMW.md)](docs/WHY_CMW.md)** - cmwが必要な理由と利点
 
 ### 開発者向けドキュメント
-- **[改善計画](docs/IMPROVEMENTS.md)** - 実プロジェクト検証結果と今後の改善計画
-- **[Phase 1実装ガイド](docs/planning/phase-1-implementation-guide.md)** - タスク管理層の実装詳細
-- **[アーキテクチャ設計v3.0](docs/planning/multiworker-framework-plan-v3.md)** - 全体設計と計画
 - **[CHANGELOG.md](CHANGELOG.md)** - 全バージョンの変更履歴
+- **[開発ロードマップ (ROADMAP.md)](docs/ROADMAP.md)** - Phase別の実装履歴とバージョン詳細
+- **[テスト戦略 (TESTING.md)](docs/TESTING.md)** - テストカバレッジ、実行方法、追加ガイドライン
+- **[セキュリティ監査 (SECURITY_AUDIT.md)](docs/SECURITY_AUDIT.md)** - セキュリティ対策と監査結果
 
 ## 🧪 テスト
 
