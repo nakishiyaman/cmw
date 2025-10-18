@@ -444,7 +444,10 @@ def validate_tasks(fix: bool, tasks_file: str) -> None:
         console.print(f"[yellow]⚠️  {len(cycles)}件の循環依存を検出しました:[/yellow]\n")
 
         for i, cycle in enumerate(cycles, 1):
-            cycle_str = " → ".join(cycle) + f" → {cycle[0]}"
+            # cycleはエッジのリスト [(from, to), ...]
+            # 表示用にノードのリストに変換
+            cycle_nodes = [edge[0] for edge in cycle]
+            cycle_str = " → ".join(cycle_nodes) + f" → {cycle_nodes[0]}"
             console.print(f"  {i}. {cycle_str}")
 
         if fix:
@@ -452,44 +455,62 @@ def validate_tasks(fix: bool, tasks_file: str) -> None:
             suggestions = validator.suggest_fixes(cycles, tasks_list)
 
             # 修正提案を表示
+            removed_deps = []
             for suggestion in suggestions:
-                console.print(f"\n循環: {' ↔ '.join(suggestion['cycle'])}")
+                # suggestion['cycle']はエッジのリスト
+                cycle_edges = suggestion['cycle']
+                cycle_nodes = [edge[0] for edge in cycle_edges]
+                console.print(f"\n循環: {' ↔ '.join(cycle_nodes)}")
                 for fix_suggestion in suggestion["suggestions"][:1]:  # 最も信頼度の高い提案のみ
                     console.print(
                         f"  ✓ {fix_suggestion['from_task']} → {fix_suggestion['to_task']} を削除"
                     )
                     console.print(f"    理由: {fix_suggestion['reason']}")
                     console.print(f"    信頼度: {fix_suggestion['confidence'] * 100:.0f}%")
+                    removed_deps.append(
+                        (fix_suggestion['from_task'], fix_suggestion['to_task'],
+                         fix_suggestion['reason'], fix_suggestion['confidence'])
+                    )
 
             # 自動修正を適用
             tasks_list = validator.auto_fix_cycles(tasks_list, cycles, auto_apply=True)
 
+            # tasks.jsonを更新（修正内容を保存）
+            tasks_data["tasks"] = [
+                {
+                    "id": task.id,
+                    "title": task.title,
+                    "description": task.description,
+                    "assigned_to": task.assigned_to,
+                    "dependencies": task.dependencies,
+                    "target_files": task.target_files,
+                    "acceptance_criteria": task.acceptance_criteria,
+                    "priority": task.priority,
+                }
+                for task in tasks_list
+            ]
+            tasks_path.write_text(
+                json.dumps(tasks_data, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+
             # 残りの循環をチェック
             remaining_cycles = validator.detect_cycles(tasks_list)
+
+            # 結果サマリー
+            console.print("\n[bold cyan]修正結果:[/bold cyan]")
+            console.print(f"  • 削除した依存関係: {len(removed_deps)}件")
+            console.print(f"  • 修正前の循環依存: {len(cycles)}件")
+            console.print(f"  • 修正後の循環依存: {len(remaining_cycles)}件")
+
             if remaining_cycles:
                 console.print(
                     f"\n[yellow]⚠️  {len(remaining_cycles)}件の循環依存が残っています[/yellow]"
                 )
+                if len(remaining_cycles) < len(cycles):
+                    console.print("[blue]ヒント: もう一度 --fix を実行すると、さらに循環を解消できる可能性があります[/blue]")
+                console.print(f"[green]💾 {tasks_file} を更新しました（一部修正を適用）[/green]")
             else:
-                console.print("\n[green]✅ 全ての循環依存を解決しました[/green]")
-
-                # tasks.jsonを更新
-                tasks_data["tasks"] = [
-                    {
-                        "id": task.id,
-                        "title": task.title,
-                        "description": task.description,
-                        "assigned_to": task.assigned_to,
-                        "dependencies": task.dependencies,
-                        "target_files": task.target_files,
-                        "acceptance_criteria": task.acceptance_criteria,
-                        "priority": task.priority,
-                    }
-                    for task in tasks_list
-                ]
-                tasks_path.write_text(
-                    json.dumps(tasks_data, ensure_ascii=False, indent=2), encoding="utf-8"
-                )
+                console.print("\n[green]✅ 全ての循環依存を解決しました！[/green]")
                 console.print(f"[green]💾 {tasks_file} を更新しました[/green]")
         else:
             console.print("\n[dim]ヒント: --fix オプションで自動修正できます[/dim]")
@@ -565,12 +586,13 @@ def validate_tasks(fix: bool, tasks_file: str) -> None:
     summary_table.add_column("結果", justify="center")
     summary_table.add_column("詳細")
 
-    # 循環依存
-    cycle_status = "✅ PASS" if not cycles else f"⚠️  {len(cycles)}件"
+    # 循環依存（修正後の状態を反映）
+    current_cycles = validator.detect_cycles(tasks_list)
+    cycle_status = "✅ PASS" if not current_cycles else f"⚠️  {len(current_cycles)}件"
     cycle_detail = (
         "循環依存なし"
-        if not cycles
-        else ("修正済み" if fix and not validator.detect_cycles(tasks_list) else "要修正")
+        if not current_cycles
+        else ("一部修正済み" if fix and len(current_cycles) < len(cycles) else "要修正")
     )
     summary_table.add_row("循環依存", cycle_status, cycle_detail)
 

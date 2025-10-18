@@ -6,7 +6,7 @@ requirements.mdを解析してタスクを自動生成するモジュール
 """
 
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 import re
 
 from .models import Task, Priority
@@ -99,11 +99,13 @@ class RequirementsParser:
         self._verify_cycles_fixed(tasks)
         return tasks
 
-    def _print_cycles_report(self, cycles: List[List[str]]) -> None:
+    def _print_cycles_report(self, cycles: List[List[Tuple[str, str]]]) -> None:
         """循環依存のレポートを表示"""
         print(f"\n⚠️  {len(cycles)}件の循環依存を検出しました:")
         for i, cycle in enumerate(cycles, 1):
-            print(f"  {i}. {' ↔ '.join(cycle)}")
+            # cycleはエッジのリスト [(from, to), ...]
+            nodes = [edge[0] for edge in cycle]
+            print(f"  {i}. {' ↔ '.join(nodes)}")
 
     def _print_fix_suggestions(self, suggestions: List[Dict]) -> None:
         """修正提案を表示"""

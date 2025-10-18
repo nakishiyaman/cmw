@@ -4,7 +4,7 @@ Dependency Validator - 依存関係の検証と修正
 循環依存の検出、分析、修正提案を行うモジュール
 """
 
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Tuple
 import networkx as nx
 import re
 
@@ -14,7 +14,7 @@ from cmw.models import Task
 class DependencyValidator:
     """タスク依存関係の検証と修正を行うクラス"""
 
-    def detect_cycles(self, tasks: List[Task]) -> List[List[str]]:
+    def detect_cycles(self, tasks: List[Task]) -> List[List[Tuple[str, str]]]:
         """
         循環依存を検出
 
@@ -22,8 +22,9 @@ class DependencyValidator:
             tasks: タスクリスト
 
         Returns:
-            循環依存のリスト（各要素はタスクIDのリスト）
-            例: [['TASK-004', 'TASK-005'], ['TASK-024', 'TASK-025']]
+            循環依存のリスト（各要素はエッジのリスト）
+            例: [[('TASK-004', 'TASK-005'), ('TASK-005', 'TASK-004')],
+                 [('TASK-024', 'TASK-025'), ('TASK-025', 'TASK-024')]]
         """
         G = self._build_dependency_graph(tasks)
 
@@ -37,14 +38,15 @@ class DependencyValidator:
             for _ in range(max_cycles):
                 try:
                     # find_cycleは最初の循環を見つける（高速）
-                    cycle = nx.find_cycle(temp_graph, orientation='original')
-                    # cycleは[(from, to, key), ...]の形式なので、ノードのみ抽出
-                    cycle_nodes = [edge[0] for edge in cycle]
-                    cycles.append(cycle_nodes)
+                    cycle_edges = nx.find_cycle(temp_graph, orientation='original')
+                    # cycle_edgesは[(from, to, key), ...]の形式
+                    # エッジ情報を保持したまま格納
+                    cycle = [(edge[0], edge[1]) for edge in cycle_edges]
+                    cycles.append(cycle)
 
                     # 見つけた循環の最初のエッジを削除して次の循環を探す
-                    if cycle:
-                        temp_graph.remove_edge(cycle[0][0], cycle[0][1])
+                    if cycle_edges:
+                        temp_graph.remove_edge(cycle_edges[0][0], cycle_edges[0][1])
                 except nx.NetworkXNoCycle:
                     # これ以上循環がない
                     break
@@ -73,12 +75,14 @@ class DependencyValidator:
 
         return G
 
-    def suggest_fixes(self, cycles: List[List[str]], tasks: List[Task]) -> List[Dict]:
+    def suggest_fixes(
+        self, cycles: List[List[Tuple[str, str]]], tasks: List[Task]
+    ) -> List[Dict]:
         """
         循環依存の修正案を提案
 
         Args:
-            cycles: 検出された循環依存
+            cycles: 検出された循環依存（エッジのリスト）
             tasks: タスクリスト
 
         Returns:
@@ -106,12 +110,12 @@ class DependencyValidator:
 
         return suggestions
 
-    def _analyze_cycle(self, cycle: List[str], tasks: List[Task]) -> List[Dict]:
+    def _analyze_cycle(self, cycle: List[tuple], tasks: List[Task]) -> List[Dict]:
         """
         循環依存を分析して修正案を生成
 
         Args:
-            cycle: 循環依存を構成するタスクIDリスト
+            cycle: 循環依存を構成するエッジのリスト [(from_id, to_id), ...]
             tasks: 全タスクリスト
 
         Returns:
@@ -121,10 +125,7 @@ class DependencyValidator:
         task_map = {t.id: t for t in tasks}
 
         # サイクル内の各エッジを評価
-        for i in range(len(cycle)):
-            from_id = cycle[i]
-            to_id = cycle[(i + 1) % len(cycle)]
-
+        for from_id, to_id in cycle:
             from_task = task_map.get(from_id)
             to_task = task_map.get(to_id)
 
@@ -235,8 +236,10 @@ class DependencyValidator:
     def auto_fix_cycles(
         self,
         tasks: List[Task],
-        cycles: List[List[str]],
+        cycles: List[List[Tuple[str, str]]],
         auto_apply: bool = True,
+        max_iterations: int = 10,
+        _iteration: int = 0,
     ) -> List[Task]:
         """
         循環依存を自動修正
@@ -245,10 +248,17 @@ class DependencyValidator:
             tasks: タスクリスト
             cycles: 検出された循環依存
             auto_apply: Trueの場合は自動適用、Falseの場合は高信頼度のみ
+            max_iterations: 最大反復回数（無限ループ防止）
+            _iteration: 現在の反復回数（内部使用）
 
         Returns:
             修正後のタスクリスト
         """
+        # 無限ループ防止: 最大反復回数チェック
+        if _iteration >= max_iterations:
+            print(f"\n⚠️  最大反復回数({max_iterations})に達しました。これ以上の自動修正を中止します。")
+            return tasks
+
         suggestions = self.suggest_fixes(cycles, tasks)
         task_map = {t.id: t for t in tasks}
         modifications = []
@@ -287,6 +297,11 @@ class DependencyValidator:
             for mod in modifications:
                 print(f"  - {mod['from']} → {mod['to']} (信頼度: {mod['confidence']:.0%})")
                 print(f"    理由: {mod['reason']}")
+        else:
+            # 進捗がない場合は中止（無限ループ防止）
+            print("\n⚠️  これ以上の自動修正ができません。")
+            print("     残りの循環は手動で確認してください。")
+            return tasks
 
         return list(task_map.values())
 

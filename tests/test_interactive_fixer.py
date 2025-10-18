@@ -128,7 +128,7 @@ class TestFixCyclesInteractively:
 
     def test_fix_cycles_skip(self, circular_tasks):
         """循環依存修正（スキップ）"""
-        cycles = [["TASK-001", "TASK-002"]]
+        cycles = [[("TASK-001", "TASK-002"), ("TASK-002", "TASK-001")]]
         fixer = InteractiveFixer()
 
         # スキップを選択
@@ -141,7 +141,7 @@ class TestFixCyclesInteractively:
 
     def test_fix_cycles_cancel(self, circular_tasks):
         """循環依存修正（キャンセル）"""
-        cycles = [["TASK-001", "TASK-002"]]
+        cycles = [[("TASK-001", "TASK-002"), ("TASK-002", "TASK-001")]]
         fixer = InteractiveFixer()
 
         # キャンセルを選択
