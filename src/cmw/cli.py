@@ -9,6 +9,7 @@ import click
 from pathlib import Path
 from typing import Optional, Dict
 
+from . import __version__
 from .models import TaskStatus
 from .coordinator import Coordinator
 from .requirements_parser import RequirementsParser
@@ -21,9 +22,9 @@ from .git_integration import GitIntegration
 
 
 @click.group()
-@click.version_option(version="0.3.1")
+@click.version_option(version=__version__)
 def cli() -> None:
-    """Claude Multi-Worker Framework - マルチワーカー開発フレームワーク v0.3.1"""
+    f"""Claude Multi-Worker Framework - マルチワーカー開発フレームワーク v{__version__}"""
     pass
 
 

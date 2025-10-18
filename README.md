@@ -1,4 +1,4 @@
-# Claude Multi-Worker Framework (cmw) v0.5.4
+# Claude Multi-Worker Framework (cmw) v0.5.5
 
 [![Tests](https://github.com/nakishiyaman/cmw/workflows/Tests/badge.svg)](https://github.com/nakishiyaman/cmw/actions)
 [![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
