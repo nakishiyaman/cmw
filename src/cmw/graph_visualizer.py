@@ -52,13 +52,28 @@ class GraphVisualizer:
         """
         Console()
 
+        # 循環依存をチェック
+        try:
+            cycles = list(nx.find_cycle(self.graph, orientation="original"))
+            # 循環依存がある場合
+            return (
+                "⚠️  循環依存が検出されました\n\n"
+                "循環依存を解決するには以下のコマンドを実行してください:\n"
+                "  cmw tasks validate --fix\n\n"
+                f"最初の循環: {' → '.join([edge[0] for edge in cycles])} → {cycles[0][0]}"
+            )
+        except nx.NetworkXNoCycle:
+            # 循環依存がない場合、通常の処理を続行
+            pass
+
         # ルートタスク（依存関係のないタスク）を取得
         root_tasks = [
             task_id for task_id in self.tasks.keys() if not self.tasks[task_id].dependencies
         ]
 
         if not root_tasks:
-            return "No tasks or circular dependencies detected"
+            # ルートタスクがないが循環もない場合（理論上は起こらないはず）
+            return "全てのタスクに依存関係があります。循環依存の可能性があります。"
 
         # Rich Treeを構築
         tree = Tree("📋 Task Graph")
@@ -116,7 +131,20 @@ class GraphVisualizer:
         Returns:
             Mermaid形式のグラフ定義
         """
-        lines = ["graph TD"]
+        # 循環依存をチェック
+        try:
+            _ = list(nx.find_cycle(self.graph, orientation="original"))
+            # 循環依存がある場合でも、Mermaidグラフは生成（循環を視覚化できる）
+            lines = [
+                "graph TD",
+                "",
+                "    %% ⚠️  循環依存が検出されました",
+                "    %% 以下のコマンドで修正してください: cmw tasks validate --fix",
+                "",
+            ]
+        except nx.NetworkXNoCycle:
+            # 循環依存がない場合
+            lines = ["graph TD"]
 
         # ノード定義
         for task_id, task in self.tasks.items():
