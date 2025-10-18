@@ -5,7 +5,7 @@ Claude Codeと統合したタスク管理・メタデータフレームワーク
 requirements.mdから自動でタスクを生成し、依存関係を管理し、進捗を可視化します。
 """
 
-__version__ = "0.5.6"
+__version__ = "0.6.0"
 
 from .models import Task, TaskStatus, Worker, ExecutionResult, Priority
 from .coordinator import Coordinator
@@ -23,6 +23,8 @@ from .prompt_template import PromptTemplate
 from .static_analyzer import StaticAnalyzer
 from .interactive_fixer import InteractiveFixer
 from .response_parser import ResponseParser
+from .dependency_analyzer import DependencyAnalyzer
+from .smart_prompt_generator import SmartPromptGenerator
 
 __all__ = [
     "Task",
@@ -50,4 +52,6 @@ __all__ = [
     "StaticAnalyzer",
     "InteractiveFixer",
     "ResponseParser",
+    "DependencyAnalyzer",
+    "SmartPromptGenerator",
 ]

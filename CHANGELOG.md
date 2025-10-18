@@ -5,6 +5,66 @@ All notable changes to Claude Multi-Worker Framework will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2025-10-18
+
+### Added
+- **インテリジェント・タスク管理機能**
+  - `DependencyAnalyzer`: 依存関係解析とクリティカルパス計算
+    - 実行可能なタスクの自動判定
+    - クリティカルパスの計算
+    - ボトルネック検出
+    - 並行実行プランの生成
+    - プロジェクト完了予測
+
+  - `SmartPromptGenerator`: 文脈を理解したプロンプト生成
+    - タスクの重要度を視覚的に強調
+    - 依存関係の詳細表示（前提・後続タスク）
+    - 関連ファイルの自動推測
+    - requirements.mdからの情報抽出
+    - 実装手順の自動生成
+    - 完了条件チェックリスト
+    - テストコマンドの提示
+    - 次のステップの提案
+
+- **新規CLIコマンド**
+  - `cmw task next`: 実行可能な次のタスクを提案
+    - 依存関係が解決済みのタスクのみ表示
+    - クリティカルパス上のタスクを強調
+    - ブロックしているタスク数を表示
+    - 優先度順にソート
+
+  - `cmw task critical`: クリティカルパス分析
+    - プロジェクト完了予測（楽観的・悲観的）
+    - クリティカルパスの可視化
+    - ボトルネック警告
+    - 並行作業の効率化提案
+
+  - `cmw task exec <TASK-ID>`: スマートタスク実行
+    - ステータスを自動で`in_progress`に更新
+    - スマートプロンプトを生成・表示
+    - `.cmw_prompt.md`にプロンプトを保存
+
+### Changed
+- **README.md更新**
+  - インテリジェント・タスク管理セクション追加
+  - 実践的な使い方の追加
+  - クリティカルパスを意識した進行例
+  - チートシート追加
+
+### Technical Details
+- 新規ファイル:
+  - `src/cmw/dependency_analyzer.py`: 依存関係解析機能
+  - `src/cmw/smart_prompt_generator.py`: スマートプロンプト生成機能
+  - `tests/test_dependency_analyzer.py`: 12テスト
+  - `tests/test_smart_prompt_generator.py`: 13テスト
+- 変更ファイル:
+  - `src/cmw/cli.py`: 3つの新規コマンド追加
+  - `src/cmw/__init__.py`: バージョン 0.5.6 → 0.6.0、新モジュールのエクスポート
+  - `README.md`: 新機能のドキュメント追加
+- テスト: 424テスト全パス (399 → 424, +25テスト)
+- 型安全性: mypy 100%クリーン
+- コード品質: ruff lint/format クリーン
+
 ## [0.5.6] - 2025-10-18
 
 ### Fixed
