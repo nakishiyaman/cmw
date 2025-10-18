@@ -5,6 +5,35 @@ All notable changes to Claude Multi-Worker Framework will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.6] - 2025-10-18
+
+### Fixed
+- **Package resource not found**: Fixed `cmw requirements generate --with-claude` command failing to find prompts template
+  - Error: `プロンプトテンプレートが見つかりません: .../prompts/requirements_generator.md`
+  - Root cause: `prompts/requirements_generator.md` was not included in the package
+  - Solution: Moved template to `src/cmw/prompts/` and updated package data configuration
+
+### Changed
+- **Prompts template location**: Moved from project root to package directory
+  - `prompts/requirements_generator.md` → `src/cmw/prompts/requirements_generator.md`
+  - Updated `cli.py` to use `Path(__file__).parent / "prompts"` for correct package-relative path
+  - Added `"prompts/*.md"` to `pyproject.toml` package data configuration
+
+### Technical Details
+- Modified files:
+  - `src/cmw/cli.py:967`: Changed path from `Path(__file__).parent.parent.parent / "prompts"` to `Path(__file__).parent / "prompts" / "requirements_generator.md"`
+  - `src/cmw/prompts/requirements_generator.md`: Created (copied from project root)
+  - `pyproject.toml:61`: Updated package-data to include `["py.typed", "prompts/*.md"]`
+  - `src/cmw/__init__.py`: Version updated to 0.5.6
+  - `README.md`: Title updated to v0.5.6
+- Impact:
+  - `cmw requirements generate --with-claude` now works correctly in installed packages
+  - Template file is properly included in wheel and sdist distributions
+  - No changes to template content, only location
+- All 399 tests passing
+- 100% type safety maintained (mypy clean)
+- 90% test coverage maintained
+
 ## [0.5.5] - 2025-10-18
 
 ### Fixed

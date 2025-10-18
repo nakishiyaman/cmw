@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "claude-multi-worker"
-version = "0.5.5"
-description = "Claude Code統合タスク管理フレームワーク v0.5.5 - requirements.mdから自動でタスク生成、100%型安全、90%テストカバレッジ、循環依存自動修正、Git連携、進捗可視化、コード複雑度削減、PEP 561準拠型情報公開"
+version = "0.5.6"
+description = "Claude Code統合タスク管理フレームワーク v0.5.6 - requirements.mdから自動でタスク生成、100%型安全、90%テストカバレッジ、循環依存自動修正、Git連携、進捗可視化、コード複雑度削減、PEP 561準拠型情報公開、プロンプトテンプレート同梱"
 readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"
@@ -58,7 +58,7 @@ cmw = "cmw.cli:cli"
 where = ["src"]
 
 [tool.setuptools.package-data]
-cmw = ["py.typed"]
+cmw = ["py.typed", "prompts/*.md"]
 
 [tool.black]
 line-length = 100
