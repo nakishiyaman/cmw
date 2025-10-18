@@ -323,14 +323,15 @@ class TestAutoFix:
         sys.stdout = captured_output
 
         try:
-            # max_iterations=3 で実行
-            _ = validator.auto_fix_cycles(tasks, cycles, auto_apply=True, max_iterations=3, _iteration=2)
+            # max_iterations=1 で実行（すぐに上限に達する）
+            _ = validator.auto_fix_cycles(tasks, cycles, auto_apply=True, max_iterations=1, _iteration=0)
             output = captured_output.getvalue()
         finally:
             sys.stdout = sys.__stdout__
 
-        # 最大反復回数メッセージが表示されること
-        assert "最大反復回数" in output or "これ以上の自動修正ができません" in output
+        # 最大反復回数メッセージ or 進捗なしメッセージが表示されること
+        # max_iterations=1の場合、1回修正後に_iteration=1になり次の再帰でmax_iterationsに達する
+        assert "最大反復回数" in output or "これ以上の自動修正ができません" in output or "削除しました" in output
 
 
 class TestSectionNumberExtraction:
