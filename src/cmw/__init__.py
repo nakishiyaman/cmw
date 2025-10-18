@@ -5,7 +5,7 @@ Claude Codeと統合したタスク管理・メタデータフレームワーク
 requirements.mdから自動でタスクを生成し、依存関係を管理し、進捗を可視化します。
 """
 
-__version__ = "0.6.1"
+__version__ = "0.6.2"
 
 from .models import Task, TaskStatus, Worker, ExecutionResult, Priority
 from .coordinator import Coordinator

@@ -4,7 +4,7 @@
 タスクの依存関係をグラフとして可視化します。
 """
 
-from typing import List, Dict, Set, Any
+from typing import List, Dict, Set, Any, Optional
 from pathlib import Path
 import networkx as nx
 from rich.tree import Tree
@@ -308,23 +308,37 @@ class GraphVisualizer:
 
         return stats
 
-    def get_task_depth(self, task_id: str) -> int:
+    def get_task_depth(self, task_id: str, visited: Optional[Set[str]] = None) -> int:
         """タスクの深さ（ルートからの距離）を取得
 
         Args:
             task_id: タスクID
+            visited: 訪問済みノード（循環依存検出用）
 
         Returns:
-            深さ（ルートタスクは0）
+            深さ（ルートタスクは0、循環依存の場合は-1）
         """
         if task_id not in self.graph:
             return -1
 
+        # 循環依存チェック
+        if visited is None:
+            visited = set()
+
+        if task_id in visited:
+            # 循環依存を検出
+            return -1
+
+        visited.add(task_id)
+
         # 全ての前提タスクからの最長パスを計算
         max_depth = 0
         for predecessor in self.graph.predecessors(task_id):
-            depth = self.get_task_depth(predecessor) + 1
-            max_depth = max(max_depth, depth)
+            depth = self.get_task_depth(predecessor, visited.copy())
+            if depth == -1:
+                # 循環依存が検出された場合
+                return -1
+            max_depth = max(max_depth, depth + 1)
 
         return max_depth
 
