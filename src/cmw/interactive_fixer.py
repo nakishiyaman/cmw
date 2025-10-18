@@ -4,7 +4,7 @@ Interactive Fixer - 対話的な問題修正UI
 Rich UIを使用して、タスクの問題を対話的に修正する機能を提供します。
 """
 
-from typing import List, Tuple
+from typing import List
 from rich.console import Console
 from rich.prompt import Prompt, Confirm
 from rich.table import Table
