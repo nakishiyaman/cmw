@@ -27,12 +27,14 @@ cmwフレームワークは、Claude Codeと統合することで、大規模な
 ### 1. プロジェクトの初期化
 
 ```bash
-# プロジェクトディレクトリを作成
-mkdir my-project
+# 方法A: サブディレクトリを作成して初期化
+cmw init my-project
 cd my-project
 
-# cmwプロジェクトを初期化
-cmw init --name my-project
+# 方法B: カレントディレクトリで初期化
+mkdir my-project
+cd my-project
+cmw init
 
 # ディレクトリ構造が作成される:
 # my-project/
