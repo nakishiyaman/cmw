@@ -324,7 +324,7 @@ class TestAutoFix:
 
         try:
             # max_iterations=3 で実行
-            fixed_tasks = validator.auto_fix_cycles(tasks, cycles, auto_apply=True, max_iterations=3, _iteration=2)
+            _ = validator.auto_fix_cycles(tasks, cycles, auto_apply=True, max_iterations=3, _iteration=2)
             output = captured_output.getvalue()
         finally:
             sys.stdout = sys.__stdout__

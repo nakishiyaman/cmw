@@ -497,7 +497,7 @@ def validate_tasks(fix: bool, tasks_file: str) -> None:
             remaining_cycles = validator.detect_cycles(tasks_list)
 
             # 結果サマリー
-            console.print(f"\n[bold cyan]修正結果:[/bold cyan]")
+            console.print("\n[bold cyan]修正結果:[/bold cyan]")
             console.print(f"  • 削除した依存関係: {len(removed_deps)}件")
             console.print(f"  • 修正前の循環依存: {len(cycles)}件")
             console.print(f"  • 修正後の循環依存: {len(remaining_cycles)}件")
