@@ -4,7 +4,7 @@ Interactive Fixer - 対話的な問題修正UI
 Rich UIを使用して、タスクの問題を対話的に修正する機能を提供します。
 """
 
-from typing import List
+from typing import List, Tuple
 from rich.console import Console
 from rich.prompt import Prompt, Confirm
 from rich.table import Table
@@ -39,7 +39,9 @@ class InteractiveFixer:
 
         for i, cycle in enumerate(cycles, 1):
             self.console.print(f"\n[bold]循環 {i}/{len(cycles)}:[/bold]")
-            self.console.print(f"  {' ↔ '.join(cycle)}")
+            # cycleはエッジのリスト [(from, to), ...]
+            nodes = [edge[0] for edge in cycle]
+            self.console.print(f"  {' ↔ '.join(nodes)}")
 
             # 修正提案を取得
             suggestions = self.validator.suggest_fixes([cycle], tasks)
