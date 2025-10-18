@@ -5,6 +5,19 @@ All notable changes to Claude Multi-Worker Framework will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.4] - 2025-10-18
+
+### Fixed
+- **`__version__` inconsistency**: Updated `src/cmw/__init__.py` `__version__` to 0.5.4
+  - Fixed `cmw --version` to display correct version number
+  - Ensured consistency with package metadata in `pyproject.toml`
+
+### Technical Details
+- Modified file: `src/cmw/__init__.py:8`
+- Issue: `cmw --version` was displaying 0.3.1 instead of actual package version
+- Root cause: `__version__` variable was not updated during v0.5.0-v0.5.3 releases
+- Resolution: Updated `__version__ = "0.5.4"` and added version check to release checklist
+
 ## [0.5.3] - 2025-10-18
 
 ### Code Quality - Complexity Reduction
