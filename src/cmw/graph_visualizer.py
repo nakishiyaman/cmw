@@ -133,7 +133,7 @@ class GraphVisualizer:
         """
         # 循環依存をチェック
         try:
-            cycles = list(nx.find_cycle(self.graph, orientation="original"))
+            _ = list(nx.find_cycle(self.graph, orientation="original"))
             # 循環依存がある場合でも、Mermaidグラフは生成（循環を視覚化できる）
             lines = [
                 "graph TD",
