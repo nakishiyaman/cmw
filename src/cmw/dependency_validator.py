@@ -237,6 +237,8 @@ class DependencyValidator:
         tasks: List[Task],
         cycles: List[List[str]],
         auto_apply: bool = True,
+        max_iterations: int = 10,
+        _iteration: int = 0,
     ) -> List[Task]:
         """
         循環依存を自動修正
@@ -245,10 +247,17 @@ class DependencyValidator:
             tasks: タスクリスト
             cycles: 検出された循環依存
             auto_apply: Trueの場合は自動適用、Falseの場合は高信頼度のみ
+            max_iterations: 最大反復回数（無限ループ防止）
+            _iteration: 現在の反復回数（内部使用）
 
         Returns:
             修正後のタスクリスト
         """
+        # 無限ループ防止: 最大反復回数チェック
+        if _iteration >= max_iterations:
+            print(f"\n⚠️  最大反復回数({max_iterations})に達しました。これ以上の自動修正を中止します。")
+            return tasks
+
         suggestions = self.suggest_fixes(cycles, tasks)
         task_map = {t.id: t for t in tasks}
         modifications = []
@@ -287,6 +296,11 @@ class DependencyValidator:
             for mod in modifications:
                 print(f"  - {mod['from']} → {mod['to']} (信頼度: {mod['confidence']:.0%})")
                 print(f"    理由: {mod['reason']}")
+        else:
+            # 進捗がない場合は中止（無限ループ防止）
+            print("\n⚠️  これ以上の自動修正ができません。")
+            print("     残りの循環は手動で確認してください。")
+            return tasks
 
         return list(task_map.values())
 

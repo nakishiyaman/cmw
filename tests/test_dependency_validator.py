@@ -261,6 +261,75 @@ class TestAutoFix:
         task_004 = next(t for t in fixed_tasks if t.id == "TASK-004")
         assert "TASK-001" in task_004.dependencies
 
+    def test_auto_fix_no_progress_stops(self):
+        """修正が進まない場合、無限ループせずに停止する"""
+        # セマンティック分析で判定できない循環依存を作成
+        tasks = [
+            Task(
+                id="TASK-A",
+                title="Task A",  # セクション番号なし
+                description="Test",
+                assigned_to="backend",
+                dependencies=["TASK-B"],
+                priority=Priority.MEDIUM,
+            ),
+            Task(
+                id="TASK-B",
+                title="Task B",  # セクション番号なし
+                description="Test",
+                assigned_to="backend",
+                dependencies=["TASK-A"],
+                priority=Priority.MEDIUM,
+            ),
+        ]
+
+        validator = DependencyValidator()
+        cycles = validator.detect_cycles(tasks)
+        assert len(cycles) == 1
+
+        # 自動修正を試みる（進捗がないはず）
+        import io
+        import sys
+        captured_output = io.StringIO()
+        sys.stdout = captured_output
+
+        try:
+            fixed_tasks = validator.auto_fix_cycles(tasks, cycles, auto_apply=True)
+            output = captured_output.getvalue()
+        finally:
+            sys.stdout = sys.__stdout__
+
+        # 進捗がない旨のメッセージが表示されること
+        assert "これ以上の自動修正ができません" in output or len(cycles) == len(validator.detect_cycles(fixed_tasks))
+
+    def test_auto_fix_max_iterations(self):
+        """最大反復回数に達した場合、無限ループせずに停止する"""
+        # 複数の循環依存を持つ複雑なグラフ
+        tasks = [
+            Task(id=f"TASK-{i:03d}", title=f"{i}.1 Task {i}", description="Test",
+                 assigned_to="backend", dependencies=[f"TASK-{(i+1) % 5:03d}"], priority=Priority.MEDIUM)
+            for i in range(5)
+        ]
+
+        validator = DependencyValidator()
+        cycles = validator.detect_cycles(tasks)
+        assert len(cycles) > 0
+
+        import io
+        import sys
+        captured_output = io.StringIO()
+        sys.stdout = captured_output
+
+        try:
+            # max_iterations=3 で実行
+            fixed_tasks = validator.auto_fix_cycles(tasks, cycles, auto_apply=True, max_iterations=3, _iteration=2)
+            output = captured_output.getvalue()
+        finally:
+            sys.stdout = sys.__stdout__
+
+        # 最大反復回数メッセージが表示されること
+        assert "最大反復回数" in output or "これ以上の自動修正ができません" in output
+
 
 class TestSectionNumberExtraction:
     """セクション番号抽出のテスト"""

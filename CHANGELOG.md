@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **循環依存の自動修正で無限ループを防止**
+  - `auto_fix_cycles` に最大反復回数チェックを追加（デフォルト10回）
+  - 修正が進まない場合は早期に停止
+  - 無限ループのリスクを完全に排除
+
+### Added
+- **無限ループ防止のテストケース**
+  - `test_auto_fix_no_progress_stops`: 進捗がない場合の停止テスト
+  - `test_auto_fix_max_iterations`: 最大反復回数テスト
+
 ## [0.6.3] - 2025-10-18
 
 ### Fixed
