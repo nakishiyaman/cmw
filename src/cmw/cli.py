@@ -109,84 +109,16 @@ def generate_tasks(requirements: str, output: str, force: bool) -> None:
     requirements_path = project_path / requirements
     output_path = project_path / output
 
-    # requirements.mdの存在確認
-    if not requirements_path.exists():
-        click.echo(f"❌ エラー: requirements.md が見つかりません: {requirements_path}", err=True)
-        click.echo("\n次のステップ:")
-        click.echo(f"  1. {requirements_path} を作成")
-        click.echo("  2. プロジェクト要件を記載")
-        click.echo("  3. cmw task generate を再実行")
+    if not _validate_requirements_exists(requirements_path):
         return
 
-    # 出力先の上書き確認
-    if output_path.exists() and not force:
-        click.echo(f"⚠️  {output} は既に存在します")
-        if not click.confirm("上書きしますか?"):
-            click.echo("キャンセルしました")
-            return
+    if not _confirm_overwrite(output_path, output, force):
+        return
 
     try:
-        # RequirementsParserでタスク生成
-        click.echo(f"\n📄 {requirements} を解析中...")
-        parser = RequirementsParser()
-        tasks = parser.parse(requirements_path)
-
-        click.echo(f"✅ {len(tasks)} 個のタスクを生成しました\n")
-
-        # タスクをJSON形式に変換
-        tasks_data = {
-            "tasks": [
-                {
-                    "id": task.id,
-                    "title": task.title,
-                    "description": task.description,
-                    "assigned_to": task.assigned_to,
-                    "dependencies": task.dependencies,
-                    "target_files": task.target_files,
-                    "acceptance_criteria": task.acceptance_criteria,
-                    "priority": task.priority,
-                }
-                for task in tasks
-            ],
-            "workers": [],
-        }
-
-        # ファイルに保存
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(
-            json.dumps(tasks_data, ensure_ascii=False, indent=2), encoding="utf-8"
-        )
-
-        click.echo(f"💾 {output} に保存しました")
-
-        # サマリー表示
-        click.echo(f"\n{'=' * 80}")
-        click.echo("生成されたタスクのサマリー")
-        click.echo(f"{'=' * 80}\n")
-
-        # 優先度別カウント
-        priority_counts = {"high": 0, "medium": 0, "low": 0}
-        for task in tasks:
-            priority_counts[task.priority] = priority_counts.get(task.priority, 0) + 1
-
-        click.echo(f"総タスク数: {len(tasks)}")
-        click.echo(f"  🔴 高優先度: {priority_counts['high']}")
-        click.echo(f"  🟡 中優先度: {priority_counts['medium']}")
-        click.echo(f"  🟢 低優先度: {priority_counts['low']}")
-
-        # 担当別カウント
-        assigned_to_counts: Dict[str, int] = {}
-        for task in tasks:
-            assigned_to_counts[task.assigned_to] = assigned_to_counts.get(task.assigned_to, 0) + 1
-
-        click.echo("\n担当別:")
-        for assigned_to, count in sorted(assigned_to_counts.items()):
-            click.echo(f"  {assigned_to}: {count}タスク")
-
-        click.echo("\n次のステップ:")
-        click.echo("  1. タスク一覧を確認: cmw task list")
-        click.echo("  2. プロジェクト状況を確認: cmw status")
-
+        tasks = _parse_requirements(requirements_path, requirements)
+        _save_tasks_to_file(tasks, output_path, output)
+        _print_task_summary(tasks)
     except FileNotFoundError as e:
         click.echo(f"❌ エラー: {str(e)}", err=True)
     except Exception as e:
@@ -194,6 +126,106 @@ def generate_tasks(requirements: str, output: str, force: bool) -> None:
         import traceback
 
         traceback.print_exc()
+
+
+def _validate_requirements_exists(requirements_path: Path) -> bool:
+    """requirements.mdの存在確認"""
+    if requirements_path.exists():
+        return True
+
+    click.echo(f"❌ エラー: requirements.md が見つかりません: {requirements_path}", err=True)
+    click.echo("\n次のステップ:")
+    click.echo(f"  1. {requirements_path} を作成")
+    click.echo("  2. プロジェクト要件を記載")
+    click.echo("  3. cmw task generate を再実行")
+    return False
+
+
+def _confirm_overwrite(output_path: Path, output: str, force: bool) -> bool:
+    """出力先の上書き確認"""
+    if not output_path.exists() or force:
+        return True
+
+    click.echo(f"⚠️  {output} は既に存在します")
+    if click.confirm("上書きしますか?"):
+        return True
+
+    click.echo("キャンセルしました")
+    return False
+
+
+def _parse_requirements(requirements_path: Path, requirements: str) -> list:
+    """requirements.mdを解析してタスクを生成"""
+    click.echo(f"\n📄 {requirements} を解析中...")
+    parser = RequirementsParser()
+    tasks = parser.parse(requirements_path)
+    click.echo(f"✅ {len(tasks)} 個のタスクを生成しました\n")
+    return tasks
+
+
+def _save_tasks_to_file(tasks: list, output_path: Path, output: str) -> None:
+    """タスクをJSONファイルに保存"""
+    tasks_data = {
+        "tasks": [
+            {
+                "id": task.id,
+                "title": task.title,
+                "description": task.description,
+                "assigned_to": task.assigned_to,
+                "dependencies": task.dependencies,
+                "target_files": task.target_files,
+                "acceptance_criteria": task.acceptance_criteria,
+                "priority": task.priority,
+            }
+            for task in tasks
+        ],
+        "workers": [],
+    }
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(tasks_data, ensure_ascii=False, indent=2), encoding="utf-8")
+    click.echo(f"💾 {output} に保存しました")
+
+
+def _print_task_summary(tasks: list) -> None:
+    """タスクサマリーを表示"""
+    click.echo(f"\n{'=' * 80}")
+    click.echo("生成されたタスクのサマリー")
+    click.echo(f"{'=' * 80}\n")
+
+    _print_priority_summary(tasks)
+    _print_assignment_summary(tasks)
+    _print_next_steps()
+
+
+def _print_priority_summary(tasks: list) -> None:
+    """優先度別サマリーを表示"""
+    priority_counts = {"high": 0, "medium": 0, "low": 0}
+    for task in tasks:
+        priority_counts[task.priority] = priority_counts.get(task.priority, 0) + 1
+
+    click.echo(f"総タスク数: {len(tasks)}")
+    click.echo(f"  🔴 高優先度: {priority_counts['high']}")
+    click.echo(f"  🟡 中優先度: {priority_counts['medium']}")
+    click.echo(f"  🟢 低優先度: {priority_counts['low']}")
+
+
+def _print_assignment_summary(tasks: list) -> None:
+    """担当別サマリーを表示"""
+    assigned_to_counts: Dict[str, int] = {}
+    for task in tasks:
+        assigned_to_counts[task.assigned_to] = assigned_to_counts.get(task.assigned_to, 0) + 1
+
+    click.echo("\n担当別:")
+    for assigned_to, count in sorted(assigned_to_counts.items()):
+        click.echo(f"  {assigned_to}: {count}タスク")
+
+
+def _print_next_steps() -> None:
+    """次のステップを表示"""
+    click.echo("\n次のステップ:")
+    click.echo("  1. タスク一覧を確認: cmw task list")
+    click.echo("  2. プロジェクト状況を確認: cmw status")
 
 
 @task.command("list")

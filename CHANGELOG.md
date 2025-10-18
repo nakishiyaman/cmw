@@ -5,6 +5,67 @@ All notable changes to Claude Multi-Worker Framework will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.3] - 2025-10-18
+
+### Code Quality - Complexity Reduction
+
+#### Complexity Improvements
+- **Reduced high-complexity functions** from 12 to 10 (-2 functions)
+- **Successfully refactored 2 most complex functions**:
+  - `requirements_parser.py:parse()` - Complexity 27 → <10 (-17)
+  - `cli.py:generate_tasks()` - Complexity 21 → <10 (-11)
+
+#### Refactoring Details
+
+**requirements_parser.py refactoring**:
+- Extracted `parse()` method into 8 focused helper methods:
+  - `_load_requirements()` - File loading
+  - `_generate_tasks_from_sections()` - Task generation
+  - `_filter_non_tasks()` - Filtering
+  - `_print_non_task_report()` - Reporting
+  - `_detect_and_fix_cycles()` - Cycle detection
+  - `_print_cycles_report()` - Cycle reporting
+  - `_print_fix_suggestions()` - Fix suggestions
+  - `_verify_cycles_fixed()` - Verification
+- Also refactored `_infer_target_files()` (complexity 11) by extracting:
+  - `_detect_router_files()`
+  - `_detect_backend_files()`
+  - `_detect_test_files()`
+  - `_detect_documentation_files()`
+
+**cli.py refactoring**:
+- Extracted `generate_tasks()` into 8 helper functions:
+  - `_validate_requirements_exists()` - Existence check
+  - `_confirm_overwrite()` - Overwrite confirmation
+  - `_parse_requirements()` - Parsing
+  - `_save_tasks_to_file()` - File saving
+  - `_print_task_summary()` - Summary display
+  - `_print_priority_summary()` - Priority breakdown
+  - `_print_assignment_summary()` - Assignment breakdown
+  - `_print_next_steps()` - Next steps
+
+#### Testing
+- **399 tests passing** - All tests continue to pass after refactoring
+- **90% code coverage maintained** - No regression in test coverage
+- Refactoring validated through comprehensive test suite
+
+#### Remaining High-Complexity Functions (10)
+- `cli.py:validate_tasks()` - Complexity 19
+- `cli.py:sync()` - Complexity 14
+- `requirements_parser.py:_extract_sections()` - Complexity 11
+- `requirements_parser.py:_infer_dependencies()` - Complexity 14
+- And 6 other functions documented in CODE_QUALITY.md
+
+### Code Quality
+- Applied Extract Method pattern for better maintainability
+- Improved code readability with Single Responsibility Principle
+- Maintained backward compatibility (no API changes)
+
+### Technical Details
+- Refactored 2 core functions using Extract Method pattern
+- All helper methods are private (_prefix) to preserve public API
+- Zero test modifications required (API unchanged)
+
 ## [0.5.2] - 2025-10-18
 
 ### Testing - 90% Coverage Achievement

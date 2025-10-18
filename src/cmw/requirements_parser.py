@@ -32,13 +32,23 @@ class RequirementsParser:
         Returns:
             生成されたタスクのリスト
         """
+        content = self._load_requirements(requirements_path)
+        sections = self._extract_sections(content)
+        tasks = self._generate_tasks_from_sections(sections)
+        tasks = self._filter_non_tasks(tasks)
+        tasks = self._infer_dependencies(tasks)
+        tasks = self._detect_and_fix_cycles(tasks)
+        return tasks
+
+    def _load_requirements(self, requirements_path: Path) -> str:
+        """requirements.mdを読み込む"""
         if not requirements_path.exists():
             raise FileNotFoundError(f"Requirements file not found: {requirements_path}")
+        return requirements_path.read_text(encoding="utf-8")
 
-        content = requirements_path.read_text(encoding="utf-8")
-        sections = self._extract_sections(content)
+    def _generate_tasks_from_sections(self, sections: List[Dict]) -> List[Task]:
+        """セクションからタスクリストを生成"""
         tasks = []
-
         for section in sections:
             # メインタスクを生成
             if section["criteria"] or section["technical_notes"]:
@@ -51,53 +61,67 @@ class RequirementsParser:
                 subtask = self._subsection_to_task(subsection, section)
                 if subtask:
                     tasks.append(subtask)
+        return tasks
 
-        # 🆕 v0.2.0: 非タスク項目のフィルタリング
+    def _filter_non_tasks(self, tasks: List[Task]) -> List[Task]:
+        """非タスク項目をフィルタリングして実装タスクのみ返す"""
         all_items = tasks
         tasks, non_tasks = self.task_filter.filter_tasks(all_items)
 
         if non_tasks:
-            print(f"\n📋 {len(non_tasks)}件の非タスク項目を検出:")
-            for non_task in non_tasks:
-                print(f"  - {non_task.id}: {non_task.title}")
-
-            print("\n💡 これらは実装タスクではなく参照情報です")
-            print(f"✅ {len(tasks)}個の実装タスクを生成しました\n")
-
-        # 依存関係を推論
-        tasks = self._infer_dependencies(tasks)
-
-        # 🆕 v0.2.0: 循環依存の検出と自動修正
-        cycles = self.validator.detect_cycles(tasks)
-
-        if cycles:
-            print(f"\n⚠️  {len(cycles)}件の循環依存を検出しました:")
-            for i, cycle in enumerate(cycles, 1):
-                print(f"  {i}. {' ↔ '.join(cycle)}")
-
-            # 修正提案を生成
-            suggestions = self.validator.suggest_fixes(cycles, tasks)
-
-            print("\n💡 推奨される修正:")
-            for suggestion in suggestions:
-                for fix in suggestion["suggestions"][:1]:  # 最良の提案のみ表示
-                    print(f"  - {fix['from_task']} → {fix['to_task']} を削除")
-                    print(f"    理由: {fix['reason']}")
-                    print(f"    信頼度: {fix['confidence']:.0%}")
-
-            # 自動修正を適用
-            print("\n🔧 自動修正を適用中...")
-            tasks = self.validator.auto_fix_cycles(tasks, cycles, auto_apply=True)
-
-            # 修正後の確認
-            remaining_cycles = self.validator.detect_cycles(tasks)
-            if remaining_cycles:
-                print(f"\n⚠️  {len(remaining_cycles)}件の循環依存が残っています")
-                print("   手動での確認と修正が必要です")
-            else:
-                print("\n✅ 全ての循環依存を解決しました")
+            self._print_non_task_report(non_tasks, tasks)
 
         return tasks
+
+    def _print_non_task_report(self, non_tasks: List[Task], tasks: List[Task]) -> None:
+        """非タスク項目のレポートを表示"""
+        print(f"\n📋 {len(non_tasks)}件の非タスク項目を検出:")
+        for non_task in non_tasks:
+            print(f"  - {non_task.id}: {non_task.title}")
+
+        print("\n💡 これらは実装タスクではなく参照情報です")
+        print(f"✅ {len(tasks)}個の実装タスクを生成しました\n")
+
+    def _detect_and_fix_cycles(self, tasks: List[Task]) -> List[Task]:
+        """循環依存を検出して自動修正"""
+        cycles = self.validator.detect_cycles(tasks)
+
+        if not cycles:
+            return tasks
+
+        self._print_cycles_report(cycles)
+        suggestions = self.validator.suggest_fixes(cycles, tasks)
+        self._print_fix_suggestions(suggestions)
+
+        print("\n🔧 自動修正を適用中...")
+        tasks = self.validator.auto_fix_cycles(tasks, cycles, auto_apply=True)
+
+        self._verify_cycles_fixed(tasks)
+        return tasks
+
+    def _print_cycles_report(self, cycles: List[List[str]]) -> None:
+        """循環依存のレポートを表示"""
+        print(f"\n⚠️  {len(cycles)}件の循環依存を検出しました:")
+        for i, cycle in enumerate(cycles, 1):
+            print(f"  {i}. {' ↔ '.join(cycle)}")
+
+    def _print_fix_suggestions(self, suggestions: List[Dict]) -> None:
+        """修正提案を表示"""
+        print("\n💡 推奨される修正:")
+        for suggestion in suggestions:
+            for fix in suggestion["suggestions"][:1]:  # 最良の提案のみ表示
+                print(f"  - {fix['from_task']} → {fix['to_task']} を削除")
+                print(f"    理由: {fix['reason']}")
+                print(f"    信頼度: {fix['confidence']:.0%}")
+
+    def _verify_cycles_fixed(self, tasks: List[Task]) -> None:
+        """循環依存が修正されたか確認"""
+        remaining_cycles = self.validator.detect_cycles(tasks)
+        if remaining_cycles:
+            print(f"\n⚠️  {len(remaining_cycles)}件の循環依存が残っています")
+            print("   手動での確認と修正が必要です")
+        else:
+            print("\n✅ 全ての循環依存を解決しました")
 
     def _extract_sections(self, content: str) -> List[Dict]:
         """
@@ -227,93 +251,82 @@ class RequirementsParser:
         3. データベース記述からdatabase.pyを推論
         4. テスト記述からテストファイルを推論
         """
-        files = set()
+        files: set[str] = set()
         content = title + " " + " ".join(criteria)
         content_lower = content.lower()
 
-        # エンドポイント検出
-        if re.search(r"POST|GET|PUT|DELETE|PATCH|エンドポイント|API", content):
-            # URLパターンから推測
-            if (
-                "/auth" in content
-                or "認証" in content
-                or "ログイン" in content
-                or "登録" in content
-            ):
-                files.add("backend/routers/auth.py")
-            elif "/task" in content or "タスク" in content and "エンドポイント" in content:
-                files.add("backend/routers/tasks.py")
-            else:
-                # 一般的なルーターファイル
-                endpoint_match = re.search(r"/([\w-]+)", content)
-                if endpoint_match:
-                    resource = endpoint_match.group(1)
-                    files.add(f"backend/routers/{resource}.py")
+        # 各ファイルタイプの検出ロジックを実行
+        self._detect_router_files(content, content_lower, files)
+        self._detect_backend_files(content_lower, files)
+        self._detect_test_files(content_lower, files)
+        self._detect_documentation_files(content_lower, files)
 
+        return sorted(files)
+
+    def _detect_router_files(self, content: str, content_lower: str, files: set[str]) -> None:
+        """エンドポイント/ルーターファイルを検出"""
+        if not re.search(r"POST|GET|PUT|DELETE|PATCH|エンドポイント|API", content):
+            return
+
+        if any(kw in content for kw in ["/auth", "認証", "ログイン", "登録"]):
+            files.add("backend/routers/auth.py")
+        elif "/task" in content or ("タスク" in content and "エンドポイント" in content):
+            files.add("backend/routers/tasks.py")
+        else:
+            # 一般的なルーターファイル
+            endpoint_match = re.search(r"/([\w-]+)", content)
+            if endpoint_match:
+                resource = endpoint_match.group(1)
+                files.add(f"backend/routers/{resource}.py")
+
+    def _detect_backend_files(self, content_lower: str, files: set[str]) -> None:
+        """バックエンドファイル（models, database, schemasなど）を検出"""
         # モデル検出
-        if any(keyword in content_lower for keyword in ["モデル", "model", "データモデル", "orm"]):
+        if any(kw in content_lower for kw in ["モデル", "model", "データモデル", "orm"]):
             files.add("backend/models.py")
 
         # データベース検出
-        if any(
-            keyword in content_lower
-            for keyword in ["データベース", "database", "db設定", "sqlalchemy"]
-        ):
+        if any(kw in content_lower for kw in ["データベース", "database", "db設定", "sqlalchemy"]):
             files.add("backend/database.py")
 
         # スキーマ検出
-        if any(
-            keyword in content_lower
-            for keyword in ["スキーマ", "schema", "pydantic", "バリデーション"]
-        ):
+        if any(kw in content_lower for kw in ["スキーマ", "schema", "pydantic", "バリデーション"]):
             files.add("backend/schemas.py")
 
         # 認証ユーティリティ検出
-        if any(
-            keyword in content_lower
-            for keyword in ["jwt", "トークン", "パスワード", "ハッシュ", "bcrypt"]
-        ):
+        if any(kw in content_lower for kw in ["jwt", "トークン", "パスワード", "ハッシュ", "bcrypt"]):
             if "エンドポイント" not in content_lower:  # エンドポイントでない場合
                 files.add("backend/auth.py")
 
         # 依存関係/ミドルウェア検出
-        if any(
-            keyword in content_lower
-            for keyword in ["ミドルウェア", "middleware", "依存関係", "dependencies"]
-        ):
+        if any(kw in content_lower for kw in ["ミドルウェア", "middleware", "依存関係", "dependencies"]):
             files.add("backend/dependencies.py")
 
         # メインアプリケーション検出
-        if any(
-            keyword in content_lower
-            for keyword in ["fastapi", "アプリケーション設定", "main.py", "cors"]
-        ):
+        if any(kw in content_lower for kw in ["fastapi", "アプリケーション設定", "main.py", "cors"]):
             files.add("backend/main.py")
 
-        # テスト検出
-        if any(keyword in content_lower for keyword in ["テスト", "test"]):
-            if "認証" in content_lower or "auth" in content_lower:
-                files.add("tests/test_auth_endpoints.py")
-            elif "タスク" in content_lower and (
-                "api" in content_lower or "エンドポイント" in content_lower
-            ):
-                files.add("tests/test_tasks_endpoints.py")
-            else:
-                files.add("tests/test_integration.py")
+    def _detect_test_files(self, content_lower: str, files: set[str]) -> None:
+        """テストファイルを検出"""
+        if not any(kw in content_lower for kw in ["テスト", "test"]):
+            return
 
+        if "認証" in content_lower or "auth" in content_lower:
+            files.add("tests/test_auth_endpoints.py")
+        elif "タスク" in content_lower and ("api" in content_lower or "エンドポイント" in content_lower):
+            files.add("tests/test_tasks_endpoints.py")
+        else:
+            files.add("tests/test_integration.py")
+
+    def _detect_documentation_files(self, content_lower: str, files: set[str]) -> None:
+        """ドキュメントファイルを検出"""
         # requirements.txt検出
-        if any(
-            keyword in content_lower for keyword in ["requirements", "依存パッケージ", "パッケージ"]
-        ):
+        if any(kw in content_lower for kw in ["requirements", "依存パッケージ", "パッケージ"]):
             files.add("requirements.txt")
 
         # README検出
-        if any(
-            keyword in content_lower for keyword in ["readme", "ドキュメント", "セットアップ手順"]
-        ):
+        if any(kw in content_lower for kw in ["readme", "ドキュメント", "セットアップ手順"]):
             files.add("README.md")
-
-        return sorted(files)
 
     def _infer_priority(self, title: str) -> Priority:
         """タイトルから優先度を推論"""
