@@ -964,9 +964,7 @@ def generate_requirements(output: str, with_claude: bool, prompt: Optional[str])
             return
 
         # プロンプトテンプレートを読み込み
-        template_path = (
-            Path(__file__).parent.parent.parent / "prompts" / "requirements_generator.md"
-        )
+        template_path = Path(__file__).parent / "prompts" / "requirements_generator.md"
 
         if not template_path.exists():
             click.echo(
