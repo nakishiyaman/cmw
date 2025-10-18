@@ -3,7 +3,6 @@ SmartPromptGeneratorのテスト
 """
 
 import pytest
-from pathlib import Path
 from cmw.models import Task, TaskStatus, Priority
 from cmw.smart_prompt_generator import SmartPromptGenerator
 
