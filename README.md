@@ -1,4 +1,4 @@
-# Claude Multi-Worker Framework (cmw) v0.5.6
+# Claude Multi-Worker Framework (cmw) v0.6.0
 
 [![Tests](https://github.com/nakishiyaman/cmw/workflows/Tests/badge.svg)](https://github.com/nakishiyaman/cmw/actions)
 [![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
@@ -433,22 +433,22 @@ cmw requirements generate -o custom/path/requirements.md
 
 ```bash
 # タスク生成
-cmw tasks generate
+cmw task generate
 
 # タスク一覧
-cmw tasks list
-cmw tasks list --status pending
-cmw tasks list --status completed
+cmw task list
+cmw task list --status pending
+cmw task list --status completed
 
 # タスク詳細
-cmw tasks show TASK-001
+cmw task show TASK-001
 
 # タスク検証（v0.2.0）
-cmw tasks validate              # 循環依存、非タスク項目、依存関係をチェック
-cmw tasks validate --fix        # 検出した問題を自動修正
+cmw task validate              # 循環依存、非タスク項目、依存関係をチェック
+cmw task validate --fix        # 検出した問題を自動修正
 
 # ファイル競合分析
-cmw tasks analyze
+cmw task analyze
 
 # 依存関係グラフ表示（v0.3.0）
 cmw task graph                  # ASCII形式でグラフ表示
@@ -464,6 +464,23 @@ cmw task complete TASK-001 --artifacts '["file1.py"]'         # 生成ファイ�
 cmw task complete TASK-001 -a '["file1.py"]' -m "実装完了"   # メッセージ付き
 ```
 
+### インテリジェント・タスク管理 (v0.6.0 NEW!)
+
+```bash
+# 次に実行すべきタスクを提案
+cmw task next                   # 実行可能なタスクを依存関係・優先度順に表示
+cmw task next --num 5           # 5件表示
+
+# クリティカルパス分析
+cmw task critical               # プロジェクト完了に最も影響するタスクを表示
+                                # ボトルネック検出、完了予測も含む
+
+# スマートタスク実行
+cmw task exec TASK-002          # タスクの詳細プロンプトを生成
+                                # ステータスを自動でin_progressに更新
+                                # 依存関係、関連ファイル、実装ガイドを表示
+```
+
 ### 進捗管理
 
 ```bash
@@ -471,6 +488,113 @@ cmw task complete TASK-001 -a '["file1.py"]' -m "実装完了"   # メッセー�
 cmw sync --from-git                    # 過去1週間分のコミットから同期
 cmw sync --from-git --since=1.day.ago  # 過去1日分
 cmw sync --from-git --dry-run          # 検出のみ（更新なし）
+```
+
+## 🚀 実践的な使い方
+
+### 基本的なワークフロー
+
+```bash
+# 1. タスク生成
+cmw task generate
+
+# 2. 次に実行すべきタスクを確認
+cmw task next
+
+# 出力例:
+# 🎯 実行可能なタスク (依存関係クリア済み)
+#
+# 1. TASK-002: 3.1 Userモデル
+#    └─ 優先度: HIGH 🔴 CRITICAL
+#    └─ 理由: クリティカルパス上, 14タスクをブロック中
+#    └─ 影響範囲: 14タスクがブロック中
+#
+# タスクを開始するには:
+#   cmw task exec TASK-002
+
+# 3. タスクを開始
+cmw task exec TASK-002
+
+# → 詳細なプロンプトが表示される:
+#   - タスク概要（重要度を強調）
+#   - 依存関係（前提タスク、待機中のタスク）
+#   - 関連ファイル
+#   - 実装ガイド
+#   - 完了条件チェックリスト
+#   - テストコマンド
+#   - 次のステップ
+
+# 4. Claude Codeで作業...
+
+# 5. タスク完了
+cmw task complete TASK-002
+
+# 6. 次のタスクへ
+cmw task next
+```
+
+### クリティカルパスを意識した進行
+
+```bash
+# クリティカルパスを確認
+cmw task critical
+
+# 出力例:
+# ⚡ クリティカルパス分析
+#
+# プロジェクト完了予測:
+#   楽観的予測: 7.3日 (並行実行フル活用)
+#   悲観的予測: 11.5日 (クリティカルパス基準)
+#   進捗: 35% (8/23タスク)
+#
+# 🔴 クリティカルパス (遅延厳禁):
+# ┌──────────────────────────────────────────────────────┐
+# │ ⏳ TASK-002: Userモデル
+# │   ↓
+# │ ⏳ TASK-003: Todoモデル
+# │   ↓
+# │ ⏳ TASK-006: Todo機能
+# │   ...
+# └──────────────────────────────────────────────────────┘
+#
+# ⚠️  ボトルネック警告:
+#   • TASK-002: 14タスクが依存
+#     → 3.1 Userモデル
+
+# 最優先タスクから着手
+cmw task exec TASK-002
+```
+
+## 📚 チートシート
+
+### タスク選択
+
+```bash
+cmw task next              # 次にやるべきタスクを提案
+cmw task critical          # クリティカルパス確認
+cmw task graph             # 依存関係グラフ可視化
+```
+
+### タスク実行
+
+```bash
+cmw task exec TASK-002     # タスク開始（プロンプト生成）
+# ... Claude Codeで作業 ...
+cmw task complete TASK-002 # 完了マーク
+```
+
+### 進捗確認
+
+```bash
+cmw status                 # 全体進捗
+cmw task list --status in_progress  # 進行中タスク
+```
+
+### 分析
+
+```bash
+cmw task analyze           # ファイル競合分析
+cmw task validate          # タスク品質検証
 ```
 
 ## 📖 ドキュメント
@@ -502,9 +626,11 @@ python -m pytest tests/test_interactive_fixer.py -v     # v0.3.0
 python -m pytest tests/test_response_parser.py -v       # v0.3.0
 python -m pytest tests/test_coordinator.py -v           # v0.3.1
 python -m pytest tests/test_cli_complete.py -v          # v0.3.1
+python -m pytest tests/test_dependency_analyzer.py -v   # v0.6.0
+python -m pytest tests/test_smart_prompt_generator.py -v # v0.6.0
 ```
 
-現在399個のテストが全てパスしています（v0.5.3）。
+現在424個のテストが全てパスしています（v0.6.0）。
 
 ## 📊 開発ロードマップ
 
@@ -689,6 +815,27 @@ python -m pytest tests/test_cli_complete.py -v          # v0.3.1
 - ✅ 後方互換性維持（API変更なし）
 - ✅ 16個のヘルパー関数を作成
 
+### ✅ v0.6.0: インテリジェント・タスク管理（100%）- 2025-10-18
+
+#### 🧠 スマートタスク実行の実現
+- **DependencyAnalyzer実装**: クリティカルパス分析、ボトルネック検出、並列実行計画
+- **SmartPromptGenerator実装**: 文脈を含む詳細プロンプト生成
+- **新CLIコマンド**: `cmw task next`, `cmw task critical`, `cmw task exec`
+- **テスト追加**: 424個全パス（399個 → 424個、+25テスト）
+
+#### ✨ 新機能
+- **`cmw task next`**: 実行可能なタスクを依存関係・優先度順に提案
+- **`cmw task critical`**: クリティカルパス表示、プロジェクト完了予測、ボトルネック警告
+- **`cmw task exec`**: タスク開始（ステータス自動更新 + 詳細プロンプト生成）
+
+#### 📊 改善された開発ワークフロー
+従来の煩雑な手順（プロンプトコピー、手動ステータス更新）から、シンプルな3コマンドフローへ:
+```bash
+cmw task next      # 次のタスクを確認
+cmw task exec TASK-002  # 開始（詳細プロンプト表示）
+cmw task complete TASK-002  # 完了
+```
+
 ### ✅ v0.5.2: テストカバレッジ向上（100%）- 2025-10-18
 
 #### 🧪 90%テストカバレッジ達成
@@ -797,7 +944,13 @@ python -m pytest tests/test_cli_complete.py -v          # v0.3.1
 - CHANGELOG.md にv0.5.0セクション追加
 - MYPY_IMPROVEMENTS.md で詳細な改善記録を提供
 
-**全体進捗**: 100%（v0.5.3リリース完了）
+**全体進捗**: 100%（v0.6.0リリース完了）
+
+**v0.6.0の新機能:**
+- ✅ インテリジェント・タスク管理（クリティカルパス分析、スマートプロンプト生成）
+- ✅ 新CLIコマンド3つ追加（`next`, `critical`, `exec`）
+- ✅ 開発ワークフロー大幅改善（プロンプトコピー不要）
+- ✅ 全424テストパス（399 → 424テスト、+25テスト）
 
 **v0.5.3の新機能:**
 - ✅ コード複雑度削減（高複雑度関数 12個 → 10個）
@@ -839,7 +992,7 @@ python -m pytest tests/test_cli_complete.py -v          # v0.3.1
 
 ---
 
-## 🚧 次期バージョン予告（v0.6.0）
+## 🚧 次期バージョン予告（v0.7.0）
 
 ### MCP統合・Plugin化（開発予定）
 
@@ -864,18 +1017,18 @@ Claude Codeとのシームレスな統合を実現します。
 
 **リリース予定:** 2025年11月中旬
 
-**注記:** v0.5.3では、Claude Code Pluginとしてのインストールはまだ対応していません。現在はCLIツールとしてPyPI経由でインストールしてください。Plugin対応はv0.6.0で実装予定です。
+**注記:** v0.6.0では、Claude Code Pluginとしてのインストールはまだ対応していません。現在はCLIツールとしてPyPI経由でインストールしてください。Plugin対応はv0.7.0で実装予定です。
 
-**現在の使い方（v0.5.3）:**
+**現在の使い方（v0.6.0）:**
 ```bash
-# CLIで手動管理
-cmw task list              # タスク一覧表示
-cmw task prompt TASK-001   # プロンプト生成
+# インテリジェントなタスク管理
+cmw task next              # 次のタスクを提案
+cmw task exec TASK-001     # プロンプト生成 + ステータス更新
 # → Claude Codeで実装
 cmw task complete TASK-001 # 完了マーク
 ```
 
-**v0.6.0での使い方（予定）:**
+**v0.7.0での使い方（予定）:**
 ```bash
 # Claude Code内で
 ユーザー: 「次のタスクを実装して」
@@ -899,8 +1052,8 @@ requirements.mdを書くだけで、タスクの分解、ファイルパスの�
 ### 3. 📊 リアルタイム進捗可視化
 美しいターミナルダッシュボードで進捗を可視化。完了率、成功率、推定残り時間、ベロシティメトリクスを一目で確認できます。
 
-### 4. 🔒 100%型安全 + クリーンコード（v0.5.3 NEW!）
-**mypy完全対応**で型エラーゼロを達成。IDE補完が完璧に機能し、リファクタリングも安心。**ruff format**で統一されたコードスタイル、**90%テストカバレッジ**（399テスト）で高品質を保証。**コード複雑度削減**により保守性が向上（高複雑度関数 12個→10個）。CI/CDで型チェックとlintを自動化し、品質の高いコードベースを維持します。
+### 4. 🔒 100%型安全 + クリーンコード
+**mypy完全対応**で型エラーゼロを達成。IDE補完が完璧に機能し、リファクタリングも安心。**ruff format**で統一されたコードスタイル、**90%テストカバレッジ**（424テスト）で高品質を保証。**コード複雑度削減**により保守性が向上（高複雑度関数 12個→10個）。CI/CDで型チェックとlintを自動化し、品質の高いコードベースを維持します。
 
 ### 5. 💰 APIコストゼロ
 Claude Codeが直接コードを生成するため、追加のAPI呼び出しコストはかかりません。

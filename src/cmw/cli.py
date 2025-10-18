@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Optional, Dict
 
 from . import __version__
-from .models import TaskStatus
+from .models import TaskStatus, Task, Priority
 from .coordinator import Coordinator
 from .requirements_parser import RequirementsParser
 from .conflict_detector import ConflictDetector
@@ -1007,6 +1007,249 @@ def generate_requirements(output: str, with_claude: bool, prompt: Optional[str])
         click.echo(f"  1. {output} を確認・編集")
         click.echo("  2. cmw task generate でタスク自動生成")
         click.echo("  3. cmw status でプロジェクト状況を確認")
+
+
+@task.command("next")
+@click.option("--coordination", "-c", default="shared/coordination", help="coordinationディレクトリのパス")
+@click.option("--num", "-n", default=3, type=int, help="表示する推奨タスク数")
+def next_task(coordination: str, num: int) -> None:
+    """実行可能な次のタスクを提案"""
+    from rich.console import Console
+    from rich.panel import Panel
+    from .dependency_analyzer import DependencyAnalyzer
+
+    console = Console()
+    coord_path = Path.cwd() / coordination
+    tasks_file = coord_path / "tasks.json"
+
+    if not tasks_file.exists():
+        console.print(f"[red]❌ エラー: {tasks_file} が見つかりません[/red]")
+        console.print("[dim]ヒント: cmw task generate でタスクを生成してください[/dim]")
+        return
+
+    # タスクを読み込み
+    tasks_data = json.loads(tasks_file.read_text(encoding="utf-8"))
+    tasks_list = []
+
+    for task_data in tasks_data.get("tasks", []):
+        task = Task(
+            id=task_data["id"],
+            title=task_data["title"],
+            description=task_data.get("description", ""),
+            assigned_to=task_data.get("assigned_to", "未割当"),
+            status=TaskStatus(task_data.get("status", "pending")),
+            dependencies=task_data.get("dependencies", []),
+            target_files=task_data.get("target_files", []),
+            acceptance_criteria=task_data.get("acceptance_criteria", []),
+            priority=Priority(task_data.get("priority", "medium")),
+        )
+        tasks_list.append(task)
+
+    # 依存関係解析
+    analyzer = DependencyAnalyzer(tasks_list)
+    recommendations = analyzer.get_next_tasks_recommendation(num_recommendations=num)
+
+    # タイトル
+    console.print(Panel.fit(
+        "🎯 実行可能なタスク (依存関係クリア済み)",
+        border_style="bold cyan"
+    ))
+
+    if not recommendations:
+        console.print("\n[yellow]⚠️  現在実行可能なタスクがありません[/yellow]")
+        console.print("[dim]全てのタスクが完了しているか、依存関係によりブロックされています[/dim]")
+        return
+
+    # 推奨タスクを表示
+    for i, rec in enumerate(recommendations, 1):
+        priority_color = {
+            "high": "red",
+            "medium": "yellow",
+            "low": "green"
+        }
+        color = priority_color.get(rec["priority"], "white")
+
+        critical_badge = "[red bold]CRITICAL[/red bold]" if rec["is_critical_path"] else ""
+        parallel_badge = "[blue]PARALLEL[/blue]" if rec["blocking_count"] == 0 else ""
+
+        console.print(f"\n[bold]{i}. {rec['task_id']}: {rec['title']}[/bold]")
+        console.print(f"   └─ 優先度: [{color}]{rec['priority'].upper()}[/{color}] {critical_badge} {parallel_badge}")
+        console.print(f"   └─ 理由: {rec['reason']}")
+
+        if rec['blocking_count'] > 0:
+            console.print(f"   └─ 影響範囲: [yellow]{rec['blocking_count']}タスクがブロック中[/yellow]")
+
+    console.print("\n" + "─" * 60)
+    console.print("[bold cyan]タスクを開始するには:[/bold cyan]")
+    if recommendations:
+        first_task = recommendations[0]
+        console.print(f"  cmw task prompt {first_task['task_id']}")
+    console.print("─" * 60)
+
+
+@task.command("critical")
+@click.option("--coordination", "-c", default="shared/coordination", help="coordinationディレクトリのパス")
+def critical_path(coordination: str) -> None:
+    """クリティカルパス分析"""
+    from rich.console import Console
+    from rich.panel import Panel
+    from .dependency_analyzer import DependencyAnalyzer
+
+    console = Console()
+    coord_path = Path.cwd() / coordination
+    tasks_file = coord_path / "tasks.json"
+
+    if not tasks_file.exists():
+        console.print(f"[red]❌ エラー: {tasks_file} が見つかりません[/red]")
+        return
+
+    # タスクを読み込み
+    tasks_data = json.loads(tasks_file.read_text(encoding="utf-8"))
+    tasks_list = []
+
+    for task_data in tasks_data.get("tasks", []):
+        task = Task(
+            id=task_data["id"],
+            title=task_data["title"],
+            description=task_data.get("description", ""),
+            assigned_to=task_data.get("assigned_to", "未割当"),
+            status=TaskStatus(task_data.get("status", "pending")),
+            dependencies=task_data.get("dependencies", []),
+            target_files=task_data.get("target_files", []),
+            acceptance_criteria=task_data.get("acceptance_criteria", []),
+            priority=Priority(task_data.get("priority", "medium")),
+        )
+        tasks_list.append(task)
+
+    # 依存関係解析
+    analyzer = DependencyAnalyzer(tasks_list)
+    critical_info = analyzer.get_critical_path()
+    forecast = analyzer.get_completion_forecast()
+    bottlenecks = analyzer.analyze_bottlenecks()
+
+    # タイトル
+    console.print(Panel.fit(
+        "⚡ クリティカルパス分析",
+        border_style="bold red"
+    ))
+
+    # 完了予測
+    console.print("\n[bold cyan]プロジェクト完了予測:[/bold cyan]")
+    console.print(f"  楽観的予測: {forecast['optimistic_completion_days']}日 (並行実行フル活用)")
+    console.print(f"  悲観的予測: {forecast['pessimistic_completion_days']}日 (クリティカルパス基準)")
+    console.print(f"  進捗: {forecast['progress_percent']}% ({forecast['completed']}/{forecast['total_tasks']}タスク)")
+
+    # クリティカルパス
+    console.print("\n[bold red]🔴 クリティカルパス (遅延厳禁):[/bold red]")
+    console.print("┌" + "─" * 58 + "┐")
+
+    for i, task_detail in enumerate(critical_info['task_details'], 1):
+        status_icon = {
+            "pending": "⏳",
+            "in_progress": "🔄",
+            "completed": "✅"
+        }.get(task_detail['status'], "❓")
+
+        console.print(f"│ {status_icon} {task_detail['id']}: {task_detail['title'][:40]}")
+        if i < len(critical_info['task_details']):
+            console.print("│   ↓")
+
+    console.print("└" + "─" * 58 + "┘")
+    console.print(f"\n合計: {critical_info['total_duration']}時間 ({critical_info['completion_days']:.1f}日)")
+
+    # ボトルネック
+    if bottlenecks:
+        console.print("\n[bold yellow]⚠️  ボトルネック警告:[/bold yellow]")
+        for bn in bottlenecks[:3]:  # Top 3
+            severity_color = {"critical": "red", "high": "yellow", "medium": "white"}
+            color = severity_color.get(bn['severity'], "white")
+            console.print(f"  • [{color}]{bn['task_id']}[/{color}]: {bn['blocking_count']}タスクが依存")
+            console.print(f"    → {bn['title'][:50]}")
+
+    # 並行作業の余地
+    parallel_plan = analyzer.get_parallel_execution_plan(num_workers=2)
+    if parallel_plan['efficiency_gain'] > 20:
+        console.print("\n[bold green]💡 並行作業の余地:[/bold green]")
+        console.print(f"  2名体制なら {parallel_plan['efficiency_gain']:.0f}% 短縮可能")
+        console.print(f"  推定完了: {parallel_plan['estimated_completion_days']:.1f}日")
+
+
+@task.command("exec")
+@click.argument("task_id")
+@click.option("--coordination", "-c", default="shared/coordination", help="coordinationディレクトリのパス")
+def exec_task(task_id: str, coordination: str) -> None:
+    """タスクを実行（スマートプロンプト表示）"""
+    from rich.console import Console
+    from .smart_prompt_generator import SmartPromptGenerator
+
+    console = Console()
+    project_path = Path.cwd()
+    coord_path = project_path / coordination
+    tasks_file = coord_path / "tasks.json"
+
+    if not tasks_file.exists():
+        console.print(f"[red]❌ エラー: {tasks_file} が見つかりません[/red]")
+        return
+
+    # タスクを読み込み
+    tasks_data = json.loads(tasks_file.read_text(encoding="utf-8"))
+    tasks_list = []
+
+    for task_data in tasks_data.get("tasks", []):
+        task = Task(
+            id=task_data["id"],
+            title=task_data["title"],
+            description=task_data.get("description", ""),
+            assigned_to=task_data.get("assigned_to", "未割当"),
+            status=TaskStatus(task_data.get("status", "pending")),
+            dependencies=task_data.get("dependencies", []),
+            target_files=task_data.get("target_files", []),
+            acceptance_criteria=task_data.get("acceptance_criteria", []),
+            priority=Priority(task_data.get("priority", "medium")),
+        )
+        tasks_list.append(task)
+
+    # タスクを検索
+    target_task = None
+    for task in tasks_list:
+        if task.id == task_id:
+            target_task = task
+            break
+
+    if not target_task:
+        console.print(f"[red]❌ エラー: タスク {task_id} が見つかりません[/red]")
+        return
+
+    # ステータスを in_progress に更新
+    if target_task.status == TaskStatus.PENDING:
+        target_task.status = TaskStatus.IN_PROGRESS
+
+        # tasks.json を更新
+        for task_data in tasks_data.get("tasks", []):
+            if task_data["id"] == task_id:
+                task_data["status"] = "in_progress"
+                break
+
+        tasks_file.write_text(
+            json.dumps(tasks_data, ensure_ascii=False, indent=2),
+            encoding="utf-8"
+        )
+
+        console.print("[green]✓ ステータス更新: pending → in_progress[/green]\n")
+    elif target_task.status == TaskStatus.COMPLETED:
+        console.print(f"[yellow]⚠️  警告: タスク {task_id} は既に完了しています[/yellow]\n")
+
+    # スマートプロンプト生成
+    generator = SmartPromptGenerator(tasks_list, project_path)
+    prompt = generator.generate(task_id)
+
+    # プロンプトを表示
+    console.print(prompt)
+
+    # プロンプトをファイルにも保存
+    prompt_file = project_path / ".cmw_prompt.md"
+    prompt_file.write_text(prompt, encoding="utf-8")
+    console.print(f"\n[dim]プロンプトを {prompt_file} に保存しました[/dim]")
 
 
 # 後方互換性: task のすべてのコマンドを tasks にもコピー

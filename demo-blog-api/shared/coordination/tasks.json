@@ -1,0 +1,376 @@
+{
+  "tasks": [
+    {
+      "id": "TASK-001",
+      "title": "2.1 記事（Article）モデル定義",
+      "description": "2. データモデルの一部として2.1 記事（Article）モデル定義を実装する",
+      "assigned_to": "testing",
+      "dependencies": [],
+      "target_files": [
+        "backend/models.py",
+        "backend/schemas.py",
+        "tests/test_auth_endpoints.py"
+      ],
+      "acceptance_criteria": [
+        "id: UUID（自動生成）",
+        "title: 文字列（必須、最大200文字）",
+        "content: 文字列（必須）",
+        "author: 文字列（必須）",
+        "created_at: 日時（自動生成）",
+        "updated_at: 日時（自動更新）",
+        "published: 真偽値（デフォルト: False）",
+        "Pydanticモデルとして定義",
+        "バリデーション設定を含む",
+        "テストコードが存在する"
+      ],
+      "priority": "high",
+      "status": "in_progress"
+    },
+    {
+      "id": "TASK-002",
+      "title": "3.1 データベース接続設定",
+      "description": "3. データベースの一部として3.1 データベース接続設定を実装する",
+      "assigned_to": "backend",
+      "dependencies": [
+        "TASK-001"
+      ],
+      "target_files": [
+        "backend/database.py",
+        "backend/models.py"
+      ],
+      "acceptance_criteria": [
+        "SQLiteを使用",
+        "接続プール設定",
+        "マイグレーション対応",
+        "SQLAlchemy ORMを使用",
+        "テーブル自動作成機能",
+        "トランザクション管理"
+      ],
+      "priority": "high"
+    },
+    {
+      "id": "TASK-003",
+      "title": "3.2 記事テーブルスキーマ定義",
+      "description": "3. データベースの一部として3.2 記事テーブルスキーマ定義を実装する",
+      "assigned_to": "backend",
+      "dependencies": [
+        "TASK-001"
+      ],
+      "target_files": [
+        "backend/database.py",
+        "backend/models.py",
+        "backend/schemas.py"
+      ],
+      "acceptance_criteria": [
+        "Articleモデルに対応するテーブル",
+        "インデックス設定",
+        "SQLAlchemyで定義",
+        "適切なカラム型"
+      ],
+      "priority": "medium"
+    },
+    {
+      "id": "TASK-004",
+      "title": "4.1 記事作成API（POST /articles）",
+      "description": "4. APIエンドポイントの一部として4.1 記事作成API（POST /articles）を実装する",
+      "assigned_to": "testing",
+      "dependencies": [
+        "TASK-002",
+        "TASK-003",
+        "TASK-010",
+        "TASK-001"
+      ],
+      "target_files": [
+        "backend/routers/articles.py",
+        "backend/schemas.py",
+        "tests/test_auth_endpoints.py"
+      ],
+      "acceptance_criteria": [
+        "リクエスト: title, content, author",
+        "レスポンス: 作成された記事情報",
+        "ステータスコード: 201",
+        "バリデーションエラー処理",
+        "作成日時の自動設定",
+        "テストコードが存在する"
+      ],
+      "priority": "medium"
+    },
+    {
+      "id": "TASK-005",
+      "title": "4.2 記事一覧取得API（GET /articles）",
+      "description": "4. APIエンドポイントの一部として4.2 記事一覧取得API（GET /articles）を実装する",
+      "assigned_to": "testing",
+      "dependencies": [
+        "TASK-003",
+        "TASK-010",
+        "TASK-004"
+      ],
+      "target_files": [
+        "backend/routers/articles.py",
+        "tests/test_integration.py"
+      ],
+      "acceptance_criteria": [
+        "クエリパラメータ: page, limit, published",
+        "レスポンス: 記事リスト、総件数",
+        "ページネーション対応",
+        "フィルタリング機能",
+        "ページネーション実装",
+        "テストコードが存在する"
+      ],
+      "priority": "medium"
+    },
+    {
+      "id": "TASK-006",
+      "title": "4.3 記事詳細取得API（GET /articles/{id}）",
+      "description": "4. APIエンドポイントの一部として4.3 記事詳細取得API（GET /articles/{id}）を実装する",
+      "assigned_to": "testing",
+      "dependencies": [
+        "TASK-003",
+        "TASK-010",
+        "TASK-004",
+        "TASK-005"
+      ],
+      "target_files": [
+        "backend/routers/articles.py",
+        "tests/test_integration.py"
+      ],
+      "acceptance_criteria": [
+        "パスパラメータ: id（UUID）",
+        "レスポンス: 記事詳細情報",
+        "ステータスコード: 200 or 404",
+        "存在しない記事への対応",
+        "テストコードが存在する"
+      ],
+      "priority": "medium"
+    },
+    {
+      "id": "TASK-007",
+      "title": "4.4 記事更新API（PUT /articles/{id}）",
+      "description": "4. APIエンドポイントの一部として4.4 記事更新API（PUT /articles/{id}）を実装する",
+      "assigned_to": "testing",
+      "dependencies": [
+        "TASK-003",
+        "TASK-010",
+        "TASK-004",
+        "TASK-005",
+        "TASK-006"
+      ],
+      "target_files": [
+        "backend/routers/articles.py",
+        "tests/test_integration.py"
+      ],
+      "acceptance_criteria": [
+        "パスパラメータ: id（UUID）",
+        "リクエスト: title, content, published",
+        "レスポンス: 更新後の記事情報",
+        "部分更新対応",
+        "updated_atの自動更新",
+        "テストコードが存在する"
+      ],
+      "priority": "medium"
+    },
+    {
+      "id": "TASK-008",
+      "title": "4.5 記事削除API（DELETE /articles/{id}）",
+      "description": "4. APIエンドポイントの一部として4.5 記事削除API（DELETE /articles/{id}）を実装する",
+      "assigned_to": "testing",
+      "dependencies": [
+        "TASK-003",
+        "TASK-010",
+        "TASK-004",
+        "TASK-005",
+        "TASK-006",
+        "TASK-007"
+      ],
+      "target_files": [
+        "backend/routers/articles.py",
+        "tests/test_integration.py"
+      ],
+      "acceptance_criteria": [
+        "パスパラメータ: id（UUID）",
+        "レスポンス: なし",
+        "ステータスコード: 204",
+        "論理削除または物理削除",
+        "テストコードが存在する"
+      ],
+      "priority": "low"
+    },
+    {
+      "id": "TASK-009",
+      "title": "5.1 FastAPIアプリケーション初期化",
+      "description": "5. アプリケーション設定の一部として5.1 FastAPIアプリケーション初期化を実装する",
+      "assigned_to": "testing",
+      "dependencies": [
+        "TASK-001",
+        "TASK-002",
+        "TASK-003",
+        "TASK-004",
+        "TASK-005",
+        "TASK-006",
+        "TASK-007",
+        "TASK-008",
+        "TASK-010",
+        "TASK-011"
+      ],
+      "target_files": [
+        "README.md",
+        "backend/database.py",
+        "backend/dependencies.py",
+        "backend/main.py",
+        "backend/routers/auth.py",
+        "tests/test_integration.py"
+      ],
+      "acceptance_criteria": [
+        "CORSミドルウェア設定",
+        "ルーター登録",
+        "起動時のデータベース初期化",
+        "全ルーターが登録されている",
+        "OpenAPIドキュメント生成",
+        "テストコードが存在する"
+      ],
+      "priority": "medium"
+    },
+    {
+      "id": "TASK-010",
+      "title": "5.2 環境設定ファイル",
+      "description": "5. アプリケーション設定の一部として5.2 環境設定ファイルを実装する",
+      "assigned_to": "backend",
+      "dependencies": [
+        "TASK-002",
+        "TASK-003",
+        "TASK-001"
+      ],
+      "target_files": [
+        "backend/database.py",
+        "backend/main.py",
+        "backend/schemas.py"
+      ],
+      "acceptance_criteria": [
+        "データベースURL",
+        "CORSオリジン設定",
+        "その他環境変数",
+        "pydantic-settingsを使用",
+        ".envファイル対応"
+      ],
+      "priority": "medium"
+    },
+    {
+      "id": "TASK-011",
+      "title": "6.1 モデルテスト",
+      "description": "6. テストの一部として6.1 モデルテストを実装する",
+      "assigned_to": "testing",
+      "dependencies": [
+        "TASK-002",
+        "TASK-003",
+        "TASK-010",
+        "TASK-001",
+        "TASK-004",
+        "TASK-005",
+        "TASK-006",
+        "TASK-007",
+        "TASK-008"
+      ],
+      "target_files": [
+        "backend/models.py",
+        "backend/schemas.py",
+        "tests/test_integration.py"
+      ],
+      "acceptance_criteria": [
+        "Articleモデルのバリデーションテスト",
+        "フィールド制約テスト",
+        "正常系・異常系のテスト",
+        "カバレッジ80%以上"
+      ],
+      "priority": "high"
+    },
+    {
+      "id": "TASK-012",
+      "title": "6.2 APIエンドポイントテスト",
+      "description": "6. テストの一部として6.2 APIエンドポイントテストを実装する",
+      "assigned_to": "testing",
+      "dependencies": [
+        "TASK-005",
+        "TASK-006",
+        "TASK-007",
+        "TASK-008",
+        "TASK-009",
+        "TASK-011"
+      ],
+      "target_files": [
+        "tests/test_integration.py"
+      ],
+      "acceptance_criteria": [
+        "各エンドポイントの統合テスト",
+        "エラーケースのテスト",
+        "pytest-asyncioを使用",
+        "全エンドポイントのテスト",
+        "カバレッジ80%以上"
+      ],
+      "priority": "medium"
+    },
+    {
+      "id": "TASK-013",
+      "title": "7.1 README作成",
+      "description": "7. ドキュメントの一部として7.1 README作成を実装する",
+      "assigned_to": "testing",
+      "dependencies": [
+        "TASK-005",
+        "TASK-006",
+        "TASK-007",
+        "TASK-008",
+        "TASK-011",
+        "TASK-012",
+        "TASK-009"
+      ],
+      "target_files": [
+        "README.md",
+        "tests/test_integration.py"
+      ],
+      "acceptance_criteria": [
+        "プロジェクト概要",
+        "セットアップ手順",
+        "API使用例",
+        "テスト実行方法",
+        "初見の開発者が理解できる",
+        "コードサンプル付き"
+      ],
+      "priority": "low"
+    },
+    {
+      "id": "TASK-014",
+      "title": "7.2 依存パッケージ定義",
+      "description": "7. ドキュメントの一部として7.2 依存パッケージ定義を実装する",
+      "assigned_to": "testing",
+      "dependencies": [
+        "TASK-002",
+        "TASK-003",
+        "TASK-005",
+        "TASK-006",
+        "TASK-007",
+        "TASK-008",
+        "TASK-010",
+        "TASK-011",
+        "TASK-012",
+        "TASK-009",
+        "TASK-013"
+      ],
+      "target_files": [
+        "README.md",
+        "backend/database.py",
+        "backend/main.py",
+        "requirements.txt",
+        "tests/test_integration.py"
+      ],
+      "acceptance_criteria": [
+        "FastAPI",
+        "SQLAlchemy",
+        "pytest",
+        "その他必要なパッケージ",
+        "バージョン固定",
+        "開発用・本番用の分離"
+      ],
+      "priority": "medium"
+    }
+  ],
+  "workers": []
+}
