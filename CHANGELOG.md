@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 修正後: エッジリスト `[('A', 'B'), ('B', 'C'), ('C', 'A')]` → 正確な依存関係
   - これにより、正しいエッジが削除され、循環が確実に解消される
 
+- **graph_visualizer.py の循環表示を改善**
+  - `render_ascii()` の循環表示でエッジ情報を明示的に処理
+  - コードの意図をより明確にし、将来のバグを防止
+
 ### Added
 - **無限ループ防止のテストケース**
   - `test_auto_fix_no_progress_stops`: 進捗がない場合の停止テスト

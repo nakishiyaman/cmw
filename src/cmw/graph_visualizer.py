@@ -54,13 +54,15 @@ class GraphVisualizer:
 
         # 循環依存をチェック
         try:
-            cycles = list(nx.find_cycle(self.graph, orientation="original"))
+            cycle_edges = list(nx.find_cycle(self.graph, orientation="original"))
+            # cycle_edgesは[(from, to, key), ...]の形式
             # 循環依存がある場合
+            cycle_nodes = [edge[0] for edge in cycle_edges]
             return (
                 "⚠️  循環依存が検出されました\n\n"
                 "循環依存を解決するには以下のコマンドを実行してください:\n"
                 "  cmw tasks validate --fix\n\n"
-                f"最初の循環: {' → '.join([edge[0] for edge in cycles])} → {cycles[0][0]}"
+                f"最初の循環: {' → '.join(cycle_nodes)} → {cycle_nodes[0]}"
             )
         except nx.NetworkXNoCycle:
             # 循環依存がない場合、通常の処理を続行
