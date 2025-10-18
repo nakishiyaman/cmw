@@ -4,7 +4,6 @@
 このモジュールは、境界条件や特殊なケースでの
 動作を検証します。
 """
-import pytest
 from cmw.dependency_validator import DependencyValidator
 from cmw.graph_visualizer import GraphVisualizer
 from cmw.requirements_parser import RequirementsParser

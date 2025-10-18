@@ -4,7 +4,6 @@
 このモジュールは、大規模なデータセットや複雑なグラフ構造での
 パフォーマンス問題を検出するためのテストを含みます。
 """
-import pytest
 import time
 from cmw.dependency_validator import DependencyValidator
 from cmw.graph_visualizer import GraphVisualizer
@@ -158,6 +157,7 @@ class TestCycleDetectionPerformance:
 
         # どんなに複雑でも10秒以内に終了すること
         assert elapsed < 10.0, f"Cycle detection timeout failed: {elapsed:.2f}s"
+        assert isinstance(cycles, list)  # 循環検出結果を使用
 
 
 class TestGraphVisualizerPerformance:

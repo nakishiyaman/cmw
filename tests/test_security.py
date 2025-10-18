@@ -5,10 +5,8 @@
 """
 import pytest
 import tempfile
-import os
 from pathlib import Path
 from cmw.requirements_parser import RequirementsParser
-from cmw.state_manager import StateManager
 from cmw.models import Task, Priority
 
 

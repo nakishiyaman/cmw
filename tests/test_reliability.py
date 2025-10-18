@@ -6,11 +6,9 @@
 import pytest
 import tempfile
 import json
-import os
 import time
 from pathlib import Path
 from cmw.requirements_parser import RequirementsParser
-from cmw.state_manager import StateManager
 from cmw.dependency_validator import DependencyValidator
 from cmw.models import Task, Priority
 
@@ -51,7 +49,7 @@ class TestFileCorruption:
 
             # UnicodeDecodeErrorが発生する可能性
             try:
-                tasks = parser.parse(invalid_file)
+                _ = parser.parse(invalid_file)
             except UnicodeDecodeError:
                 pass  # 予期されるエラー
 
@@ -330,6 +328,7 @@ class TestTimeout:
 
             # 10秒以内に完了
             assert elapsed < 10.0, f"Parse took too long: {elapsed:.2f}s"
+            assert isinstance(tasks, list)  # パース結果を使用
 
         finally:
             req_file.unlink()

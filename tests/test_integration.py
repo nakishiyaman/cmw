@@ -11,7 +11,6 @@ from pathlib import Path
 from cmw.requirements_parser import RequirementsParser
 from cmw.dependency_validator import DependencyValidator
 from cmw.graph_visualizer import GraphVisualizer
-from cmw.task_provider import TaskProvider
 from cmw.models import Task, Priority
 
 
@@ -389,6 +388,7 @@ class TestMemoryAndResource:
         # 循環検出
         validator = DependencyValidator()
         cycles = validator.detect_cycles(tasks)
+        assert isinstance(cycles, list)  # 循環検出結果を使用
 
         # グラフ可視化
         visualizer = GraphVisualizer(tasks)
