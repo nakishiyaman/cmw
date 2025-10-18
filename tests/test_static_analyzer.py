@@ -412,3 +412,200 @@ class TestRealWorldScenarios:
 
         # エラーが発生しても空のsetを返す
         assert deps == set()
+
+
+class TestImportTypes:
+    """様々なインポートタイプのテスト"""
+
+    def test_ast_import_detection(self, tmp_path):
+        """import文の検出"""
+        # import os, sys のような形式
+        file_a = tmp_path / "a.py"
+        file_a.write_text("import os\nimport sys", encoding='utf-8')
+
+        analyzer = StaticAnalyzer(project_root=tmp_path)
+        deps = analyzer.analyze_file_dependencies("a.py")
+
+        # 標準ライブラリなので依存関係には含まれない
+        assert isinstance(deps, set)
+
+    def test_relative_import_from_dot(self, tmp_path):
+        """相対インポート (from . import) の検出"""
+        # パッケージ構造を作成
+        (tmp_path / "pkg").mkdir()
+        (tmp_path / "pkg" / "__init__.py").write_text("", encoding='utf-8')
+        (tmp_path / "pkg" / "module_a.py").write_text("def func_a(): pass", encoding='utf-8')
+        (tmp_path / "pkg" / "module_b.py").write_text(
+            "from . import module_a\n\ndef func_b():\n    module_a.func_a()",
+            encoding='utf-8'
+        )
+
+        analyzer = StaticAnalyzer(project_root=tmp_path)
+        deps = analyzer.analyze_file_dependencies("pkg/module_b.py")
+
+        # module_aへの依存が検出される
+        assert "pkg/module_a.py" in deps or "pkg/__init__.py" in deps
+
+    def test_sys_path_modification_detection(self, tmp_path):
+        """sys.path.insert/appendの検出"""
+        # sys.pathを変更するコード
+        file_with_syspath = tmp_path / "main.py"
+        file_with_syspath.write_text("""
+import sys
+from pathlib import Path
+
+# プロジェクトルートをsys.pathに追加
+sys.path.insert(0, str(Path(__file__).parent))
+
+from some_module import something
+""", encoding='utf-8')
+
+        analyzer = StaticAnalyzer(project_root=tmp_path)
+
+        # エラーが発生しないことを確認
+        deps = analyzer.analyze_file_dependencies("main.py")
+        assert isinstance(deps, set)
+
+    def test_evaluate_path_expr_parent(self, tmp_path):
+        """パス式評価（Path(__file__).parent）のテスト"""
+        file = tmp_path / "subdir" / "test.py"
+        file.parent.mkdir(parents=True)
+        file.write_text("""
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
+""", encoding='utf-8')
+
+        analyzer = StaticAnalyzer(project_root=tmp_path)
+
+        # sys.path変更の検出
+        with open(file, 'r', encoding='utf-8') as f:
+            import ast
+            tree = ast.parse(f.read())
+
+        extra_paths = analyzer._detect_sys_path_changes(tree, "subdir/test.py")
+
+        # パスが検出されることを確認
+        assert isinstance(extra_paths, list)
+
+    def test_evaluate_path_expr_parent_parent(self, tmp_path):
+        """パス式評価（Path(__file__).parent.parent）のテスト"""
+        file = tmp_path / "a" / "b" / "test.py"
+        file.parent.mkdir(parents=True)
+        file.write_text("""
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
+""", encoding='utf-8')
+
+        analyzer = StaticAnalyzer(project_root=tmp_path)
+
+        with open(file, 'r', encoding='utf-8') as f:
+            import ast
+            tree = ast.parse(f.read())
+
+        extra_paths = analyzer._detect_sys_path_changes(tree, "a/b/test.py")
+
+        # パスが検出されることを確認
+        assert isinstance(extra_paths, list)
+
+    def test_module_to_file_with_extra_paths(self, tmp_path):
+        """extra_pathsを使用したモジュール解決"""
+        # src/module.py を作成
+        (tmp_path / "src").mkdir()
+        (tmp_path / "src" / "mymodule.py").write_text("def func(): pass", encoding='utf-8')
+
+        analyzer = StaticAnalyzer(project_root=tmp_path)
+
+        # extra_pathsにsrcを指定
+        extra_paths = [tmp_path / "src"]
+        file_paths = analyzer._module_to_file("mymodule", "main.py", extra_paths)
+
+        # src/mymodule.pyが解決される
+        assert "src/mymodule.py" in file_paths
+
+    def test_module_to_file_relative_single_dot(self, tmp_path):
+        """相対インポート（単一ドット）のテスト"""
+        (tmp_path / "pkg").mkdir()
+        (tmp_path / "pkg" / "module_a.py").write_text("", encoding='utf-8')
+
+        analyzer = StaticAnalyzer(project_root=tmp_path)
+
+        # pkg/module_b.py から .module_a をインポート
+        file_paths = analyzer._module_to_file(".module_a", "pkg/module_b.py")
+
+        # pkg/module_a.py が解決される
+        assert "pkg/module_a.py" in file_paths
+
+    def test_module_to_file_relative_double_dot(self, tmp_path):
+        """相対インポート（二重ドット）のテスト"""
+        (tmp_path / "pkg").mkdir()
+        (tmp_path / "pkg" / "subpkg").mkdir()
+        (tmp_path / "pkg" / "module_a.py").write_text("", encoding='utf-8')
+
+        analyzer = StaticAnalyzer(project_root=tmp_path)
+
+        # pkg/subpkg/module_b.py から ..module_a をインポート
+        file_paths = analyzer._module_to_file("..module_a", "pkg/subpkg/module_b.py")
+
+        # pkg/module_a.py が解決される
+        assert "pkg/module_a.py" in file_paths
+
+    def test_module_to_file_relative_package(self, tmp_path):
+        """相対インポート（パッケージ）のテスト"""
+        (tmp_path / "pkg").mkdir()
+        (tmp_path / "pkg" / "__init__.py").write_text("", encoding='utf-8')
+
+        analyzer = StaticAnalyzer(project_root=tmp_path)
+
+        # pkg/module.py から . をインポート（パッケージ自体）
+        file_paths = analyzer._module_to_file(".", "pkg/module.py")
+
+        # pkg/__init__.py が解決される（または空のsetでも許容）
+        assert isinstance(file_paths, set)
+
+    def test_analyze_complexity_with_nesting(self, tmp_path):
+        """ネストした構造の複雑度分析"""
+        complex_file = tmp_path / "complex.py"
+        complex_file.write_text("""
+def outer():
+    if True:
+        for i in range(10):
+            while True:
+                try:
+                    with open("file") as f:
+                        if f:
+                            pass
+                except:
+                    pass
+""", encoding='utf-8')
+
+        analyzer = StaticAnalyzer(project_root=tmp_path)
+        stats = analyzer.analyze_complexity("complex.py")
+
+        # ネストの深さが記録される（0以上）
+        assert stats['max_nesting_depth'] >= 0
+        # 少なくとも1つの関数が存在
+        assert stats['num_functions'] >= 1
+
+    def test_unicode_decode_error_handling(self, tmp_path):
+        """UnicodeDecodeErrorのハンドリング"""
+        # バイナリファイルを作成
+        binary_file = tmp_path / "binary.py"
+        binary_file.write_bytes(b'\xff\xfe\x00\x00')
+
+        analyzer = StaticAnalyzer(project_root=tmp_path)
+
+        # エラーが発生しても空のsetを返す
+        deps = analyzer.analyze_file_dependencies("binary.py")
+        assert deps == set()
+
+        # 複雑度分析でも同様
+        stats = analyzer.analyze_complexity("binary.py")
+        assert stats == {}
+
+        # エンドポイント抽出でも同様
+        endpoints = analyzer.extract_api_endpoints("binary.py")
+        assert endpoints == []

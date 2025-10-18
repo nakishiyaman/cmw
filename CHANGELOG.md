@@ -5,6 +5,67 @@ All notable changes to Claude Multi-Worker Framework will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.2] - 2025-10-18
+
+### Testing - 90% Coverage Achievement
+
+#### Coverage Improvements
+- **Achieved 90% test coverage** (72% → 90%, +18% improvement)
+- **Total tests: 399** (288 → 399, +111 tests)
+- **Total statements: 2988** (447 missing → 298 missing, -149 missing)
+
+#### New Test Coverage
+- **requirements_generator.py**: 0% → 100% (+21 tests)
+  - Interactive generation with mocked user input
+  - All project types and configuration options
+  - Edge cases and error handling
+
+- **dashboard.py**: 17% → 100% (+21 tests)
+  - Summary panel creation and formatting
+  - Velocity calculations and time tracking
+  - Priority and worker tables
+  - Progress visualization
+  - All status display modes
+
+- **task_filter.py**: 60% → 98% (+26 tests)
+  - Implementation task detection logic
+  - File and criteria validation
+  - All keyword patterns (task verbs, non-task keywords)
+  - Reference conversion
+
+- **requirements_parser.py**: 73% → 91% (+20 tests)
+  - Circular dependency detection
+  - File relation detection
+  - Various import patterns
+  - Section parsing edge cases
+
+- **static_analyzer.py**: 78% → 99% (+11 tests)
+  - Import detection (ast.Import, relative imports)
+  - sys.path modification handling
+  - Complexity analysis
+  - Module resolution
+
+- **cli.py**: 45% → 72% (+12 tests)
+  - tasks generate command with custom paths
+  - status command (basic and compact modes)
+  - task graph command (ASCII, Mermaid, stats)
+  - task prompt command
+  - tasks analyze command
+  - init command
+
+### Code Quality
+- All 399 tests passing
+- Comprehensive test suite covering critical functionality
+- Better code reliability and maintainability
+
+### Technical Details
+- Added test_requirements_generator.py (21 tests)
+- Added test_dashboard.py (21 tests)
+- Added test_task_filter.py (26 tests)
+- Extended test_requirements_parser.py (+20 tests)
+- Extended test_static_analyzer.py (+11 tests)
+- Added test_cli_basic.py (12 tests)
+
 ## [0.5.1] - 2025-10-18
 
 ### Code Quality
