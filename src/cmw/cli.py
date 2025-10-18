@@ -444,7 +444,10 @@ def validate_tasks(fix: bool, tasks_file: str) -> None:
         console.print(f"[yellow]⚠️  {len(cycles)}件の循環依存を検出しました:[/yellow]\n")
 
         for i, cycle in enumerate(cycles, 1):
-            cycle_str = " → ".join(cycle) + f" → {cycle[0]}"
+            # cycleはエッジのリスト [(from, to), ...]
+            # 表示用にノードのリストに変換
+            cycle_nodes = [edge[0] for edge in cycle]
+            cycle_str = " → ".join(cycle_nodes) + f" → {cycle_nodes[0]}"
             console.print(f"  {i}. {cycle_str}")
 
         if fix:
@@ -454,7 +457,10 @@ def validate_tasks(fix: bool, tasks_file: str) -> None:
             # 修正提案を表示
             removed_deps = []
             for suggestion in suggestions:
-                console.print(f"\n循環: {' ↔ '.join(suggestion['cycle'])}")
+                # suggestion['cycle']はエッジのリスト
+                cycle_edges = suggestion['cycle']
+                cycle_nodes = [edge[0] for edge in cycle_edges]
+                console.print(f"\n循環: {' ↔ '.join(cycle_nodes)}")
                 for fix_suggestion in suggestion["suggestions"][:1]:  # 最も信頼度の高い提案のみ
                     console.print(
                         f"  ✓ {fix_suggestion['from_task']} → {fix_suggestion['to_task']} を削除"

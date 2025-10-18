@@ -4,7 +4,7 @@ Dependency Validator - 依存関係の検証と修正
 循環依存の検出、分析、修正提案を行うモジュール
 """
 
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Tuple
 import networkx as nx
 import re
 
@@ -14,7 +14,7 @@ from cmw.models import Task
 class DependencyValidator:
     """タスク依存関係の検証と修正を行うクラス"""
 
-    def detect_cycles(self, tasks: List[Task]) -> List[List[str]]:
+    def detect_cycles(self, tasks: List[Task]) -> List[List[Tuple[str, str]]]:
         """
         循環依存を検出
 
@@ -22,8 +22,9 @@ class DependencyValidator:
             tasks: タスクリスト
 
         Returns:
-            循環依存のリスト（各要素はタスクIDのリスト）
-            例: [['TASK-004', 'TASK-005'], ['TASK-024', 'TASK-025']]
+            循環依存のリスト（各要素はエッジのリスト）
+            例: [[('TASK-004', 'TASK-005'), ('TASK-005', 'TASK-004')],
+                 [('TASK-024', 'TASK-025'), ('TASK-025', 'TASK-024')]]
         """
         G = self._build_dependency_graph(tasks)
 
@@ -37,14 +38,15 @@ class DependencyValidator:
             for _ in range(max_cycles):
                 try:
                     # find_cycleは最初の循環を見つける（高速）
-                    cycle = nx.find_cycle(temp_graph, orientation='original')
-                    # cycleは[(from, to, key), ...]の形式なので、ノードのみ抽出
-                    cycle_nodes = [edge[0] for edge in cycle]
-                    cycles.append(cycle_nodes)
+                    cycle_edges = nx.find_cycle(temp_graph, orientation='original')
+                    # cycle_edgesは[(from, to, key), ...]の形式
+                    # エッジ情報を保持したまま格納
+                    cycle = [(edge[0], edge[1]) for edge in cycle_edges]
+                    cycles.append(cycle)
 
                     # 見つけた循環の最初のエッジを削除して次の循環を探す
-                    if cycle:
-                        temp_graph.remove_edge(cycle[0][0], cycle[0][1])
+                    if cycle_edges:
+                        temp_graph.remove_edge(cycle_edges[0][0], cycle_edges[0][1])
                 except nx.NetworkXNoCycle:
                     # これ以上循環がない
                     break
@@ -106,12 +108,12 @@ class DependencyValidator:
 
         return suggestions
 
-    def _analyze_cycle(self, cycle: List[str], tasks: List[Task]) -> List[Dict]:
+    def _analyze_cycle(self, cycle: List[tuple], tasks: List[Task]) -> List[Dict]:
         """
         循環依存を分析して修正案を生成
 
         Args:
-            cycle: 循環依存を構成するタスクIDリスト
+            cycle: 循環依存を構成するエッジのリスト [(from_id, to_id), ...]
             tasks: 全タスクリスト
 
         Returns:
@@ -121,10 +123,7 @@ class DependencyValidator:
         task_map = {t.id: t for t in tasks}
 
         # サイクル内の各エッジを評価
-        for i in range(len(cycle)):
-            from_id = cycle[i]
-            to_id = cycle[(i + 1) % len(cycle)]
-
+        for from_id, to_id in cycle:
             from_task = task_map.get(from_id)
             to_task = task_map.get(to_id)
 

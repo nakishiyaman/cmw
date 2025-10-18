@@ -33,7 +33,9 @@ class TestCycleDetection:
         cycles = validator.detect_cycles(tasks)
 
         assert len(cycles) == 1
-        assert set(cycles[0]) == {"TASK-004", "TASK-005"}
+        # cyclesはエッジのリストのリスト
+        cycle_nodes = {edge[0] for edge in cycles[0]} | {edge[1] for edge in cycles[0]}
+        assert cycle_nodes == {"TASK-004", "TASK-005"}
 
     def test_detect_no_cycle(self):
         """循環依存がない場合"""
